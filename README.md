@@ -7,6 +7,22 @@ Based on knowledge from [`me_cleaner`](https://github.com/corna/me_cleaner),
 `intel_fw` is written from scratch in Rust, allowing for integration with other
 projects, including a programmatic API.
 
+## Development
+
+To run the CLI via `cargo` directly, remember to add arguments after an extra
+`--`; i.e., to print the general help, invoke `cargo run --relase -- -h`, or,
+for a subcommand, e.g. `cargo run --relase -- me clean -h`.
+
+This tool uses the [`clap` command line argument parser in _derive_ mode](https://docs.rs/clap/latest/clap/_derive/index.html).
+To familiarize yourself with Rust and common approaches to CLI tools, take a
+look at the [Rust CLI book](https://rust-cli.github.io/book/index.html).
+
+For more understanding, see also any of these additional resources:
+- <https://rust-cli-recommendations.sunshowers.io/handling-arguments.html>
+- <https://github.com/kyclark/command-line-rust>
+- <https://tucson-josh.com/posts/rust-clap-cli/>
+- <https://www.rustadventure.dev/introducing-clap/clap-v4/parsing-arguments-with-clap>
+
 ## Milestones
 
 - [ ] bootstrap a new, general CLI, `intel_fw`, with an `me` subcommand
