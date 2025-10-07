@@ -1,10 +1,18 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use std::fs;
 
+use clap::{Parser, Subcommand, ValueEnum};
 use log::{debug, error, info, trace, warn};
+
+mod clean;
+mod show;
+
+use intel_fw::parse;
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 enum Partition {
     MFS,
+    FTPR,
+    CODE, // only Gen 1
 }
 
 #[derive(Subcommand, Debug)]
@@ -79,6 +87,8 @@ struct Cli {
     #[command(subcommand)]
     cmd: Command,
     #[clap(long, short, action)]
+    debug: bool,
+    #[clap(long, short, action)]
     verbose: bool,
 }
 
@@ -88,7 +98,11 @@ fn main() {
     let env = env_logger::Env::default().default_filter_or("info");
     env_logger::Builder::from_env(env).init();
 
-    let Cli { cmd, verbose: _ } = Cli::parse();
+    let Cli {
+        cmd,
+        debug,
+        verbose,
+    } = Cli::parse();
     match cmd {
         Command::Bg(_) => todo!(),
         Command::Me(cmd) => match cmd {
@@ -131,9 +145,29 @@ fn main() {
                     info!("Output will be written to: {out_file}");
                 }
                 info!("Reading {file_name}...");
-                todo!("clean");
+                let data = fs::read(file_name).unwrap();
+                match parse(&data, debug) {
+                    Ok(fpt) => {
+                        show::show(&fpt, verbose);
+                        println!();
+                        todo!("clean");
+                    }
+                    Err(e) => {
+                        error!("Could not parse ME FPT: {e}");
+                    }
+                }
             }
-            MeCommand::Show { file_name } => todo!("show {file_name}"),
+            MeCommand::Show { file_name } => {
+                let data = fs::read(file_name).unwrap();
+                match parse(&data, debug) {
+                    Ok(fpt) => {
+                        show::show(&fpt, verbose);
+                    }
+                    Err(e) => {
+                        error!("Could not parse ME FPT: {e}");
+                    }
+                }
+            }
         },
     }
 }

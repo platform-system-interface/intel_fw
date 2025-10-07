@@ -3,9 +3,22 @@ name = "intel_fw"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "intel_fw"
+path = "src/lib.rs"
+
+[[bin]]
+name = "intel_fw"
+path = "src/main.rs"
+
 [dependencies]
 clap = { version = "4.5.48", features = ["derive"] }
 env_logger = "0.11.8"
 log = "0.4.28"
+md5 = "0.8.0"
+phf = { version = "0.13.1", default-features = false, features = ["macros"] }
+phf_macros = "0.13.1"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_bytes = "0.11.19"
 zerocopy = "0.8.27"
 zerocopy-derive = "0.8.27"
