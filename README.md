@@ -1,6 +1,7 @@
 # Modern Intel Firmware Tool :sparkles:
 
-This is a new utility to analyze and edit firmware images for Intel platforms.
+This is a new utility to analyze and edit firmware images for [Intel platforms](
+docs/platforms.md).
 
 Based on knowledge from [`me_cleaner`](https://github.com/corna/me_cleaner),
 [MEAnalyzer](https://github.com/platomav/meanalyzer) and related research,
