@@ -1,9 +1,11 @@
-use crate::dir::man::Manifest;
 use core::fmt::{self, Display};
+
+use bitfield_struct::bitfield;
 use serde::{Deserialize, Serialize};
 use zerocopy::FromBytes;
 use zerocopy_derive::{FromBytes, IntoBytes};
 
+use crate::dir::man::Manifest;
 use crate::meta::get_meta_for_key;
 
 pub const CPD_MAGIC: &str = "$CPD";
@@ -22,11 +24,23 @@ pub struct CPDHeader {
 
 const HEADER_SIZE: usize = core::mem::size_of::<CPDHeader>();
 
+// See https://github.com/corna/me_cleaner check_and_remove_modules_gen3
+#[bitfield(u32)]
+#[derive(FromBytes, IntoBytes, Serialize, Deserialize)]
+pub struct FlagsAndOffset {
+    #[bits(25)]
+    pub offset: u32,
+    pub compressed: bool,
+    #[bits(6)]
+    pub _unknown: u8,
+}
+
+// See https://github.com/skochinsky/me-tools class CPDEntry
 #[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct CPDEntry {
     pub name: [u8; 12],
-    pub offset: u32,
+    pub flags_and_offset: FlagsAndOffset,
     pub size: u32,
     pub compression_flag: u32,
 }
@@ -43,12 +57,22 @@ impl CPDEntry {
 impl Display for CPDEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let n = self.name();
-        let o = self.offset;
+        let o = self.flags_and_offset.offset();
         let s = self.size;
         let end = o + s;
-        let flag = self.compression_flag;
-
-        write!(f, "{n:13} @ 0x{o:06x}:0x{end:06x} (0x{s:06x}) {flag:032b}")
+        // See https://github.com/corna/me_cleaner check_and_remove_modules_gen3
+        let meta = {
+            if n.ends_with(".met") {
+                "metadata"
+            } else if n.ends_with(".man") {
+                "manifest"
+            } else if self.flags_and_offset.compressed() {
+                "Huffman"
+            } else {
+                "uncompressed or LZMA"
+            }
+        };
+        write!(f, "{n:13} @ 0x{o:06x}:0x{end:06x} (0x{s:06x}) {meta:20}")
     }
 }
 
@@ -88,20 +112,16 @@ impl Display for CodePartitionDirectory {
             }
             Err(e) => format!("{e}"),
         };
-        let l3 = format!("  file name        offset    end       size           compression flags");
+        let l3 = format!("  file name        offset    end       size      kind");
         write!(f, "{l1}\n{l2}\n{l3}\n").unwrap();
         let mut entries = self.entries.clone();
-        entries.sort_by_key(|e| e.offset);
+        entries.sort_by_key(|e| e.flags_and_offset.offset());
         for e in entries {
             write!(f, "  {e}\n").unwrap();
         }
         write!(f, "")
     }
 }
-
-// TODO: See https://github.com/skochinsky/me-tools class CPDEntry
-// What is the other u8?!
-const OFFSET_MASK: u32 = 0xffffff;
 
 impl CodePartitionDirectory {
     pub fn new(data: Vec<u8>, offset: usize) -> Result<Self, String> {
@@ -120,17 +140,17 @@ impl CodePartitionDirectory {
         } else {
             HEADER_SIZE
         };
+        // TODO: read as array directly
         for e in 0..header.entries as usize {
             let pos = header_size + e * 24;
-            let (mut entry, _) = CPDEntry::read_from_prefix(&data[pos..]).unwrap();
-            entry.offset &= OFFSET_MASK;
+            let (entry, _) = CPDEntry::read_from_prefix(&data[pos..]).unwrap();
             entries.push(entry);
         }
 
         let manifest = {
             let name = format!("{}.man", name);
             if let Some(e) = entries.iter().find(|e| e.name() == name) {
-                let b = &data[e.offset as usize..];
+                let b = &data[e.flags_and_offset.offset() as usize..];
                 Manifest::new(b)
             } else {
                 Err("no manifest found".to_string())
