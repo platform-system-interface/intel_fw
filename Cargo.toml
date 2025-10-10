@@ -12,6 +12,7 @@ name = "intel_fw"
 path = "src/main.rs"
 
 [dependencies]
+bitfield-struct = "0.11.0"
 clap = { version = "4.5.48", features = ["derive"] }
 env_logger = "0.11.8"
 log = "0.4.28"
@@ -20,5 +21,6 @@ phf = { version = "0.13.1", default-features = false, features = ["macros"] }
 phf_macros = "0.13.1"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_bytes = "0.11.19"
+strum = { version = "0.27.2", features = ["derive"] }
 zerocopy = "0.8.27"
 zerocopy-derive = "0.8.27"
