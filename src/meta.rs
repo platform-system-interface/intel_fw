@@ -74,6 +74,10 @@ static KEY_TO_META: phf::Map<&'static str, Meta> = phf_map! {
         variant: Variant::ME,
         version: &["11.x.x.x"],
     },
+    "3efc26920b4bee901b624771c742887b" => Meta {
+        variant: Variant::ME,
+        version: &["12.x.x.x"],
+    },
     "bda0b6bb8ca0bf0cac55ac4c4d55e0f2" => Meta {
         variant: Variant::TXE,
         version: &["1.x.x.x"],
