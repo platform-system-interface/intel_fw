@@ -2,8 +2,8 @@ use core::fmt::{self, Display};
 
 use bitfield_struct::bitfield;
 use serde::{Deserialize, Serialize};
-use zerocopy::FromBytes;
-use zerocopy_derive::{FromBytes, IntoBytes};
+use zerocopy::{FromBytes, Ref};
+use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 use crate::dir::man::Manifest;
 use crate::meta::get_meta_for_key;
@@ -26,7 +26,7 @@ const HEADER_SIZE: usize = core::mem::size_of::<CPDHeader>();
 
 // See https://github.com/corna/me_cleaner check_and_remove_modules_gen3
 #[bitfield(u32)]
-#[derive(FromBytes, IntoBytes, Serialize, Deserialize)]
+#[derive(Immutable, FromBytes, IntoBytes, Serialize, Deserialize)]
 pub struct FlagsAndOffset {
     #[bits(25)]
     pub offset: u32,
@@ -36,7 +36,7 @@ pub struct FlagsAndOffset {
 }
 
 // See https://github.com/skochinsky/me-tools class CPDEntry
-#[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct CPDEntry {
     pub name: [u8; 12],
@@ -134,18 +134,21 @@ impl CodePartitionDirectory {
             Ok(n) => n.trim_end_matches('\0').to_string(),
             Err(_) => format!("{:02x?}", n),
         };
-        let mut entries = Vec::<CPDEntry>::new();
         let header_size = if header.version_or_checksum == 0x00140102 {
             HEADER_SIZE + 4
         } else {
             HEADER_SIZE
         };
-        // TODO: read as array directly
-        for e in 0..header.entries as usize {
-            let pos = header_size + e * 24;
-            let (entry, _) = CPDEntry::read_from_prefix(&data[pos..]).unwrap();
-            entries.push(entry);
-        }
+        let pos = header_size;
+        let count = header.entries as usize;
+        let slice = &data[pos..];
+        let Ok((r, _)) = Ref::<_, [CPDEntry]>::from_prefix_with_elems(slice, count) else {
+            return Err(format!(
+                "cannot parse ME FW Gen 3 directory entries @ {:08x}",
+                pos
+            ));
+        };
+        let entries = r.to_vec();
 
         let manifest = {
             let name = format!("{}.man", name);
