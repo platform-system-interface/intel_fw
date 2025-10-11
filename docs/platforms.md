@@ -52,6 +52,7 @@ generation and specific platforms a certain firmware version range.
 | CSME  | Converged Security and Manageability Engine |
 | DAL   | Dynamic Application Loader                  |
 | FIT   | Firmware Interface Table                    |
+| HAP   | High-Assurance Platform                     |
 | IFD   | Intel Flash Descriptor                      |
 | PTT   | Platform Trust Technology                   |
 | SPS   | Server Platform Services                    |
