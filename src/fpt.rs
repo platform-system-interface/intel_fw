@@ -23,18 +23,22 @@ pub struct FPTEntry {
     pub flags: u32,
 }
 
+impl FPTEntry {
+    pub fn name(self) -> String {
+        match std::str::from_utf8(&self.name) {
+            Ok(n) => n.trim_end_matches('\0').to_string(),
+            Err(_) => format!("{:02x?}", &self.name),
+        }
+    }
+}
+
 impl Display for FPTEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let o = self.offset as usize;
         let s = self.size as usize;
         let end = o + s;
-
-        let name = match std::str::from_utf8(&self.name) {
-            Ok(n) => n.trim_end_matches('\0').to_string(),
-            Err(_) => format!("{:02x?}", &self.name),
-        };
-
-        let (part_type, full_name) = get_part_info(name.as_str());
+        let name = self.name();
+        let (part_type, full_name) = get_part_info(&name);
         let part_info = format!("{part_type:?}: {full_name}");
         let name_offset_end_size = format!("{name:>4} @ 0x{o:08x}:0x{end:08x} (0x{s:08x})");
 
