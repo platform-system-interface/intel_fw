@@ -114,9 +114,8 @@ impl Display for CodePartitionDirectory {
         };
         let l3 = format!("  file name        offset    end       size      kind");
         write!(f, "{l1}\n{l2}\n{l3}\n").unwrap();
-        let mut entries = self.entries.clone();
-        entries.sort_by_key(|e| e.flags_and_offset.offset());
-        for e in entries {
+        let sorted_entries = self.sorted_entries();
+        for e in sorted_entries {
             write!(f, "  {e}\n").unwrap();
         }
         write!(f, "")
@@ -151,7 +150,7 @@ impl CodePartitionDirectory {
         let entries = r.to_vec();
 
         let manifest = {
-            let name = format!("{}.man", name);
+            let name = format!("{name}.man");
             if let Some(e) = entries.iter().find(|e| e.name() == name) {
                 let b = &data[e.flags_and_offset.offset() as usize..];
                 Manifest::new(b)
@@ -169,5 +168,38 @@ impl CodePartitionDirectory {
         };
 
         Ok(cpd)
+    }
+
+    pub fn sorted_entries(&self) -> Vec<CPDEntry> {
+        let mut entries = self.entries.clone();
+        entries.sort_by_key(|e| e.flags_and_offset.offset());
+        entries
+    }
+
+    pub fn remainder(&self) -> usize {
+        let sorted = self.sorted_entries();
+        let last = sorted.last().unwrap();
+        self.offset + (last.flags_and_offset.offset() + last.size) as usize
+    }
+
+    pub fn clean(&mut self) {
+        for e in &self.entries {
+            //
+        }
+    }
+
+    pub fn removable_entries(self, blocklist: &Vec<String>) -> Vec<(usize, usize)> {
+        use log::info;
+        let mut removables = Vec::<(usize, usize)>::new();
+
+        for e in &self.entries {
+            match &e.name() {
+                n if n.ends_with(".man") => info!("keep manifest {n}"),
+                n if n.ends_with(".met") => info!("keep metadata {n}"),
+                n if blocklist.contains(n) => info!("keep necessary {n}"),
+                _ => removables.push((e.flags_and_offset.offset() as usize, e.size as usize)),
+            }
+        }
+        removables
     }
 }

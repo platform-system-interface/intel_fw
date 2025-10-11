@@ -1,4 +1,7 @@
-use std::fs;
+use std::{
+    fs::{self, File},
+    io::Write,
+};
 
 use clap::{Parser, Subcommand, ValueEnum};
 use log::{debug, error, info, trace, warn};
@@ -6,7 +9,7 @@ use log::{debug, error, info, trace, warn};
 mod clean;
 mod show;
 
-use intel_fw::parse;
+use intel_fw::{dir, parse};
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 enum Partition {
@@ -141,15 +144,60 @@ fn main() {
                 if let Some(me_file) = extract_me {
                     info!("Dump ME region to {me_file}");
                 }
-                if let Some(out_file) = output {
+                if let Some(out_file) = &output {
                     info!("Output will be written to: {out_file}");
                 }
                 info!("Reading {file_name}...");
-                let data = fs::read(file_name).unwrap();
+                let mut data = fs::read(file_name).unwrap();
                 match parse(&data, debug) {
                     Ok(fpt) => {
                         show::show(&fpt, verbose);
                         println!();
+                        let blocklist = Vec::from(["rbe", "kernel", "syslib", "bup"])
+                            .iter()
+                            .map(|s| String::from(*s))
+                            .collect();
+
+                        for d in &fpt.gen3dirs {
+                            if d.name == "FTPR" {
+                                let dir_offset = d.offset;
+                                let removables = d.clone().removable_entries(&blocklist);
+                                println!("- {dir_offset:08x}");
+                                for (mod_offset, size) in removables {
+                                    println!("-- {mod_offset:08x} {size:08x}");
+                                    for o in 0..size {
+                                        data[dir_offset + mod_offset + o] = 0xff;
+                                    }
+                                }
+
+                                let r = d.remainder();
+                                let e = fpt.entries.iter().find(|e| e.name() == "FTPR").unwrap();
+                                let end = dir_offset + e.size as usize;
+                                info!("Remaining: {r:08x}..{end:08x}");
+                                for o in r..end {
+                                    data[o] = 0xff;
+                                }
+                            }
+                        }
+
+                        let fpt_offset = fpt.base;
+                        for e in &fpt.entries {
+                            match e.name().as_str() {
+                                "FLOG" | "FTUP" | "IVBP" | "MFS" | "NFTP" | "PSVN" | "UTOK" => {
+                                    let offset = fpt_offset + e.offset as usize;
+                                    let size = e.size as usize;
+                                    for o in offset..offset + size {
+                                        data[o] = 0xff;
+                                    }
+                                }
+                                _ => {} //
+                            }
+                        }
+
+                        if let Some(out_file) = output {
+                            let mut file = File::create(out_file).unwrap();
+                            file.write_all(&data).unwrap();
+                        }
                         todo!("clean");
                     }
                     Err(e) => {
