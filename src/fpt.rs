@@ -112,7 +112,7 @@ pub fn get_part_info(n: &str) -> (PartitionType, &str) {
         "FTUP" => (PartitionType::Code, "[NFTP]+[WCOD]+[LOCL]"),
         "DLMP" => (PartitionType::Code, "IDLM partition"),
         "PSVN" => (PartitionType::Data, "Secure Version Number"),
-        // IVBP used in hibernation
+        // IVBP is used in hibernation, should probably not be removed?!
         "IVBP" => (PartitionType::Data, "IV + Bring Up cache"),
         "MFS" => (PartitionType::Data, "ME Flash File System"),
         "NFTP" => (PartitionType::Code, "Additional code"),
