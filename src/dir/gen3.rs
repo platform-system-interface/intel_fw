@@ -114,9 +114,8 @@ impl Display for CodePartitionDirectory {
         };
         let l3 = format!("  file name        offset    end       size      kind");
         write!(f, "{l1}\n{l2}\n{l3}\n").unwrap();
-        let mut entries = self.entries.clone();
-        entries.sort_by_key(|e| e.flags_and_offset.offset());
-        for e in entries {
+        let sorted_entries = self.sorted_entries();
+        for e in sorted_entries {
             write!(f, "  {e}\n").unwrap();
         }
         write!(f, "")
@@ -169,5 +168,11 @@ impl CodePartitionDirectory {
         };
 
         Ok(cpd)
+    }
+
+    fn sorted_entries(&self) -> Vec<CPDEntry> {
+        let mut entries = self.entries.clone();
+        entries.sort_by_key(|e| e.flags_and_offset.offset());
+        entries
     }
 }
