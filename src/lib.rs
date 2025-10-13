@@ -9,6 +9,7 @@ pub mod fpt;
 pub mod ifd;
 pub mod me;
 pub mod meta;
+pub mod trans;
 pub mod ver;
 
 use fit::{Fit, FitError};
