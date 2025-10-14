@@ -123,9 +123,14 @@ fn get_mapping(size: usize) -> usize {
     }
 }
 
+// The FIT pointer is at a fixed known position.
+// > FIT resides in the BIOS Flash area and is located by a FIT
+// pointer at physical address (4GB - 40h), refer to Figure below.
+const FIT_POINTER_BOTTOM_OFFSET: usize = 0x40;
+
 impl Fit {
     pub fn new(data: &[u8]) -> Result<Self, String> {
-        let fitp_pos = data.len() - 0x40;
+        let fitp_pos = data.len() - FIT_POINTER_BOTTOM_OFFSET;
         let fitp = &data[fitp_pos..fitp_pos + 4];
         let mapping = get_mapping(data.len());
         let Ok((fp, _)) = u32::read_from_prefix(fitp) else {
