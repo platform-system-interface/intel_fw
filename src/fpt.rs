@@ -4,10 +4,12 @@
 //! and https://github.com/platomav/MEAnalyzer
 //! and https://github.com/corna/me_cleaner
 
-use core::fmt::{self, Display};
-use core::mem::size_of;
-use std::convert::Infallible;
-use std::num::Wrapping;
+use core::{
+    convert::Infallible,
+    fmt::{self, Display},
+    mem::size_of,
+    num::Wrapping,
+};
 
 use serde::{Deserialize, Serialize};
 use zerocopy::{AlignmentError, ConvertError, FromBytes, IntoBytes, Ref, SizeError};
