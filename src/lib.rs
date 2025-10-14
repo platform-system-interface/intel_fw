@@ -1,5 +1,5 @@
-use std::mem;
-use zerocopy::FromBytes;
+use core::mem;
+use log::error;
 
 pub mod dir;
 pub mod fit;
@@ -24,7 +24,6 @@ pub fn parse(data: &[u8], debug: bool) -> Result<ME_FPT, String> {
     let fit = fit::Fit::new(data);
 
     let cpd_bytes = dir::gen3::CPD_MAGIC.as_bytes();
-    let mut entries = Vec::<fpt::FPTEntry>::new();
     let mut gen2dirs = Vec::<dir::gen2::Directory>::new();
     let mut gen3dirs = Vec::<dir::gen3::CodePartitionDirectory>::new();
 
@@ -48,16 +47,14 @@ pub fn parse(data: &[u8], debug: bool) -> Result<ME_FPT, String> {
     while base + 16 + mem::size_of::<fpt::FPT>() <= data.len() {
         // first 16 bytes are potentially other stuff
         let o = base + 16;
-        let m = &data[o..o + 4];
-        if m.eq(fpt::FPT_MAGIC.as_bytes()) {
-            let (fpt, _) = fpt::FPT::read_from_prefix(&data[o..]).unwrap();
-            for e in 0..fpt.entries as usize {
-                // NOTE: Skip $FPT itself
-                let pos = o + 32 + e * 32;
-                let (entry, _) = fpt::FPTEntry::read_from_prefix(&data[pos..]).unwrap();
-                entries.push(entry);
-            }
-
+        if let Some(r) = fpt::FPT::parse(&data[o..]) {
+            let fpt = match r {
+                Ok(r) => r,
+                Err(e) => {
+                    error!("Cannot parse ME FPT entries @ {o:08x}: {e:?}");
+                    continue;
+                }
+            };
             // realign base; what does this indicate?
             if base % 0x1000 != 0 {
                 base = o;
@@ -66,7 +63,7 @@ pub fn parse(data: &[u8], debug: bool) -> Result<ME_FPT, String> {
                 }
             }
 
-            for e in &entries {
+            for e in &fpt.entries {
                 let name = match std::str::from_utf8(&e.name) {
                     // some names are shorter than 4 bytes and padded with 0x0
                     Ok(n) => n.trim_end_matches('\0').to_string(),
@@ -125,8 +122,7 @@ pub fn parse(data: &[u8], debug: bool) -> Result<ME_FPT, String> {
 
             let me_fpt = ME_FPT {
                 base,
-                header: fpt,
-                entries,
+                fpt,
                 gen3dirs,
                 gen2dirs,
                 fit,
