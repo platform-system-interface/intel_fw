@@ -23,7 +23,6 @@ fn dump48(data: &[u8]) {
 pub fn parse(data: &[u8], debug: bool) -> Result<ME_FW, String> {
     let fit = fit::Fit::new(data);
 
-    let cpd_bytes = dir::gen3::CPD_MAGIC.as_bytes();
     let mut gen2dirs = Vec::<dir::gen2::Directory>::new();
     let mut gen3dirs = Vec::<dir::gen3::CodePartitionDirectory>::new();
 
@@ -32,7 +31,7 @@ pub fn parse(data: &[u8], debug: bool) -> Result<ME_FW, String> {
         let mut o = 0;
         while o < data.len() {
             let buf = &data[o..o + 4];
-            if buf.eq(cpd_bytes) {
+            if buf.eq(dir::gen3::CPD_MAGIC_BYTES) {
                 let Ok(cpd) = dir::gen3::CodePartitionDirectory::new(data[o..].to_vec(), o) else {
                     continue;
                 };
@@ -76,7 +75,7 @@ pub fn parse(data: &[u8], debug: bool) -> Result<ME_FW, String> {
                     MDMV | DLMP | FTPR | NFTP => {
                         if o + 4 < data.len() {
                             let buf = &data[o..o + 4];
-                            if buf.eq(cpd_bytes) {
+                            if buf.eq(dir::gen3::CPD_MAGIC_BYTES) {
                                 if let Ok(cpd) = dir::gen3::CodePartitionDirectory::new(
                                     data[o..o + s].to_vec(),
                                     o,
