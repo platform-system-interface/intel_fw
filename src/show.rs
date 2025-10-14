@@ -1,5 +1,5 @@
 use intel_fw::dir::{gen2::Directory as Gen2Dir, gen3::CodePartitionDirectory};
-use intel_fw::fit::Fit;
+use intel_fw::fit::{Fit, FitError};
 use intel_fw::fpt::{FPT, ME_FW};
 
 fn print_gen2_dirs(dirs: &Vec<Gen2Dir>) {
@@ -48,7 +48,7 @@ fn print_fpt(fpt: &FPT) {
     }
 }
 
-fn print_fit(fit: &Result<Fit, String>) {
+fn print_fit(fit: &Result<Fit, FitError>) {
     match fit {
         Ok(fit) => {
             println!("FIT @ {:08x}, {}", fit.offset, fit.header);
@@ -57,7 +57,7 @@ fn print_fit(fit: &Result<Fit, String>) {
             }
         }
         Err(e) => {
-            log::error!("Could not parse FIT: {e}");
+            log::error!("Could not parse FIT: {e:?}");
         }
     }
 }

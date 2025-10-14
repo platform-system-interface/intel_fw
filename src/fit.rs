@@ -9,6 +9,7 @@ use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 // firmware-interface-table-bios-specification-r1p2p1.pdf
 const FIT_MAGIC: &str = "_FIT_   ";
+const FIT_MAGIC_BYTES: &[u8] = FIT_MAGIC.as_bytes();
 
 #[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C, packed)]
@@ -128,34 +129,56 @@ fn get_mapping(size: usize) -> usize {
 // pointer at physical address (4GB - 40h), refer to Figure below.
 const FIT_POINTER_BOTTOM_OFFSET: usize = 0x40;
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum FitError {
+    PointerReadError(String),
+    InvalidPointer(String),
+    HeaderReadError(String),
+    HeaderNoMagic(String),
+    EntryReadError(String),
+}
+
 impl Fit {
-    pub fn new(data: &[u8]) -> Result<Self, String> {
+    pub fn new(data: &[u8]) -> Result<Self, FitError> {
         let fitp_pos = data.len() - FIT_POINTER_BOTTOM_OFFSET;
         let fitp = &data[fitp_pos..fitp_pos + 4];
         let mapping = get_mapping(data.len());
         let Ok((fp, _)) = u32::read_from_prefix(fitp) else {
-            return Err(format!("Cannot read FIT pointer @ {fitp_pos:08x}"));
+            return Err(FitError::PointerReadError(format!(
+                "Cannot read FIT pointer @ {fitp_pos:08x}"
+            )));
         };
         if fp == 0xffff_ffff {
-            let err = format!("Not a FIT: {fp:08x}");
-            return Err(err);
+            return Err(FitError::InvalidPointer(format!("Not a FIT: {fp:08x}")));
         }
         let offset = mapping & fp as usize;
         // NOTE: FIT is usually aligned. The spec does not mandate it though.
         if offset % 0x10 != 0 {
-            let err = format!("Not a FIT pointer: {offset:08x}");
-            return Err(err);
+            return Err(FitError::InvalidPointer(format!(
+                "Not a FIT pointer: {offset:08x}"
+            )));
         }
 
         let Ok((header, _)) = FitHeader::read_from_prefix(&data[offset..]) else {
-            return Err(format!("No FIT header @ {offset:08x}"));
+            return Err(FitError::HeaderReadError(format!(
+                "Could not parse FIT header @ {offset:08x}"
+            )));
         };
+        if header.magic != FIT_MAGIC_BYTES {
+            return Err(FitError::HeaderNoMagic(format!(
+                "No FIT header @ {offset:08x}, got {:02x?}, expected {:02x?} ({})",
+                header.magic, FIT_MAGIC_BYTES, FIT_MAGIC
+            )));
+        }
         // NOTE: The header counts as a first entry.
         let count = (header.entries - 1) as usize;
         let pos = offset + FIT_HEADER_SIZE;
         let slice = &data[pos..];
         let Ok((r, _)) = Ref::<_, [FitEntry]>::from_prefix_with_elems(slice, count) else {
-            return Err(format!("cannot parse FIT entries @ {:08x}", pos));
+            return Err(FitError::EntryReadError(format!(
+                "Could not parse FIT entries @ {:08x}",
+                pos
+            )));
         };
         let entries = r.to_vec();
         let fit = Fit {
@@ -216,4 +239,25 @@ impl Display for FitEntry {
         };
         write!(f, "{t:40} {size:08x} @ {addr:08x} version {ver:04x} {cs}")
     }
+}
+
+#[cfg(test)]
+static DATA: &[u8] = include_bytes!("../tests/me11_fit.bin");
+
+#[test]
+fn parse_invalid_ptr() {
+    let parsed = Fit::new(&vec![0xff; 0x100]);
+    assert!(matches!(parsed, Err(FitError::InvalidPointer(_))));
+}
+
+#[test]
+fn parse_no_magic() {
+    let parsed = Fit::new(&vec![0x00; 0x100]);
+    assert!(matches!(parsed, Err(FitError::HeaderNoMagic(_))));
+}
+
+#[test]
+fn parse_fit_ok() {
+    let parsed = Fit::new(&DATA);
+    assert!(parsed.is_ok());
 }
