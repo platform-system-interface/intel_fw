@@ -7,9 +7,10 @@
 use core::fmt::{self, Display};
 use core::mem::size_of;
 use std::convert::Infallible;
+use std::num::Wrapping;
 
 use serde::{Deserialize, Serialize};
-use zerocopy::{AlignmentError, ConvertError, FromBytes, Ref, SizeError};
+use zerocopy::{AlignmentError, ConvertError, FromBytes, IntoBytes, Ref, SizeError};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 use crate::dir::gen2::Directory as Gen2Directory;
@@ -59,6 +60,19 @@ pub enum FptError<'a> {
             Infallible,
         >,
     ),
+}
+
+impl FPTHeader {
+    pub fn checksum(self) -> u8 {
+        let mut c = self.clone();
+        c.checksum = 0;
+        let sum = c
+            .as_bytes()
+            .iter()
+            .map(|e| Wrapping(*e))
+            .sum::<Wrapping<u8>>();
+        ((sum ^ Wrapping(0xff)) + Wrapping(1)).0
+    }
 }
 
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
@@ -206,4 +220,11 @@ fn parse_okay_fpt() {
     assert!(fpt_res.is_ok());
     let fpt = fpt_res.unwrap();
     assert_eq!(fpt.header.entries as usize, fpt.entries.len());
+}
+
+#[test]
+fn checksum() {
+    let parsed = FPT::parse(&DATA[16..12 * 32 + 16]);
+    let fpt = parsed.unwrap().unwrap();
+    assert_eq!(fpt.header.checksum(), fpt.header.checksum);
 }
