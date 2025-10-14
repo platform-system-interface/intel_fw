@@ -1,16 +1,67 @@
+//! For references regarding data structures and logic,
+//! see https://github.com/peterbjornx/meimagetool ...intelme/model/fpt/ (Java)
+//! and https://github.com/linuxboot/fiano/blob/main/pkg/intel/me/structures.go
+//! and https://github.com/platomav/MEAnalyzer
+//! and https://github.com/corna/me_cleaner
+
 use core::fmt::{self, Display};
+use core::mem::size_of;
+use std::convert::Infallible;
+
 use serde::{Deserialize, Serialize};
-use zerocopy_derive::{FromBytes, IntoBytes};
+use zerocopy::{AlignmentError, ConvertError, FromBytes, Ref, SizeError};
+use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 use crate::dir::gen2::Directory as Gen2Directory;
 use crate::dir::gen3::CodePartitionDirectory;
 use crate::fit::Fit;
 use crate::ver::Version;
 
-// see https://github.com/peterbjornx/meimagetool ...intelme/model/fpt/ (Java)
-// and https://github.com/linuxboot/fiano/blob/main/pkg/intel/me/structures.go
-// and https://github.com/platomav/MEAnalyzer
-#[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
+const FPT_MAGIC: &str = "$FPT";
+
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
+#[repr(C)]
+pub struct FPTHeader {
+    pub signature: [u8; 4],
+    pub entries: u32,
+    pub header_ver: u8,
+    pub entry_ver: u8,
+    pub header_len: u8,
+    pub checksum: u8,
+    pub ticks_to_add: u16,
+    pub tokens_to_add: u16,
+    pub uma_size_or_reserved: u32,
+    pub flash_layout_or_flags: u32,
+    // Not Present in ME version 7
+    pub fitc_ver: Version,
+}
+
+const FPT_HEADER_SIZE: usize = size_of::<FPTHeader>();
+
+impl Display for FPTHeader {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let hv = format!("  Header version: {}", self.header_ver);
+        let ev = format!("  Entry version:  {}", self.entry_ver);
+        let en = format!("  Entries:        {}", self.entries);
+        let cs = format!("  Checksum:       {:02x}", self.checksum);
+        let fv = format!("  FITC version:   {}", self.fitc_ver);
+        write!(f, "{hv}\n{ev}\n{en}\n{cs}\n{fv}")
+    }
+}
+
+#[derive(Debug)]
+pub enum FptError<'a> {
+    HeaderParseError(SizeError<&'a [u8], FPTHeader>),
+    EntryParseError(
+        ConvertError<
+            AlignmentError<&'a [u8], [FPTEntry]>,
+            SizeError<&'a [u8], [FPTEntry]>,
+            Infallible,
+        >,
+    ),
+}
+
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct FPTEntry {
     pub name: [u8; 4],
@@ -32,6 +83,8 @@ impl FPTEntry {
     }
 }
 
+const FPT_ENTRY_SIZE: usize = size_of::<FPTEntry>();
+
 impl Display for FPTEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let o = self.offset as usize;
@@ -46,34 +99,35 @@ impl Display for FPTEntry {
     }
 }
 
-// ...
-pub const FPT_MAGIC: &str = "$FPT";
-
-#[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
-#[repr(C)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FPT {
-    pub signature: [u8; 4],
-    pub entries: u32,
-    pub header_ver: u8,
-    pub entry_ver: u8,
-    pub header_len: u8,
-    pub checksum: u8,
-    pub ticks_to_add: u16,
-    pub tokens_to_add: u16,
-    pub uma_size_or_reserved: u32,
-    pub flash_layout_or_flags: u32,
-    // Not Present in ME version 7
-    pub fitc_ver: Version,
+    pub header: FPTHeader,
+    pub entries: Vec<FPTEntry>,
 }
 
-impl Display for FPT {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let hv = format!("  Header version: {}", self.header_ver);
-        let ev = format!("  Entry version:  {}", self.entry_ver);
-        let en = format!("  Entries:        {}", self.entries);
-        let cs = format!("  Checksum:       {:02x}", self.checksum);
-        let v = format!("  FITC version:   {}", self.fitc_ver);
-        write!(f, "{hv}\n{ev}\n{cs}\n{v}")
+impl<'a> FPT {
+    pub fn parse(data: &'a [u8]) -> Option<Result<Self, FptError<'a>>> {
+        let m = &data[..4];
+        if m.eq(FPT_MAGIC.as_bytes()) {
+            let header = match FPTHeader::read_from_prefix(data) {
+                Ok((h, _)) => h,
+                Err(e) => return Some(Err(FptError::HeaderParseError(e))),
+            };
+            // NOTE: Skip $FPT (header) itself
+            let slice = &data[FPT_HEADER_SIZE..];
+            let count = header.entries as usize;
+            let entries = match Ref::<_, [FPTEntry]>::from_prefix_with_elems(slice, count) {
+                Ok((r, _)) => r,
+                Err(e) => return Some(Err(FptError::EntryParseError(e))),
+            };
+
+            Some(Ok(Self {
+                header,
+                entries: entries.to_vec(),
+            }))
+        } else {
+            None
+        }
     }
 }
 
@@ -81,8 +135,7 @@ impl Display for FPT {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ME_FPT {
     pub base: usize,
-    pub header: FPT,
-    pub entries: Vec<FPTEntry>,
+    pub fpt: FPT,
     pub gen3dirs: Vec<CodePartitionDirectory>,
     pub gen2dirs: Vec<Gen2Directory>,
     pub fit: Result<Fit, String>,

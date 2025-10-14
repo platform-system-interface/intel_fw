@@ -1,8 +1,8 @@
 use core::fmt::{self, Display};
 use serde::{Deserialize, Serialize};
-use zerocopy_derive::{FromBytes, IntoBytes};
+use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
-#[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct Version {
     major: u16,

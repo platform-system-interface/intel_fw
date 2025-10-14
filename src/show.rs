@@ -1,6 +1,6 @@
 use intel_fw::dir::{gen2::Directory as Gen2Dir, gen3::CodePartitionDirectory};
 use intel_fw::fit::Fit;
-use intel_fw::fpt::{FPTEntry, ME_FPT};
+use intel_fw::fpt::{FPT, ME_FPT};
 
 fn print_gen2_dirs(dirs: &Vec<Gen2Dir>) {
     println!("Gen 2 directories:");
@@ -36,8 +36,12 @@ fn print_gen3_dirs(dirs: &Vec<CodePartitionDirectory>) {
     }
 }
 
-fn print_fpt_entries(entries: &mut [FPTEntry]) {
+fn print_fpt(fpt: &FPT) {
+    let FPT { header, entries } = fpt;
+    println!("{header}");
+    println!("Entries:");
     println!("  name     offset     end         size       type  notes");
+    let mut entries = entries.clone();
     entries.sort_by_key(|e| e.offset);
     for e in entries {
         println!("- {e}");
@@ -65,15 +69,13 @@ pub fn show(fpt: &ME_FPT, verbose: bool) {
     println!();
     let ME_FPT {
         base,
-        header,
-        entries,
+        fpt,
         gen3dirs,
         gen2dirs,
         fit,
     } = fpt;
-    println!("FPT at 0x{base:08x}:\n{header}");
-    println!("Entries:");
-    print_fpt_entries(&mut entries.clone());
+    println!("FPT at 0x{base:08x}:");
+    print_fpt(&fpt);
     println!();
     print_fit(&fit);
     println!();
