@@ -7,7 +7,7 @@ pub mod fpt;
 pub mod meta;
 pub mod ver;
 
-pub use fpt::ME_FPT;
+pub use fpt::ME_FW;
 use fpt::{AFSP, DLMP, EFFS, FTPR, FTUP, MDMV, MFS, NFTP};
 
 fn dump48(data: &[u8]) {
@@ -20,7 +20,7 @@ fn dump48(data: &[u8]) {
     println!("{b:02x?}");
 }
 
-pub fn parse(data: &[u8], debug: bool) -> Result<ME_FPT, String> {
+pub fn parse(data: &[u8], debug: bool) -> Result<ME_FW, String> {
     let fit = fit::Fit::new(data);
 
     let cpd_bytes = dir::gen3::CPD_MAGIC.as_bytes();
@@ -120,14 +120,13 @@ pub fn parse(data: &[u8], debug: bool) -> Result<ME_FPT, String> {
                 }
             }
 
-            let me_fpt = ME_FPT {
+            return Ok(ME_FW {
                 base,
                 fpt,
                 gen3dirs,
                 gen2dirs,
                 fit,
-            };
-            return Ok(me_fpt);
+            });
         }
         base += 16;
     }
