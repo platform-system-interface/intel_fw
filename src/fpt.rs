@@ -99,6 +99,7 @@ impl FPTEntry {
     }
 }
 
+#[cfg(test)]
 const FPT_ENTRY_SIZE: usize = size_of::<FPTEntry>();
 
 impl Display for FPTEntry {
