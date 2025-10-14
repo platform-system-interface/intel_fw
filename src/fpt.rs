@@ -147,7 +147,7 @@ impl<'a> FPT {
 
 #[allow(non_camel_case_types)]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ME_FPT {
+pub struct ME_FW {
     pub base: usize,
     pub fpt: FPT,
     pub gen3dirs: Vec<CodePartitionDirectory>,

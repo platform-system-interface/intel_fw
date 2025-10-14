@@ -1,6 +1,6 @@
 use intel_fw::dir::{gen2::Directory as Gen2Dir, gen3::CodePartitionDirectory};
 use intel_fw::fit::Fit;
-use intel_fw::fpt::{FPT, ME_FPT};
+use intel_fw::fpt::{FPT, ME_FW};
 
 fn print_gen2_dirs(dirs: &Vec<Gen2Dir>) {
     println!("Gen 2 directories:");
@@ -62,18 +62,18 @@ fn print_fit(fit: &Result<Fit, String>) {
     }
 }
 
-pub fn show(fpt: &ME_FPT, verbose: bool) {
+pub fn show(me_fw: &ME_FW, verbose: bool) {
     if verbose {
-        println!("{fpt:#02x?}");
+        println!("{me_fw:#02x?}");
     }
     println!();
-    let ME_FPT {
+    let ME_FW {
         base,
         fpt,
         gen3dirs,
         gen2dirs,
         fit,
-    } = fpt;
+    } = me_fw;
     println!("FPT at 0x{base:08x}:");
     print_fpt(&fpt);
     println!();
