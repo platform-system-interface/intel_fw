@@ -1,3 +1,7 @@
+//! For the FIT (Firmware Interface Table) spec and its revisions, see
+//! https://edc.intel.com/content/www/de/de/design/products-and-solutions/software-and-services/firmware-and-bios/firmware-interface-table/1.6/revision-history/
+//! https://cdrdv2-public.intel.com/599500/599500_FW_Interface_Table_BIOS_Spec_Rev1p6.pdf
+
 use core::fmt::{self, Display};
 use serde::{Deserialize, Serialize};
 use zerocopy::{FromBytes, Ref};
