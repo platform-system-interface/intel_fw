@@ -9,6 +9,7 @@ use crate::dir::man::Manifest;
 use crate::meta::get_meta_for_key;
 
 pub const CPD_MAGIC: &str = "$CPD";
+pub const CPD_MAGIC_BYTES: &[u8] = CPD_MAGIC.as_bytes();
 
 // see https://troopers.de/downloads/troopers17/TR17_ME11_Static.pdf
 #[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
