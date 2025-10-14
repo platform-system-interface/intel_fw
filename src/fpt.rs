@@ -183,3 +183,27 @@ pub fn get_part_info(n: &str) -> (PartitionType, &str) {
         _ => (PartitionType::None, "[> UNKNOWN <]"),
     }
 }
+
+#[cfg(test)]
+static DATA: &[u8] = include_bytes!("../tests/me11.fpt");
+
+#[cfg(test)]
+static FPT_CLEANED: &[u8] = include_bytes!("../tests/me11_cleaned.fpt");
+
+#[test]
+fn parse_size_error() {
+    let parsed = FPT::parse(&DATA[16..70]);
+    assert!(parsed.is_some());
+    let fpt_res = parsed.unwrap();
+    assert!(matches!(fpt_res, Err(FptError::EntryParseError(_))));
+}
+
+#[test]
+fn parse_okay_fpt() {
+    let parsed = FPT::parse(&DATA[16..]);
+    assert!(parsed.is_some());
+    let fpt_res = parsed.unwrap();
+    assert!(fpt_res.is_ok());
+    let fpt = fpt_res.unwrap();
+    assert_eq!(fpt.header.entries as usize, fpt.entries.len());
+}
