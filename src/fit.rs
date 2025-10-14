@@ -20,7 +20,12 @@ impl Display for FitHeader {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Header counts as entry, but we want the actual number of entries
         let e = self.entries - 1;
-        write!(f, "{e} entries")
+        let en = format!("{e} entries");
+        // Expected to be 0x0100 as per spec
+        let v = self.version;
+        let ve = format!("version {v:04x}");
+        let cs = format!("checksum: {:02x}", self.checksum);
+        write!(f, "{en}, {ve}, {cs}")
     }
 }
 
