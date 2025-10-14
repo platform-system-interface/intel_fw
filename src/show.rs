@@ -1,6 +1,12 @@
-use intel_fw::dir::{gen2::Directory as Gen2Dir, gen3::CodePartitionDirectory};
-use intel_fw::fit::{Fit, FitError};
-use intel_fw::fpt::{FPT, ME_FW};
+use log::{error, warn};
+
+use intel_fw::{
+    Firmware,
+    dir::{gen2::Directory as Gen2Dir, gen3::CodePartitionDirectory},
+    fit::Fit,
+    fpt::FPT,
+    me::{Directories, ME},
+};
 
 fn print_gen2_dirs(dirs: &Vec<Gen2Dir>) {
     println!("Gen 2 directories:");
@@ -36,8 +42,14 @@ fn print_gen3_dirs(dirs: &Vec<CodePartitionDirectory>) {
     }
 }
 
-fn print_fpt(fpt: &FPT) {
-    let FPT { header, entries } = fpt;
+fn print_me(me: &ME) {
+    println!("FPT at 0x{:08x}:", me.base);
+    let FPT {
+        offset,
+        header,
+        entries,
+    } = &me.fpt;
+    println!("Offset: {offset:08x}");
     println!("{header}");
     println!("Entries:");
     println!("  name     offset     end         size       type  notes");
@@ -46,43 +58,40 @@ fn print_fpt(fpt: &FPT) {
     for e in entries {
         println!("- {e}");
     }
-}
-
-fn print_fit(fit: &Result<Fit, FitError>) {
-    match fit {
-        Ok(fit) => {
-            println!("FIT @ {:08x}, {}", fit.offset, fit.header);
-            for e in &fit.entries {
-                println!("  {e}");
-            }
-        }
-        Err(e) => {
-            log::error!("Could not parse FIT: {e:?}");
-        }
+    match &me.dirs {
+        Directories::Gen2(dirs) => print_gen2_dirs(dirs),
+        Directories::Gen3(dirs) => print_gen3_dirs(dirs),
     }
 }
 
-pub fn show(me_fw: &ME_FW, verbose: bool) {
+fn print_fit(fit: &Fit) {
+    println!("FIT @ {:08x}, {}", fit.offset, fit.header);
+    for e in &fit.entries {
+        println!("  {e}");
+    }
+}
+
+pub fn show(fw: &Firmware, verbose: bool) {
     if verbose {
-        println!("{me_fw:#02x?}");
+        println!("{fw:#02x?}");
     }
     println!();
-    let ME_FW {
-        base,
-        fpt,
-        gen3dirs,
-        gen2dirs,
-        fit,
-    } = me_fw;
-    println!("FPT at 0x{base:08x}:");
-    print_fpt(fpt);
-    println!();
-    print_fit(fit);
-    println!();
-    if !gen2dirs.is_empty() {
-        print_gen2_dirs(&gen2dirs);
+    match &fw.ifd {
+        Ok(ifd) => println!("{ifd}"),
+        Err(e) => warn!("Could not parse IFD: {e:?}"),
     }
-    if !gen3dirs.is_empty() {
-        print_gen3_dirs(&gen3dirs);
+    if let Some(me_res) = &fw.me {
+        match me_res {
+            Ok(me) => print_me(&me),
+            Err(e) => error!("ME firmware could not be parsed: {e:?}"),
+        }
+    } else {
+        error!("No ME firmware found");
     }
+    println!();
+    match &fw.fit {
+        Ok(fit) => print_fit(&fit),
+        Err(e) => warn!("Could not parse FIT: {e:?}"),
+    }
+    println!();
 }

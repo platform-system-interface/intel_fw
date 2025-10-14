@@ -1,12 +1,12 @@
 use std::fs;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use log::{debug, error, info, trace, warn};
+use log::{debug, info};
 
 mod clean;
 mod show;
 
-use intel_fw::parse;
+use intel_fw::Firmware;
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 enum Partition {
@@ -55,9 +55,21 @@ enum MeCommand {
         /// File to read
         file_name: String,
     },
-    /// Display the (CS)ME high-level structures
+    /// Display the (CS)ME high-level structures (full image or ME region)
     #[clap(verbatim_doc_comment)]
     Show {
+        /// File to read
+        file_name: String,
+    },
+    /// Scan for (CS)ME data structures (useful for update images)
+    #[clap(verbatim_doc_comment)]
+    Scan {
+        /// File to read
+        file_name: String,
+    },
+    /// Check for consistency (full image or ME region)
+    #[clap(verbatim_doc_comment)]
+    Check {
         /// File to read
         file_name: String,
     },
@@ -146,27 +158,21 @@ fn main() {
                 }
                 info!("Reading {file_name}...");
                 let data = fs::read(file_name).unwrap();
-                match parse(&data, debug) {
-                    Ok(fpt) => {
-                        show::show(&fpt, verbose);
-                        println!();
-                        todo!("clean");
-                    }
-                    Err(e) => {
-                        error!("Could not parse ME FPT: {e}");
-                    }
-                }
+                let fw = Firmware::parse(&data, debug);
+                show::show(&fw, verbose);
+                println!();
+                todo!("clean");
+            }
+            MeCommand::Scan { file_name } => {
+                todo!("scan {file_name}")
+            }
+            MeCommand::Check { file_name } => {
+                todo!("check {file_name}")
             }
             MeCommand::Show { file_name } => {
                 let data = fs::read(file_name).unwrap();
-                match parse(&data, debug) {
-                    Ok(fpt) => {
-                        show::show(&fpt, verbose);
-                    }
-                    Err(e) => {
-                        error!("Could not parse ME FPT: {e}");
-                    }
-                }
+                let fw = Firmware::parse(&data, debug);
+                show::show(&fw, verbose);
             }
         },
     }

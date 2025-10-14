@@ -22,12 +22,7 @@ use serde::{Deserialize, Serialize};
 use zerocopy::{AlignmentError, ConvertError, FromBytes, IntoBytes, Ref, SizeError};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
-use crate::{
-    dir::gen2::Directory as Gen2Directory,
-    dir::gen3::CodePartitionDirectory,
-    fit::{Fit, FitError},
-    ver::Version,
-};
+use crate::ver::Version;
 
 const FPT_MAGIC: &str = "$FPT";
 
@@ -127,44 +122,65 @@ impl Display for FPTEntry {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FPT {
+    pub offset: usize,
     pub header: FPTHeader,
     pub entries: Vec<FPTEntry>,
 }
 
-impl<'a> FPT {
-    pub fn parse(data: &'a [u8]) -> Option<Result<Self, FptError<'a>>> {
-        let m = &data[..4];
-        if m.eq(FPT_MAGIC.as_bytes()) {
-            let header = match FPTHeader::read_from_prefix(data) {
-                Ok((h, _)) => h,
-                Err(e) => return Some(Err(FptError::HeaderParseError(e))),
-            };
-            // NOTE: Skip $FPT (header) itself
-            let slice = &data[FPT_HEADER_SIZE..];
-            let count = header.entries as usize;
-            let entries = match Ref::<_, [FPTEntry]>::from_prefix_with_elems(slice, count) {
-                Ok((r, _)) => r,
-                Err(e) => return Some(Err(FptError::EntryParseError(e))),
-            };
+pub const FPT_SIZE: usize = size_of::<FPT>();
 
-            Some(Ok(Self {
-                header,
-                entries: entries.to_vec(),
-            }))
+// The FPT magic is either at the start or at a 16 bytes offset.
+fn determine_offset(data: &[u8]) -> Option<usize> {
+    let m = &data[..4];
+    if m.eq(FPT_MAGIC.as_bytes()) {
+        return Some(0);
+    } else {
+        let m = &data[16..20];
+        if m.eq(FPT_MAGIC.as_bytes()) {
+            return Some(16);
         } else {
-            None
+            return None;
         }
     }
 }
 
-#[allow(non_camel_case_types)]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ME_FW {
-    pub base: usize,
-    pub fpt: FPT,
-    pub gen3dirs: Vec<CodePartitionDirectory>,
-    pub gen2dirs: Vec<Gen2Directory>,
-    pub fit: Result<Fit, FitError>,
+impl<'a> FPT {
+    pub fn parse(data: &'a [u8]) -> Option<Result<Self, FptError<'a>>> {
+        let Some(offset) = determine_offset(data) else {
+            return None;
+        };
+        let d = &data[offset..];
+        let header = match FPTHeader::read_from_prefix(d) {
+            Ok((h, _)) => h,
+            Err(e) => return Some(Err(FptError::HeaderParseError(e))),
+        };
+        // NOTE: Skip $FPT (header) itself
+        let slice = &d[FPT_HEADER_SIZE..];
+        let count = header.entries as usize;
+        let entries = match Ref::<_, [FPTEntry]>::from_prefix_with_elems(slice, count) {
+            Ok((r, _)) => r,
+            Err(e) => return Some(Err(FptError::EntryParseError(e))),
+        };
+
+        Some(Ok(Self {
+            offset,
+            header,
+            entries: entries.to_vec(),
+        }))
+    }
+
+    // Find an FPT in a given slice, and if the magic is detected, get the
+    // parse result and the offset.
+    pub fn scan(data: &'a [u8]) -> Option<(Result<Self, FptError<'a>>, usize)> {
+        let mut o = 0;
+        while o + 16 + FPT_SIZE <= data.len() {
+            if let Some(fpt) = Self::parse(data) {
+                return Some((fpt, o));
+            }
+            o += 16;
+        }
+        None
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -218,7 +234,7 @@ static FPT_CLEANED: &[u8] = include_bytes!("../tests/me11_cleaned.fpt");
 
 #[test]
 fn parse_size_error() {
-    let parsed = FPT::parse(&DATA[16..70]);
+    let parsed = FPT::parse(&DATA[..70]);
     assert!(parsed.is_some());
     let fpt_res = parsed.unwrap();
     assert!(matches!(fpt_res, Err(FptError::EntryParseError(_))));
@@ -235,8 +251,18 @@ fn parse_okay_fpt() {
 }
 
 #[test]
+fn parse_okay_fpt_with_offset() {
+    let parsed = FPT::parse(&DATA);
+    assert!(parsed.is_some());
+    let fpt_res = parsed.unwrap();
+    assert!(fpt_res.is_ok());
+    let fpt = fpt_res.unwrap();
+    assert_eq!(fpt.header.entries as usize, fpt.entries.len());
+}
+
+#[test]
 fn checksum() {
-    let parsed = FPT::parse(&DATA[16..12 * 32 + 16]);
+    let parsed = FPT::parse(&DATA);
     let fpt = parsed.unwrap().unwrap();
     assert_eq!(fpt.header.checksum(), fpt.header.checksum);
 }
