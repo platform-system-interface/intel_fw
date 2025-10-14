@@ -15,10 +15,12 @@ use serde::{Deserialize, Serialize};
 use zerocopy::{AlignmentError, ConvertError, FromBytes, IntoBytes, Ref, SizeError};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
-use crate::dir::gen2::Directory as Gen2Directory;
-use crate::dir::gen3::CodePartitionDirectory;
-use crate::fit::Fit;
-use crate::ver::Version;
+use crate::{
+    dir::gen2::Directory as Gen2Directory,
+    dir::gen3::CodePartitionDirectory,
+    fit::{Fit, FitError},
+    ver::Version,
+};
 
 const FPT_MAGIC: &str = "$FPT";
 
@@ -155,7 +157,7 @@ pub struct ME_FW {
     pub fpt: FPT,
     pub gen3dirs: Vec<CodePartitionDirectory>,
     pub gen2dirs: Vec<Gen2Directory>,
-    pub fit: Result<Fit, String>,
+    pub fit: Result<Fit, FitError>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
