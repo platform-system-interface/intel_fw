@@ -75,9 +75,9 @@ pub fn show(me_fw: &ME_FW, verbose: bool) {
         fit,
     } = me_fw;
     println!("FPT at 0x{base:08x}:");
-    print_fpt(&fpt);
+    print_fpt(fpt);
     println!();
-    print_fit(&fit);
+    print_fit(fit);
     println!();
     if !gen2dirs.is_empty() {
         print_gen2_dirs(&gen2dirs);
