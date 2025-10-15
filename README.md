@@ -26,7 +26,7 @@ For more understanding, see also any of these additional resources:
 
 ## Milestones
 
-- [ ] bootstrap a new, general CLI, `intel_fw`, with an `me` subcommand
+- [x] bootstrap a new, general CLI, `intel_fw`, with an `me` subcommand
     - mimic the `me_cleaner` CLI, using similar+same arguments and switches for
       compatibility
 - [ ] port the logic to Rust, using `me_cleaner`-edited images as test fixtures
