@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use core::mem;
 use log::{error, warn};
 
