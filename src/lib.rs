@@ -1,5 +1,5 @@
 use core::mem;
-use log::error;
+use log::{error, warn};
 
 pub mod dir;
 pub mod fit;
@@ -25,7 +25,7 @@ pub fn parse(data: &[u8], debug: bool) -> Result<ME_FW, String> {
     let ifd = ifd::IFD::parse(&data);
     match ifd {
         Ok(ifd) => println!("{ifd}"),
-        Err(e) => println!("Not a full image: {e:?}"),
+        Err(e) => warn!("Not a full image: {e:?}"),
     }
 
     let fit = fit::Fit::new(data);
