@@ -29,8 +29,6 @@
 
 use std::fmt::Display;
 
-use log::error;
-
 use bitfield_struct::bitfield;
 use serde::{Deserialize, Serialize};
 use zerocopy::FromBytes;
