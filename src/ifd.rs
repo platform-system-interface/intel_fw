@@ -194,16 +194,18 @@ pub struct Regions {
     flreg2: FlashRegion,
     flreg3: FlashRegion,
     flreg4: FlashRegion,
+    flreg5: FlashRegion,
 }
 
 impl Display for Regions {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let r0 = format!("   Flash descriptor:          {}", self.flreg0);
-        let r1 = format!("   BIOS (host) firmware:      {}", self.flreg1);
-        let r2 = format!("   ME (coprocessor) firmware: {}", self.flreg2);
-        let r3 = format!("   Gigabit ethernet data:     {}", self.flreg3);
-        let r4 = format!("   Platform data:             {}", self.flreg4);
-        write!(f, "{r0}\n{r1}\n{r2}\n{r3}\n{r4}")
+        let r0 = format!("   Flash descriptor (IFD):   {}", self.flreg0);
+        let r1 = format!("   BIOS (host) firmware:     {}", self.flreg1);
+        let r2 = format!("   (CS)ME firmware:          {}", self.flreg2);
+        let r3 = format!("   Gigabit ethernet data:    {}", self.flreg3);
+        let r4 = format!("   Platform data:            {}", self.flreg4);
+        let r5 = format!("   Embedded controller (EC): {}", self.flreg5);
+        write!(f, "{r0}\n{r1}\n{r2}\n{r3}\n{r4}\n{r5}")
     }
 }
 
