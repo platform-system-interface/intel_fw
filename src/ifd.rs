@@ -1,19 +1,23 @@
-//! Intel Flash Descriptor (IFD), which was extended over time; for reference,
+//! Intel Flash Descriptor (IFD)
+//!
+//! The IFD was extended over time; for reference,
 //! see <https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/io-controller-hub-8-datasheet.pdf>
 //! and <https://edc.intel.com/content/www/us/en/design/ipla/software-development-platforms/client/platforms/alder-lake-mobile-p/intel-600-series-chipset-family-on-package-platform-controller-hub-pch-datash/002/>
 //! and <https://www.intel.com/content/www/us/en/content-details/710279/intel-600-series-and-intel-700-series-chipset-family-on-package-platform-controller-hub-pch-datasheet-volume-2-of-2.html>
 //! and <https://opensecuritytraining.info/IntroBIOS_files/Day2_02_Advanced%20x86%20-%20BIOS%20and%20SMM%20Internals%20-%20Flash%20Descriptor.pdf>
-//! and coreboot util/ifdtool
+//! and coreboot `util/ifdtool/`.
 //!
-//! NOTE: xxBA is the common abbreviation for _base address_.
+//! The IFD consists of multiple sections, which got more over generations
+//! of processors. The following table is based on the Chip 600 PCH docs.
+//! Offsets of specific sections are described via the Descriptor Map,
+//! called base addresses, commonly abbreviation as xxBA.
 //! NOTE: The base addresses are compact values and really mean bits 4..11
 //! of 25-bit values, so we nead to expand them to get the real addresses.
 //! See the implementations for the calculations.
 //!
 //! | Section                      |
 //! | ---------------------------- |
-//! | Signature                    |
-//! | Descriptor Map               |
+//! | Signature + Descriptor Map   |
 //! | Components                   |
 //! | Regions                      |
 //! | Masters                      |
