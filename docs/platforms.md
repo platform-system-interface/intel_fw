@@ -45,19 +45,20 @@ generation and specific platforms a certain firmware version range.
 
 ## Abbreviations
 
-| abbr. | expansion                                   |
-| ----- | ------------------------------------------- |
-| ACM   | Authenticated Code Module                   |
-| AMT   | Active Management Technology                |
-| CSME  | Converged Security and Manageability Engine |
-| DAL   | Dynamic Application Loader                  |
-| FIT   | Firmware Interface Table                    |
-| HAP   | High-Assurance Platform                     |
-| IFD   | Intel Flash Descriptor                      |
-| PTT   | Platform Trust Technology                   |
-| SPS   | Server Platform Services                    |
-| TXE   | Trusted Execution Engine                    |
-| TXT   | Trusted Execution Technology                |
+| abbr.     | expansion                                   |
+| --------- | ------------------------------------------- |
+| ACM       | Authenticated Code Module                   |
+| AMT       | Active Management Technology                |
+| CSME      | Converged Security and Manageability Engine |
+| DAL       | Dynamic Application Loader                  |
+| FIT       | Firmware Interface Table                    |
+| HAP       | High-Assurance Platform                     |
+| {I,M,P}CH | {I/O,Memory,Platform} Controller Hub[^9]    |
+| IFD       | Intel Flash Descriptor                      |
+| PTT       | Platform Trust Technology                   |
+| SPS       | Server Platform Services                    |
+| TXE       | Trusted Execution Engine                    |
+| TXT       | Trusted Execution Technology                |
 
 [^1]: <https://www.amplicon-usa.com/actions/viewDoc.cfm?doc=iAMT-white-paper.pdf>
 [^2]: <https://edc.intel.com/content/www/us/en/design/ipla/software-development-platforms/client/platforms/alder-lake-desktop/12th-generation-intel-core-processors-datasheet-volume-1-of-2/010/boot-guard-technology/>
@@ -67,3 +68,4 @@ generation and specific platforms a certain firmware version range.
 [^6]: <https://www.intel.com/content/www/us/en/support/articles/000055675/technologies.html?wapkw=csme>
 [^7]: <https://prohoster.info/en/blog/administrirovanie/doverennaya-zagruzka-shryodingera-intel-boot-guard>
 [^8]: <https://github.com/flothrone/bootguard>
+[^9]: <https://en.wikipedia.org/wiki/Intel_Hub_Architecture>
