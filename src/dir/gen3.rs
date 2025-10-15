@@ -11,7 +11,7 @@ use crate::meta::get_meta_for_key;
 pub const CPD_MAGIC: &str = "$CPD";
 pub const CPD_MAGIC_BYTES: &[u8] = CPD_MAGIC.as_bytes();
 
-// see https://troopers.de/downloads/troopers17/TR17_ME11_Static.pdf
+// see <https://troopers.de/downloads/troopers17/TR17_ME11_Static.pdf>
 #[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C, packed)]
 pub struct CPDHeader {
@@ -25,7 +25,7 @@ pub struct CPDHeader {
 
 const HEADER_SIZE: usize = core::mem::size_of::<CPDHeader>();
 
-// See https://github.com/corna/me_cleaner check_and_remove_modules_gen3
+// See <https://github.com/corna/me_cleaner> `check_and_remove_modules_gen3()`
 #[bitfield(u32)]
 #[derive(Immutable, FromBytes, IntoBytes, Serialize, Deserialize)]
 pub struct FlagsAndOffset {
@@ -36,7 +36,7 @@ pub struct FlagsAndOffset {
     pub _unknown: u8,
 }
 
-// See https://github.com/skochinsky/me-tools class CPDEntry
+// See <https://github.com/skochinsky/me-tools> class `CPDEntry`
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct CPDEntry {
