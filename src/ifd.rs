@@ -181,7 +181,8 @@ impl Display for FlashRegion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let b = self.ba();
         let l = self.la();
-        write!(f, "{b:08x} - {l:08x}")
+        let u = if b > l { " (unused)" } else { "" };
+        write!(f, "{b:08x} - {l:08x}{u}")
     }
 }
 
