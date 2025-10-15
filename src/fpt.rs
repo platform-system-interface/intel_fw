@@ -1,8 +1,15 @@
+//! Flash Partition Table (FPT)
+//!
+//! Knowledge herein is solely based on independent analysis efforts.
+//! The expansion of the acronym FPT is confirmed by Intel in the appendix
+//! on ME Firmware Status Registers in
+//! <https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/intel-power-node-manager-v3-spec.pdf>.
 //! For references regarding data structures and logic,
 //! see <https://github.com/peterbjornx/meimagetool> `...intelme/model/fpt/` (Java)
 //! and <https://github.com/linuxboot/fiano/blob/main/pkg/intel/me/structures.go>
 //! and <https://github.com/platomav/MEAnalyzer>
 //! and <https://github.com/corna/me_cleaner>
+//! and <https://github.com/mostav02/Remove_IntelME_FPT>.
 
 use core::{
     convert::Infallible,
