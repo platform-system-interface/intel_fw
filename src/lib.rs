@@ -4,6 +4,7 @@ use log::error;
 pub mod dir;
 pub mod fit;
 pub mod fpt;
+pub mod ifd;
 pub mod meta;
 pub mod ver;
 
@@ -21,6 +22,12 @@ fn dump48(data: &[u8]) {
 }
 
 pub fn parse(data: &[u8], debug: bool) -> Result<ME_FW, String> {
+    let ifd = ifd::IFD::parse(&data);
+    match ifd {
+        Ok(ifd) => println!("{ifd}"),
+        Err(e) => println!("Not a full image: {e:?}"),
+    }
+
     let fit = fit::Fit::new(data);
 
     let mut gen2dirs = Vec::<dir::gen2::Directory>::new();
