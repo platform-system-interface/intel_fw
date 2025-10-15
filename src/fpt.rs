@@ -1,8 +1,8 @@
 //! For references regarding data structures and logic,
-//! see https://github.com/peterbjornx/meimagetool ...intelme/model/fpt/ (Java)
-//! and https://github.com/linuxboot/fiano/blob/main/pkg/intel/me/structures.go
-//! and https://github.com/platomav/MEAnalyzer
-//! and https://github.com/corna/me_cleaner
+//! see <https://github.com/peterbjornx/meimagetool> `...intelme/model/fpt/` (Java)
+//! and <https://github.com/linuxboot/fiano/blob/main/pkg/intel/me/structures.go>
+//! and <https://github.com/platomav/MEAnalyzer>
+//! and <https://github.com/corna/me_cleaner>
 
 use core::{
     convert::Infallible,
