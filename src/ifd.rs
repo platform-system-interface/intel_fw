@@ -27,6 +27,10 @@
 //! | Descriptor Upper Map         |
 //! | OEM Section                  |
 
+// We retain the all-uppercase acronyms in the struct definitions.
+// Lowercase helpers are provided through implementations.
+#![allow(non_snake_case)]
+
 use std::fmt::Display;
 
 use bitfield_struct::bitfield;
