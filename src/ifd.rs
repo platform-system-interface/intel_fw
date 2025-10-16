@@ -111,9 +111,10 @@ impl FLMAP1 {
 impl Display for FLMAP1 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmba = self.fmba();
-        let isl = self.isl();
         let nm = self.nm();
-        let fisba = self.FISBA();
+        // NOTE: On later platforms, FISBA was changed into FPSBA (PCH Strap).
+        let fisba = self.fisba();
+        let isl = self.isl();
         let m = format!("             masters:  {nm}, base: 0x{fmba:08x}");
         let i = format!("   ICH8 strap length: {isl}, base: 0x{fisba:08x}");
         write!(f, "{m}\n{i}")
