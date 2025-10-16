@@ -176,6 +176,10 @@ impl FlashRegion {
     fn la(self) -> usize {
         self.limit() as usize * 4096 + 4095
     }
+
+    pub fn range(self) -> (usize, usize) {
+        (self.ba(), self.la() + 1)
+    }
 }
 
 impl Display for FlashRegion {
