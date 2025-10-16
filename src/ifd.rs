@@ -235,7 +235,7 @@ impl Display for IFD {
 
 const OFFSET: usize = 16;
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum IfdError {
     NoIfd(String),
 }
