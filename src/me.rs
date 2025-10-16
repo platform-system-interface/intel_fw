@@ -10,7 +10,7 @@ use crate::{
     fpt::{AFSP, DLMP, EFFS, FPT, FTPR, FTUP, MDMV, MFS, NFTP},
 };
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub enum Generation {
     Gen1,
     Gen2,

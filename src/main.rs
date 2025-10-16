@@ -1,3 +1,8 @@
+//! Modern tool to work on Intel firmware images.
+//!
+//! Detecting what's given is unfortunately hard.
+//! E.g. Lenovo ThinkPad X270: Skylake/Kaby Lake (SKL/KBL), 100/200 series chipsets
+
 use std::{
     fs::{self, File},
     io::Write,
