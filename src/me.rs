@@ -9,7 +9,7 @@ use crate::{
     fpt::{DIR_PARTS, FPT, FPT_SIZE, FS_PARTS, FTUP},
 };
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub enum Generation {
     Gen1,
     Gen2,
