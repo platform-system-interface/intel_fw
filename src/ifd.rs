@@ -2,13 +2,20 @@
 //!
 //! The IFD was extended over time; for reference,
 //! see <https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/io-controller-hub-8-datasheet.pdf>
+//! and <https://www.intel.com/content/dam/doc/datasheet/7300-chipset-memory-controller-hub-datasheet.pdf>
+//! and <https://www.intel.com/content/www/us/en/content-details/332690/intel-100-series-chipset-family-platform-controller-hub-pch-datasheet-volume-1.html>
+//! and <https://www.intel.com/content/www/us/en/content-details/332691/intel-100-series-chipset-family-platform-controller-hub-pch-datasheet-volume-2.html>
 //! and <https://edc.intel.com/content/www/us/en/design/ipla/software-development-platforms/client/platforms/alder-lake-mobile-p/intel-600-series-chipset-family-on-package-platform-controller-hub-pch-datash/002/>
 //! and <https://www.intel.com/content/www/us/en/content-details/710279/intel-600-series-and-intel-700-series-chipset-family-on-package-platform-controller-hub-pch-datasheet-volume-2-of-2.html>
 //! and <https://opensecuritytraining.info/IntroBIOS_files/Day2_02_Advanced%20x86%20-%20BIOS%20and%20SMM%20Internals%20-%20Flash%20Descriptor.pdf>
 //! and coreboot `util/ifdtool/`.
 //!
-//! The IFD consists of multiple sections, which got more over generations
-//! of processors. The following table is based on the Chip 600 PCH docs.
+//! The IFD consists of multiple fields and sections, which got more over generations
+//! of processors. Some semantics also changed over time.
+//! Unfortunately, there is no clear single source of truth documenting which
+//! processors would require which exact fields, either. One major change came with
+//! Skylake, as per coreboot commit `1f7fd720c81755144423f2d4062c39cc651adc0a`.
+//! The following table is based on the 600 series chipset PCH datasheet.
 //! Offsets of specific sections are described via the Descriptor Map,
 //! called base addresses, commonly abbreviation as xxBA.
 //! NOTE: The base addresses are compact values and really mean bits 4..11
@@ -26,6 +33,10 @@
 //! | Management Engine VSCC Table |
 //! | Descriptor Upper Map         |
 //! | OEM Section                  |
+//!
+//! For a list of acronyms, see the Serial Peripheral Interface (SPI) section
+//! in the 400 or 600 series chipset PCH datasheet volume 1.
+//! <https://edc.intel.com/content/www/us/en/design/ipla/software-development-platforms/client/platforms/alder-lake-mobile-p/intel-600-series-chipset-family-on-package-platform-controller-hub-pch-datash/serial-peripheral-interface-spi/>
 
 // We retain the all-uppercase acronyms in the struct definitions.
 // Lowercase helpers are provided through implementations.
