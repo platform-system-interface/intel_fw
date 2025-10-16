@@ -42,11 +42,11 @@
 // Lowercase helpers are provided through implementations.
 #![allow(non_snake_case)]
 
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 
 use bitfield_struct::bitfield;
 use serde::{Deserialize, Serialize};
-use zerocopy::FromBytes;
+use zerocopy::{FromBytes, Ref};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 // NOTE: This is the LE representation.
@@ -89,8 +89,8 @@ impl Display for FLMAP0 {
         let nc = self.nc();
         let frba = self.frba();
         let nr = self.nr();
-        let c = format!("          components:  {nc}, base: 0x{fcba:08x}");
-        let r = format!("             regions:  {nr}, base: 0x{frba:08x}");
+        let c = format!("        components:  {nc}, base: 0x{fcba:08x}");
+        let r = format!("           regions:  {nr}, base: 0x{frba:08x}");
         write!(f, "{c}\n{r}")
     }
 }
@@ -130,9 +130,9 @@ impl Display for FLMAP1 {
         // NOTE: On later platforms, FISBA was changed into FPSBA (PCH Strap).
         let fisba = self.fisba();
         let isl = self.isl();
-        let m = format!("             masters:  {nm}, base: 0x{fmba:08x}");
-        let i = format!("   ICH8 strap length: {isl}, base: 0x{fisba:08x}");
-        write!(f, "{m}\n{i}")
+        let m = format!("           masters:  {nm}, base: 0x{fmba:08x}");
+        let s = format!("   ICH8/PCH straps: {isl:2}, base: 0x{fisba:08x}");
+        write!(f, "{m}\n{s}")
     }
 }
 
@@ -153,11 +153,13 @@ impl FLMAP2 {
     }
 }
 
+// Only for 100 up to 900 series chipset PCHs, per coreboot util/ifdtool
 impl Display for FLMAP2 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmsba = self.fmsba();
+        // coreboot calls this PSL
         let msl = self.msl();
-        write!(f, "    MCH strap length:  {msl}, base: 0x{fmsba:08x}")
+        write!(f, "        MCH straps: {msl:2}, base: 0x{fmsba:08x}")
     }
 }
 
@@ -167,8 +169,8 @@ pub struct Header {
     magic: u32,
     flmap0: FLMAP0,
     flmap1: FLMAP1,
-    flmap2: FLMAP2,
-    flmap3: u32, // TODO
+    flmap2: FLMAP2, // 100x series
+    flmap3: u32,    // TODO: 500, 600, 800 and 900 series
 }
 
 #[bitfield(u32)]
@@ -229,11 +231,13 @@ impl Display for Regions {
     }
 }
 
-#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone)]
 #[repr(C)]
 pub struct IFD {
     pub header: Header,
     pub regions: Regions,
+    pub pch_straps: Vec<u32>,
+    pub mch_straps: Vec<u32>,
 }
 
 impl Display for IFD {
@@ -245,6 +249,46 @@ impl Display for IFD {
         writeln!(f, "{}", self.header.flmap2)?;
         writeln!(f, "== Regions ==")?;
         write!(f, "{}", self.regions)
+    }
+}
+
+impl Debug for IFD {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{self}")?;
+        writeln!(f, "== ICH/PCH Straps ==")?;
+        for (i, s) in self.pch_straps.iter().enumerate() {
+            writeln!(f, "  {i:2}: {s:08x}")?;
+        }
+        writeln!(f, "== MCH Straps ==")?;
+        for (i, s) in self.mch_straps.iter().enumerate() {
+            writeln!(f, "  {i:2}: {s:08x}")?;
+        }
+        write!(f, "")
+    }
+}
+
+// Extract a bit from a given byte, as bool.
+fn extract_bit(byte: u32, bit: u32) -> bool {
+    byte >> bit & 1 == 1
+}
+
+impl IFD {
+    // from <https://review.coreboot.org/c/coreboot/+/82272>
+    // <https://edc.intel.com/content/www/us/en/design/products-and-solutions/processors-and-chipsets/700-series-chipset-family-platform-controller-hub-datasheet-volume-1-of/004/intel-direct-connect-interface-dci/>
+    pub fn dci(&self) -> bool {
+        extract_bit(self.pch_straps[0], 17)
+    }
+
+    pub fn hap(&self) -> bool {
+        extract_bit(self.pch_straps[0], 16)
+    }
+
+    pub fn ich_me_disabled(&self) -> bool {
+        extract_bit(self.pch_straps[0], 0)
+    }
+
+    pub fn alt_me_disabled(&self) -> bool {
+        extract_bit(self.pch_straps[10], 7)
     }
 }
 
@@ -271,6 +315,21 @@ impl IFD {
         }
         let (regions, _) = Regions::read_from_prefix(&data[header.flmap0.frba()..]).unwrap();
 
-        Ok(Self { header, regions })
+        let count = header.flmap1.isl();
+        let slice = &data[header.flmap1.fisba()..];
+        let (straps, _) = Ref::<_, [u32]>::from_prefix_with_elems(slice, count).unwrap();
+        let pch_straps = straps.to_vec();
+
+        let count = header.flmap2.msl();
+        let slice = &data[header.flmap2.fmsba()..];
+        let (straps, _) = Ref::<_, [u32]>::from_prefix_with_elems(slice, count).unwrap();
+        let mch_straps = straps.to_vec();
+
+        Ok(Self {
+            header,
+            regions,
+            mch_straps,
+            pch_straps,
+        })
     }
 }
