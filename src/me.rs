@@ -26,6 +26,7 @@ pub enum Directories {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ME {
     pub base: usize,
+    pub generation: Generation,
     pub fpt: FPT,
     pub dirs: Directories,
 }
@@ -108,17 +109,22 @@ impl ME {
                 }
             }
 
-            let dirs = {
+            let (generation, dirs) = {
                 if gen3dirs.len() > 0 {
-                    Directories::Gen3(gen3dirs)
+                    (Generation::Gen3, Directories::Gen3(gen3dirs))
                 } else if gen2dirs.len() > 0 {
-                    Directories::Gen2(gen2dirs)
+                    (Generation::Gen2, Directories::Gen2(gen2dirs))
                 } else {
                     return None;
                 }
             };
 
-            Some(Ok(Self { base, fpt, dirs }))
+            Some(Ok(Self {
+                base,
+                generation,
+                fpt,
+                dirs,
+            }))
         } else {
             None
         }
