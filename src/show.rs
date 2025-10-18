@@ -61,6 +61,8 @@ fn print_me(me: &ME) {
     match &me.dirs {
         Directories::Gen2(dirs) => print_gen2_dirs(dirs),
         Directories::Gen3(dirs) => print_gen3_dirs(dirs),
+        // TODO
+        _ => {}
     }
 }
 

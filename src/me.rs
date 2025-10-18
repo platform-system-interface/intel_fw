@@ -6,6 +6,7 @@ use crate::{
         gen3::{CPD_MAGIC_BYTES, CodePartitionDirectory},
         man::Manifest,
     },
+    fpt::FPT_SIZE,
     fpt::{AFSP, DLMP, EFFS, FPT, FTPR, FTUP, MDMV, MFS, NFTP},
 };
 
@@ -14,12 +15,14 @@ pub enum Generation {
     Gen1,
     Gen2,
     Gen3,
+    Unknown,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum Directories {
     Gen2(Vec<Gen2Directory>),
     Gen3(Vec<CodePartitionDirectory>),
+    Unknown,
 }
 
 #[allow(non_camel_case_types)]
@@ -115,7 +118,7 @@ impl ME {
                 } else if gen2dirs.len() > 0 {
                     (Generation::Gen2, Directories::Gen2(gen2dirs))
                 } else {
-                    return None;
+                    (Generation::Unknown, Directories::Unknown)
                 }
             };
 
