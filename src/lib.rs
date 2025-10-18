@@ -40,4 +40,11 @@ impl Firmware {
         let fit = Fit::new(data);
         Self { ifd, me, fit }
     }
+
+    pub fn scan(data: &[u8], debug: bool) -> Self {
+        let ifd = IFD::parse(&data);
+        let me = ME::scan(&data, debug);
+        let fit = Fit::new(&data);
+        Self { ifd, me, fit }
+    }
 }
