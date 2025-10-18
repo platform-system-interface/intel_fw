@@ -112,9 +112,11 @@ impl TryFrom<u8> for EntryType {
 
 const MAP_8M: usize = 0x007f_ffff;
 const MAP_16M: usize = 0x00ff_ffff;
+const MAP_32M: usize = 0x01ff_ffff;
 
 const SIZE_8M: usize = 8 * 1024 * 1024;
 const SIZE_16M: usize = 16 * 1024 * 1024;
+const SIZE_32M: usize = 32 * 1024 * 1024;
 
 // The flash is mapped so that it ends at 0xffff_ffff, so we need to
 // map it to resolve pointers.
@@ -122,6 +124,7 @@ fn get_mapping(size: usize) -> usize {
     match size {
         SIZE_8M => MAP_8M,
         SIZE_16M => MAP_16M,
+        SIZE_32M => MAP_32M,
         _ => MAP_16M,
     }
 }
