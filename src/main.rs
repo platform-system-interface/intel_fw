@@ -164,7 +164,9 @@ fn main() {
                 todo!("clean");
             }
             MeCommand::Scan { file_name } => {
-                todo!("scan {file_name}")
+                let data = fs::read(file_name).unwrap();
+                let fw = Firmware::scan(&data, debug);
+                show::show(&fw, verbose);
             }
             MeCommand::Check { file_name } => {
                 todo!("check {file_name}")
