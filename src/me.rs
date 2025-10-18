@@ -133,6 +133,17 @@ impl ME {
         }
     }
 
+    // Find an ME partition in a given slice, and if an FPT is detected, get the
+    // parse result, which includes the offset as its base address.
+    pub fn scan(data: &[u8], debug: bool) -> Option<Result<Self, String>> {
+        for o in (0..data.len() - FPT_SIZE - 0x10).step_by(0x40) {
+            if let Some(r) = Self::parse(&data[o..], o, debug) {
+                return Some(r);
+            }
+        }
+        None
+    }
+
     // Scan for all CPDs (there may be some not listed in FPT)
     pub fn cpd_scan(data: &[u8]) -> Vec<CodePartitionDirectory> {
         let mut gen3dirs = Vec::<CodePartitionDirectory>::new();
