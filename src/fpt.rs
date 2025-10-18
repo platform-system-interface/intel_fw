@@ -25,6 +25,7 @@ use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 use crate::ver::Version;
 
 const FPT_MAGIC: &str = "$FPT";
+const FPT_MAGIC_BYTES: &[u8] = FPT_MAGIC.as_bytes();
 
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
@@ -129,15 +130,17 @@ pub struct FPT {
 
 pub const FPT_SIZE: usize = size_of::<FPT>();
 
+const POSSIBLE_OFFSET: usize = 16;
+
 // The FPT magic is either at the start or at a 16 bytes offset.
 fn determine_offset(data: &[u8]) -> Option<usize> {
-    let m = &data[..4];
-    if m.eq(FPT_MAGIC.as_bytes()) {
+    let m = &data[..FPT_MAGIC_BYTES.len()];
+    if m.eq(FPT_MAGIC_BYTES) {
         return Some(0);
     } else {
-        let m = &data[16..20];
-        if m.eq(FPT_MAGIC.as_bytes()) {
-            return Some(16);
+        let m = &data[POSSIBLE_OFFSET..POSSIBLE_OFFSET + FPT_MAGIC_BYTES.len()];
+        if m.eq(FPT_MAGIC_BYTES) {
+            return Some(POSSIBLE_OFFSET);
         } else {
             return None;
         }
@@ -172,12 +175,10 @@ impl<'a> FPT {
     // Find an FPT in a given slice, and if the magic is detected, get the
     // parse result and the offset.
     pub fn scan(data: &'a [u8]) -> Option<(Result<Self, FptError<'a>>, usize)> {
-        let mut o = 0;
-        while o + 16 + FPT_SIZE <= data.len() {
-            if let Some(fpt) = Self::parse(data) {
+        for o in (0..data.len() - FPT_SIZE - POSSIBLE_OFFSET).step_by(0x40) {
+            if let Some(fpt) = Self::parse(&data[o..]) {
                 return Some((fpt, o));
             }
-            o += 16;
         }
         None
     }
