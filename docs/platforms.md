@@ -37,11 +37,18 @@ The following diagram is based on knowledge from various sources, including the
 Security researchers have analyzed the ME and divided hardware variants into 3
 generations[^4] thus far, each with their own multiple firmware versions,
 including security patch releases[^5][^6].
-One core aspect in security research has been Boot Guard[^7][^8].
+One core aspect in security research has been Boot Guard[^7][^8], which had
+been introduced with Haswell, Intel's 4th generation Core series platforms[^10],
+and discussed in the coreboot community[^11].
 
 Note that the ME generations roughly correspond with the overall platform, in
 that ranges of Intel platforms are expected to carry a certain ME hardware
 generation and specific platforms a certain firmware version range.
+
+## Processor names
+
+Intel publicly documents how to interpret procesor names[^12] and what their
+suffixes mean[^13].
 
 ## Abbreviations
 
@@ -52,6 +59,7 @@ generation and specific platforms a certain firmware version range.
 | CSME      | Converged Security and Manageability Engine |
 | DAL       | Dynamic Application Loader                  |
 | FIT       | Firmware Interface Table                    |
+| FPT       | Firmware Partition Table                    |
 | HAP       | High-Assurance Platform                     |
 | {I,M,P}CH | {I/O,Memory,Platform} Controller Hub[^9]    |
 | IFD       | Intel Flash Descriptor                      |
@@ -59,6 +67,14 @@ generation and specific platforms a certain firmware version range.
 | SPS       | Server Platform Services                    |
 | TXE       | Trusted Execution Engine                    |
 | TXT       | Trusted Execution Technology                |
+
+### Ambiguities
+
+There are colliding acronyms, even within this domain.
+The following abbreviations have a second meaning:
+
+- FIT: _Flash Image Tool_ (sometimes also called _FITC_)
+- FPT: _Flash Programming Tool_
 
 [^1]: <https://www.amplicon-usa.com/actions/viewDoc.cfm?doc=iAMT-white-paper.pdf>
 [^2]: <https://edc.intel.com/content/www/us/en/design/ipla/software-development-platforms/client/platforms/alder-lake-desktop/12th-generation-intel-core-processors-datasheet-volume-1-of-2/010/boot-guard-technology/>
@@ -69,3 +85,7 @@ generation and specific platforms a certain firmware version range.
 [^7]: <https://prohoster.info/en/blog/administrirovanie/doverennaya-zagruzka-shryodingera-intel-boot-guard>
 [^8]: <https://github.com/flothrone/bootguard>
 [^9]: <https://en.wikipedia.org/wiki/Intel_Hub_Architecture>
+[^10]: <https://web.archive.org/web/20201129154607/https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/4th-gen-core-family-mobile-brief.pdf>
+[^11]: <https://web.archive.org/web/20230322090345/https://patrick.georgi.family/2015/02/17/intel-boot-guard/>
+[^12]: <https://www.intel.com/content/www/us/en/processors/processor-numbers.html>
+[^13]: <https://www.intel.com/content/www/us/en/support/articles/000058567/processors/intel-core-processors.html>
