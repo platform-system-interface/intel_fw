@@ -1,4 +1,5 @@
 use core::fmt::{self, Display};
+use core::ops::Range;
 use core::str::from_utf8;
 
 use bitfield_struct::bitfield;
@@ -6,7 +7,14 @@ use serde::{Deserialize, Serialize};
 use zerocopy::{FromBytes, Ref};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
+use crate::Removables;
 use crate::dir::man::{self, Manifest};
+
+// These must never be removed. They are essential for platform initialization.
+pub const ALWAYS_RETAIN: &[&str] = &[
+    "BUP",  // bringup
+    "ROMP", //
+];
 
 const ENTRY_MAGIC: &str = "$MME";
 const ENTRY_MAGIC_BYTES: &[u8] = ENTRY_MAGIC.as_bytes();
@@ -284,5 +292,185 @@ impl Directory {
             size,
             name,
         })
+    }
+
+    fn dump_ranges(ranges: &Vec<Range<usize>>) {
+        let group_size = 4;
+        for (i, r) in ranges.iter().enumerate() {
+            if i % group_size == group_size - 1 {
+                println!("{r:08x?}");
+            } else {
+                print!("{r:08x?} ");
+            }
+        }
+        println!();
+    }
+
+    // Get the offset ranges of the chunks.
+    fn chunks_as_ranges(self: &Self, chunks: &Vec<u32>, stream_end: usize) -> Vec<Range<usize>> {
+        // NOTE: This is the end of the directory.
+        // me_cleaner uses the end of the ME region.
+        let dir_end = self.offset + self.size;
+        let mut nonzero_offsets = vec![stream_end];
+        let offsets = chunks
+            .iter()
+            .map(|c| {
+                let o = *c as usize;
+                // Highest byte contains flags. 0x80 means inactive.
+                const CHUNK_INACTIVE: usize = 0x80;
+                if o >> 24 == CHUNK_INACTIVE {
+                    0
+                } else {
+                    let xo = o & 0x00ff_ffff;
+                    if xo != 0 {
+                        nonzero_offsets.push(xo);
+                    }
+                    xo
+                }
+            })
+            .collect::<Vec<usize>>();
+        nonzero_offsets.sort();
+        // Turn offsets into ranges by finding the offset of the next chunk.
+        offsets
+            .iter()
+            .map(|offset| {
+                let o = *offset;
+                let e = if o != 0 {
+                    // NOTE: nonzero_offsets are a subset of offsets, so this should never fail.
+                    let p = nonzero_offsets.iter().position(|e| *e == o).unwrap();
+                    let next = p + 1;
+                    // The last entry has no successor.
+                    if next < nonzero_offsets.len() {
+                        nonzero_offsets[next]
+                    } else {
+                        stream_end.min(dir_end)
+                    }
+                } else {
+                    0
+                };
+                o..e
+            })
+            .collect::<Vec<Range<usize>>>()
+    }
+}
+
+impl Removables for Directory {
+    /// Removable ranges relative to the start of the directory
+    fn removables(self: &Self, retention_list: &Vec<String>) -> Vec<Range<usize>> {
+        use log::{debug, info, warn};
+        let debug = false;
+        let mut removables = vec![];
+
+        let mut unremovable_chunks = vec![];
+        let mut all_chunks = vec![];
+        let dir_offset = self.offset;
+
+        for m in &self.modules {
+            // Get the full directory entry.
+            let e = match m {
+                Module::Uncompressed(m) => m,
+                Module::Lzma(Ok(m)) => m,
+                Module::Huffman(Ok((m, h))) => {
+                    let n = m.name();
+                    let o = m.offset as usize;
+                    let s = m.size as usize;
+
+                    // NOTE: The header is always the same, since multiple
+                    // Huffman-encoded modules point to the same offset.
+                    let cs = h.header.chunk_size;
+                    if all_chunks.len() == 0 {
+                        info!("Huffman chunk size: {cs}");
+                        let stream_end = (h.header.hs0 + h.header.hs1) as usize;
+                        all_chunks = self.chunks_as_ranges(&h.chunks, stream_end);
+                    }
+
+                    const CHUNK_OFFSET: u32 = 0x10000000;
+                    // Each module occupies its own range of chunks.
+                    let b = m.mod_base - (h.header.chunk_base + CHUNK_OFFSET);
+                    let c = (m.code_size / cs) as usize;
+                    let first_chunk = (b / cs) as usize;
+                    let last_chunk = first_chunk + c;
+                    info!("Huffman compressed {n} @ {o:08x} ({s} bytes)");
+                    let a = if retention_list.contains(&n) {
+                        for o in &all_chunks[first_chunk..last_chunk + 1] {
+                            if o.start != 0 {
+                                unremovable_chunks.push(o.clone());
+                            }
+                        }
+                        "retained"
+                    } else {
+                        "removed"
+                    };
+                    info!("  Chunks {first_chunk}..{last_chunk} will be {a}");
+                    continue;
+                }
+                Module::Lzma(Err(e)) | Module::Huffman(Err(e)) => {
+                    warn!("Compressed module could not be parsed: {e}, skipping");
+                    continue;
+                }
+                Module::Unknown(m) => {
+                    let n = m.name();
+                    let o = m.offset;
+                    let s = m.size;
+                    info!("Unknown module {n} @ {o:08x} ({s} bytes)");
+                    continue;
+                }
+            };
+            let n = e.name();
+            let o = e.offset as usize;
+            let s = e.size as usize;
+
+            match &n {
+                n if retention_list.contains(n) => {
+                    info!("Retain {n} @ {o:08x} ({s} bytes)");
+                }
+                n => {
+                    info!("Remove {n} @ {o:08x} ({s} bytes)");
+                    removables.push(o..o + s);
+                }
+            }
+        }
+
+        let mut r = 0;
+        for c in &all_chunks {
+            let mut remove = true;
+            // Filter out chunks that must be kept: those in range of some unremovable chunk
+            // TODO: Simplify when Range.is_overlapping is stabiliized (currently nightly),
+            // https://doc.rust-lang.org/core/slice/trait.GetDisjointMutIndex.html#tymethod.is_overlapping
+            for u in &unremovable_chunks {
+                if (u.contains(&c.start)) || (u.contains(&(c.end - 1))) {
+                    debug!("OVERLAP: {u:06x?} (partially) contains {c:06x?}");
+                    remove = false;
+                    break;
+                }
+            }
+            if remove && c.start < c.end {
+                // NOTE: Chunks are relative to the start of the ME region (or FPT?).
+                // We provide the offset relative to the directory.
+                let o = c.start - dir_offset;
+                let e = c.end - dir_offset;
+                removables.push(o..e);
+                r += 1;
+            } else if debug && c.start != 0 {
+                debug!("KEEP {c:06x?}");
+            }
+        }
+
+        let a = &all_chunks.len();
+        let u = unremovable_chunks.len();
+        info!("Total chunks:   {a}");
+        info!("   unremovable: {u}");
+        info!("   will remove: {r}");
+
+        if debug {
+            debug!("== All chunks");
+            Self::dump_ranges(&all_chunks);
+            debug!("== Unremovable chunks");
+            Self::dump_ranges(&unremovable_chunks);
+            debug!("== All removables");
+            Self::dump_ranges(&removables);
+        }
+
+        removables
     }
 }
