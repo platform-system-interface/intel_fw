@@ -43,6 +43,9 @@ pub struct FPTHeader {
     pub uma_size_or_reserved: u32,
     pub flash_layout_or_flags: u32,
     // Not Present in ME version 7
+    /// Version of Flash Image Tool used to create the image
+    /// It is abbreviated FIT(C), though not clear what the C is for.
+    /// Note: This is NOT related to the Firmware Interface Table.
     pub fitc_ver: Version,
 }
 
