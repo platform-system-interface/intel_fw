@@ -208,6 +208,7 @@ pub fn get_part_info(n: &str) -> (PartitionType, &str) {
         FTPR_NAME => (PartitionType::Code, "Main code partition"),
         "FTUP" => (PartitionType::Code, "[NFTP]+[WCOD]+[LOCL]"),
         "DLMP" => (PartitionType::Code, "IDLM partition"),
+        "MDMV" => (PartitionType::Code, "Media protection (PAVP, JOM)"),
         "PSVN" => (PartitionType::Data, "Secure Version Number"),
         // IVBP is used in hibernation, should probably not be removed?!
         "IVBP" => (PartitionType::Data, "IV + Bring Up cache"),
