@@ -8,9 +8,11 @@ use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 use crate::dir::man::{self, Manifest};
 
-const ENTRY_MAGIC: &[u8] = b"$MME";
-const SIG_LUT: u32 = u32::from_le_bytes(*b"LLUT");
-const SIG_LZMA: u32 = u32::from_le_bytes([0x36, 0x00, 0x40, 0x00]);
+const ENTRY_MAGIC: &str = "$MME";
+const ENTRY_MAGIC_BYTES: &[u8] = ENTRY_MAGIC.as_bytes();
+pub const SIG_LUT: &str = "LLUT";
+pub const SIG_LUT_BYTES: &[u8] = SIG_LUT.as_bytes();
+pub const SIG_LZMA_BYTES: &[u8] = &[0x36, 0x00, 0x40, 0x00];
 
 // https://github.com/skochinsky/me-tools me_unpack.py MeModuleHeader2
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
