@@ -148,6 +148,7 @@ pub struct Directory {
     pub header: Header,
     pub entries: Vec<Entry>,
     pub offset: usize,
+    pub size: usize,
     pub name: String,
 }
 
@@ -155,15 +156,16 @@ impl Display for Directory {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let n = &self.name;
         let o = self.offset;
+        let s = self.size;
         let m = self.manifest;
-        write!(f, "{n} @ {o:08x}, {m}")
+        write!(f, "{n} @ {o:08x}, {s} bytes, {m}")
     }
 }
 
 const HEADER_SIZE: usize = core::mem::size_of::<Header>();
 
 impl Directory {
-    pub fn new(data: &[u8], offset: usize) -> Result<Self, String> {
+    pub fn new(data: &[u8], offset: usize, size: usize) -> Result<Self, String> {
         let Ok(manifest) = Manifest::new(data) else {
             return Err("cannot parse Gen 2 directory manifest".to_string());
         };
@@ -198,6 +200,7 @@ impl Directory {
             header,
             entries,
             offset,
+            size,
             name,
         })
     }
