@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
 use zerocopy::{AlignmentError, ConvertError, FromBytes, IntoBytes, Ref, SizeError};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
-use crate::ver::Version;
+use crate::{trans::Trans, ver::Version};
 
 pub const FTPR: &str = "FTPR";
 pub const FTUP: &str = "FTUP";
@@ -267,6 +267,33 @@ impl<'a> FPT {
     }
 }
 
+impl Trans for FPT {
+    fn clean(&mut self) {
+        let new_entries = self
+            .entries
+            .iter()
+            .filter(|e| e.name() == FTPR)
+            .map(|e| *e)
+            .collect::<Vec<FPTEntry>>();
+        self.entries = new_entries;
+        self.header.entries = self.entries.len() as u32;
+        // clear EFFS presence flag
+        // TODO: parameterize
+        self.header.flash_layout_or_flags &= 0xffff_fffe;
+        self.header.checksum = self.header_checksum();
+    }
+
+    fn to_vec(self) -> Vec<u8> {
+        let res = [
+            self.pre_header.as_bytes(),
+            self.header.as_bytes(),
+            self.entries.as_bytes(),
+        ]
+        .concat();
+        res.to_vec()
+    }
+}
+
 #[cfg(test)]
 static DATA: &[u8] = include_bytes!("../tests/me11.fpt");
 
@@ -306,4 +333,15 @@ fn checksum() {
     let parsed = FPT::parse(&DATA);
     let fpt = parsed.unwrap().unwrap();
     assert_eq!(fpt.header_checksum(), fpt.header.checksum);
+}
+
+#[test]
+fn clean() {
+    let mut fpt = FPT::parse(&DATA[16..]).unwrap().unwrap();
+    fpt.clean();
+    let cleaned = fpt.to_vec();
+    // Only one entry should now remain.
+    assert_eq!(cleaned.len(), FPT_HEADER_SIZE + FPT_ENTRY_SIZE);
+    let expected = &FPT_CLEANED[16..80];
+    assert_eq!(expected, &cleaned);
 }
