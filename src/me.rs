@@ -1,3 +1,10 @@
+//! Intel Management Engine Firmware Parser
+//!
+//! Intel provides a closed-source tool called FIT(C) to their customers for
+//! editing firmware images, as referenced in the following documents:
+//! - [FSP guide](https://cdrdv2-public.intel.com/334348/5th-gen-core-i5-5350u-eval-kit-fsp-user-guide.pdf)
+//! - [TXE guide](https://www.portwell.eu/index.php?eID=dumpFile&t=f&f=10304&token=9d79dec7d7313cf82d445b05ccd5013a6b97ee81&download=)
+
 use serde::{Deserialize, Serialize};
 
 use crate::{
