@@ -27,6 +27,8 @@ use crate::ver::Version;
 const FPT_MAGIC: &str = "$FPT";
 const FPT_MAGIC_BYTES: &[u8] = FPT_MAGIC.as_bytes();
 
+pub const FTPR_NAME: &str = "FTPR";
+
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct FPTHeader {
@@ -203,7 +205,7 @@ pub const EFFS: u32 = u32::from_be_bytes(*b"EFFS");
 // see https://troopers.de/downloads/troopers17/TR17_ME11_Static.pdf
 pub fn get_part_info(n: &str) -> (PartitionType, &str) {
     match n {
-        "FTPR" => (PartitionType::Code, "Main code partition"),
+        FTPR_NAME => (PartitionType::Code, "Main code partition"),
         "FTUP" => (PartitionType::Code, "[NFTP]+[WCOD]+[LOCL]"),
         "DLMP" => (PartitionType::Code, "IDLM partition"),
         "PSVN" => (PartitionType::Data, "Secure Version Number"),
