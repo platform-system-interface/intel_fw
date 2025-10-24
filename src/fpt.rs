@@ -10,6 +10,10 @@
 //! and <https://github.com/platomav/MEAnalyzer>
 //! and <https://github.com/corna/me_cleaner>
 //! and <https://github.com/mostav02/Remove_IntelME_FPT>.
+//!
+//! Additional related resources:
+//! - <https://cdrdv2-public.intel.com/334348/5th-gen-core-i5-5350u-eval-kit-fsp-user-guide.pdf>
+//! - <https://www.portwell.eu/index.php?eID=dumpFile&t=f&f=10304&token=9d79dec7d7313cf82d445b05ccd5013a6b97ee81&download=>
 
 use core::{
     convert::Infallible,
