@@ -104,6 +104,13 @@ impl Entry {
             data_end,
         }
     }
+
+    pub fn name(&self) -> String {
+        match std::str::from_utf8(&self.name) {
+            Ok(n) => n.trim_end_matches('\0').to_string(),
+            Err(_) => format!("{:02x?}", &self.name),
+        }
+    }
 }
 
 impl Display for BinaryMap {
