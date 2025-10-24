@@ -8,6 +8,12 @@ use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 use crate::dir::man::{self, Manifest};
 
+// These must never be removed. They are essential for platform initialization.
+pub const ALWAYS_RETAIN: &[&str] = &[
+    "ROMP", //
+    "BUP",  // bringup
+];
+
 const ENTRY_MAGIC: &str = "$MME";
 const ENTRY_MAGIC_BYTES: &[u8] = ENTRY_MAGIC.as_bytes();
 pub const SIG_LUT: &str = "LLUT";
@@ -285,4 +291,193 @@ impl Directory {
             name,
         })
     }
+
+    pub fn removable_entries(self, blocklist: &Vec<String>) -> Vec<(usize, usize)> {
+        use log::info;
+        let mut removables = Vec::<(usize, usize)>::new();
+
+        let mut unremovable_chunks = vec![];
+        let mut all_chunks = vec![];
+        let dir_offset = self.offset;
+
+        for m in &self.modules {
+            // Get the full directory entry.
+            let e = match m {
+                Module::Uncompressed(m) => m,
+                Module::Lzma(Ok(m)) => m,
+                Module::Huffman(Ok((m, h))) => {
+                    let n = m.name();
+                    let o = m.offset as usize;
+                    let s = m.size as usize;
+
+                    // NOTE: The header is always the same, since multiple
+                    // Huffman-encoded modules point to the same offset.
+                    let cs = h.header.chunk_size;
+                    if all_chunks.len() == 0 {
+                        info!("Huffman chunk size: {cs}");
+                        let stream_end = (h.header.hs0 + h.header.hs1) as usize;
+                        all_chunks = self.chunks_as_ranges(&h.chunks, stream_end);
+                    }
+
+                    // Each module occupies its own range of chunks.
+                    let b = m.mod_base - (h.header.chunk_base + 0x10000000);
+                    let c = (m.code_size / cs) as usize;
+                    let first_chunk = (b / cs) as usize;
+                    let last_chunk = first_chunk + c;
+                    info!("Huffman compressed {n} @ {o:08x} ({s} bytes)");
+                    let a = if blocklist.contains(&n) {
+                        for o in &all_chunks[first_chunk..last_chunk + 1] {
+                            if o.0 != 0 {
+                                unremovable_chunks.push(o.clone());
+                            }
+                        }
+                        "retained"
+                    } else {
+                        "removed"
+                    };
+                    info!("  Chunks {first_chunk}..{last_chunk} will be {a}");
+                    continue;
+                }
+                Module::Lzma(Err(e)) | Module::Huffman(Err(e)) => {
+                    println!("Compressed module could not be parsed: {e}, skipping");
+                    continue;
+                }
+                Module::Unknown(m) => {
+                    let n = m.name();
+                    let o = m.offset;
+                    let s = m.size;
+                    info!("Unknown module {n} @ {o:08x} ({s} bytes)");
+                    continue;
+                }
+            };
+            let n = e.name();
+            let o = e.offset as usize;
+            let s = e.size as usize;
+
+            match &n {
+                n if blocklist.contains(n) => {
+                    info!("Keep necessary {n} @ {o:08x} ({s} bytes)");
+                }
+                n => {
+                    info!("Remove {n} @ {o:08x} ({s} bytes)");
+                    removables.push((o, s));
+                }
+            }
+        }
+
+        // Each chunk here is (chunk_offset, chunk_end).
+        let mut r = 0;
+        for (co, ce) in &all_chunks {
+            let mut remove = true;
+            for (uo, ue) in &unremovable_chunks {
+                // filter out chunks that must be kept
+                if (uo <= co && co < ue) || (uo < ce && ce <= ue) {
+                    remove = false;
+                    break;
+                }
+            }
+            if remove && ce > co {
+                // NOTE: Chunks are relative to start of the ME region.
+                // We provide the offset relative to the directory and the size.
+                let o = co - dir_offset;
+                let s = ce - co;
+                removables.push((o, s));
+                r += 1;
+            } else if *ce != 0 {
+                println!("KEEP {co:06x}..{ce:06x}");
+            }
+        }
+
+        let a = &all_chunks.len();
+        let u = unremovable_chunks.len();
+        println!("total chunks:   {a}");
+        println!("   unremovable: {u}");
+        println!("   will remove: {r}");
+
+        // Removed too much @ 18_7900; WHY?
+
+        if false {
+            println!("== All chunks");
+            Self::dump_chunks(&all_chunks);
+            println!("== Unremovable chunks");
+            Self::dump_chunks(&unremovable_chunks);
+        }
+        Self::dump_chunks(&removables);
+
+        removables
+    }
+
+    fn dump_chunks(chunks: &Vec<(usize, usize)>) {
+        for (i, c) in chunks.iter().enumerate() {
+            if i % 4 == 0 {
+                println!();
+            }
+            print!("{c:08x?} ");
+        }
+        println!();
+    }
+
+    // Get the offset ranges of the chunks.
+    fn chunks_as_ranges(self: &Self, chunks: &Vec<u32>, stream_end: usize) -> Vec<(usize, usize)> {
+        // NOTE: This is the end of the directory.
+        // me_cleaner uses the end of the ME region.
+        let dir_end = self.offset + self.size;
+        let mut nonzero_offsets = vec![stream_end];
+        let offsets = chunks
+            .iter()
+            .map(|c| {
+                let o = *c as usize;
+                // Highest byte contains flags. 0x80 means inactive.
+                const CHUNK_INACTIVE: usize = 0x80;
+                if o >> 24 == CHUNK_INACTIVE {
+                    0
+                } else {
+                    let xo = o & 0x00ff_ffff;
+                    if xo != 0 {
+                        nonzero_offsets.push(xo);
+                    }
+                    xo
+                }
+            })
+            .collect::<Vec<usize>>();
+        nonzero_offsets.sort();
+        // Turn offsets into ranges by finding the offset of the next chunk.
+        offsets
+            .iter()
+            .map(|offset| {
+                let o = *offset;
+                let e = if o != 0 {
+                    // FIXME: This should never fail for a _consistent_ image.
+                    // However, in case of corruption, we should return an error.
+                    if let Some(p) = nonzero_offsets.iter().position(|e| *e == o) {
+                        let next = p + 1;
+                        // The last entry has no successor.
+                        if next < nonzero_offsets.len() {
+                            nonzero_offsets[next]
+                        } else {
+                            stream_end.min(dir_end)
+                        }
+                    } else {
+                        // TODO: return error
+                        0
+                    }
+                } else {
+                    0
+                };
+                (o, e)
+            })
+            .collect::<Vec<(usize, usize)>>()
+    }
 }
+
+/*
+0000: 4c4c 5554 c001 0000 00c0 0410 406f 0e00  LLUT........@o..
+0010:[ae42 0400 007b 0e00]0100 0000 0000 0000  .B...{..........
+0020: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+0030: 0004 0000 0700 0000 4350 5420 4130 2020  ........CPT A0
+0040: 0087 0ec0 1d8a 0e40 9c8d 0e40 2091 0e40  .......@...@ ..@
+0050: c194 0e40 5698 0e40 c99b 0e40 489f 0e40  ...@V..@...@H..@
+0060: a2a2 0ec0 3ba6 0ec0 c8a9 0ec0 5dad 0ec0  ....;.......]...
+0070: feb0 0ec0 88b4 0ec0 0bb8 0ec0 b0bb 0ec0  ................
+0080: 47bf 0ec0 e5c2 0e40 99c6 0e40 40ca 0e40  G......@...@@..@
+ */
