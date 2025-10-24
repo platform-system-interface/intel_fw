@@ -14,22 +14,8 @@ fn print_gen2_dirs(dirs: &Vec<Gen2Dir>) {
         println!("{dir}");
         for e in &dir.entries {
             let pos = dir.offset + e.offset as usize;
-            /*
-            let sig =
-                u32::read_from_prefix(&data[pos..pos + 4]).unwrap();
-            let kind = match sig {
-                SIG_LUT => "LLUT",
-                SIG_LZMA => "LZMA",
-                _ => {
-                    dump48(&data[pos..]);
-                    "unknown"
-                }
-            };
-            */
-            let kind = "...";
-            let t = e.compression_type();
             let b = e.bin_map();
-            println!(" - {e}    {pos:08x} {t:?} ({kind})\n     {b}");
+            println!(" - {e} @ {pos:08x}\n     {b}");
         }
         println!();
     }

@@ -1,6 +1,7 @@
 use core::fmt::{self, Display};
 use core::str::from_utf8;
 
+use bitfield_struct::bitfield;
 use serde::{Deserialize, Serialize};
 use zerocopy::{FromBytes, Ref};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
@@ -25,13 +26,35 @@ pub struct Entry {
     pub memory_size: u32,  // e.g. 0x0004_b425
     pub pre_uma_size: u32, // e.g. 0x0004_b425 (often same as memory_size)
     pub entry_point: u32,  // e.g. 0x2009_1000
-    pub flags: u32,        // e.g. 0x0010_d42a
+    pub flags: Flags,      // e.g. 0x0010_d42a
     pub _54: u32,          // e.g. 0x0000_0008
     pub _58: u32,          // so far all 0
     pub _5c: u32,          // so far all 0
 }
 
-#[derive(Clone, Copy, Debug)]
+#[bitfield(u32)]
+#[derive(Immutable, FromBytes, IntoBytes, Serialize, Deserialize)]
+pub struct Flags {
+    #[bits(4)]
+    _r: u8,
+    #[bits(3)]
+    pub compression: Compression,
+    _r: bool,
+
+    _r: u8,
+
+    _r: bool,
+    #[bits(3)]
+    rapi: usize,
+    #[bits(2)]
+    kapi: usize,
+    #[bits(2)]
+    _r: u8,
+
+    _r: u8,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Compression {
     Uncompressed,
     Huffman,
@@ -39,32 +62,36 @@ pub enum Compression {
     Unknown,
 }
 
+impl Compression {
+    const fn from_bits(val: u8) -> Self {
+        match val {
+            0 => Self::Uncompressed,
+            1 => Self::Huffman,
+            2 => Self::Lzma,
+            _ => Self::Unknown,
+        }
+    }
+
+    const fn into_bits(self) -> u8 {
+        self as u8
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct BinaryMap {
-    pub rapi: u32, // 3 bits, really
-    pub kapi: u32, // 2 bits, really
+    pub rapi: usize, // 3 bits, really
+    pub kapi: usize, // 2 bits, really
     pub code_start: usize,
     pub code_end: usize,
     pub data_end: usize,
 }
 
 impl Entry {
-    pub fn compression_type(&self) -> Compression {
-        let comp_flag = (self.flags >> 4) & 0b111;
-        match comp_flag {
-            0 => Compression::Uncompressed,
-            1 => Compression::Huffman,
-            2 => Compression::Lzma,
-            _ => Compression::Unknown,
-        }
-    }
-
     pub fn bin_map(&self) -> BinaryMap {
         let b = self.mod_base;
-        let f = self.flags;
-        let rapi = (f >> 17) & 0b111;
-        let kapi = (f >> 20) & 0b11;
-        let code_start = (b + (rapi + kapi) * 0x1000) as usize;
+        let rapi = self.flags.rapi();
+        let kapi = self.flags.kapi();
+        let code_start = (b as usize + (rapi + kapi) * 0x1000) as usize;
         let code_end = (b + self.code_size) as usize;
         let data_end = (b + self.memory_size) as usize;
         BinaryMap {
@@ -100,7 +127,8 @@ impl Display for Entry {
         let o = self.offset;
         let s = self.size;
         let e = self.entry_point;
-        write!(f, "{n:16} {s:08x} @ {o:08x}, entry point {e:08x}")
+        let c = self.flags.compression();
+        write!(f, "{n:16} {s:08x} @ {o:08x}, entry point {e:08x}, {c:10?}")
     }
 }
 
