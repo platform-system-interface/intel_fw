@@ -69,19 +69,6 @@ pub enum FptError<'a> {
     ),
 }
 
-impl FPTHeader {
-    pub fn checksum(self) -> u8 {
-        let mut c = self.clone();
-        c.checksum = 0;
-        let sum = c
-            .as_bytes()
-            .iter()
-            .map(|e| Wrapping(*e))
-            .sum::<Wrapping<u8>>();
-        ((sum ^ Wrapping(0xff)) + Wrapping(1)).0
-    }
-}
-
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct FPTEntry {
@@ -123,7 +110,7 @@ impl Display for FPTEntry {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FPT {
-    pub offset: usize,
+    pub pre_header: Vec<u8>,
     pub header: FPTHeader,
     pub entries: Vec<FPTEntry>,
 }
@@ -152,6 +139,8 @@ impl<'a> FPT {
         let Some(offset) = determine_offset(data) else {
             return None;
         };
+        // Save for checksum recalculation
+        let pre_header = &data[..offset];
         let d = &data[offset..];
         let header = match FPTHeader::read_from_prefix(d) {
             Ok((h, _)) => h,
@@ -166,7 +155,7 @@ impl<'a> FPT {
         };
 
         Some(Ok(Self {
-            offset,
+            pre_header: pre_header.to_vec(),
             header,
             entries: entries.to_vec(),
         }))
@@ -181,6 +170,16 @@ impl<'a> FPT {
             }
         }
         None
+    }
+
+    /// Two's complement of the sum of the bytes
+    pub fn header_checksum(self: &Self) -> u8 {
+        let mut c = self.header.clone();
+        // Initial checksum field itself must be 0.
+        c.checksum = 0;
+        let d = [self.pre_header.as_bytes(), c.as_bytes()].concat();
+        let sum = d.iter().map(|e| Wrapping(*e as i8)).sum::<Wrapping<i8>>();
+        -sum.0 as u8
     }
 }
 
@@ -265,5 +264,5 @@ fn parse_okay_fpt_with_offset() {
 fn checksum() {
     let parsed = FPT::parse(&DATA);
     let fpt = parsed.unwrap().unwrap();
-    assert_eq!(fpt.header.checksum(), fpt.header.checksum);
+    assert_eq!(fpt.header_checksum(), fpt.header.checksum);
 }

@@ -31,11 +31,11 @@ fn print_gen3_dirs(dirs: &Vec<CodePartitionDirectory>) {
 fn print_me(me: &ME) {
     println!("FPT at 0x{:08x}:", me.base);
     let FPT {
-        offset,
+        pre_header,
         header,
         entries,
     } = &me.fpt;
-    println!("Offset: {offset:08x}");
+    println!("Pre-header: {pre_header:02x?}");
     println!("{header}");
     println!("Entries:");
     println!("  name     offset     end         size       type  notes");
