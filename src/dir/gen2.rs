@@ -173,6 +173,14 @@ impl Directory {
             return Err("cannot parse ME FW Gen 2 directory header".to_string());
         };
         let pos = man::MANIFEST_SIZE + HEADER_SIZE;
+        let m = &data[pos..pos + 4];
+
+        if !m.eq(ENTRY_MAGIC_BYTES) {
+            return Err(format!(
+                "entry magic not found, got {m:02x?}, wanted {ENTRY_MAGIC_BYTES:02x?} ({ENTRY_MAGIC})"
+            ));
+        }
+
         let slice = &data[pos..];
         let Ok((r, _)) = Ref::<_, [Entry]>::from_prefix_with_elems(slice, count) else {
             return Err(format!(
