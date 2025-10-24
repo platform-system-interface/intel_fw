@@ -42,3 +42,29 @@ For more understanding, see also any of these additional resources:
 - [ ] work out a reusable library, i.e., a Rust crate for <https://crates.io/>
 - [ ] sync up; <https://github.com/corna/me_cleaner> has another patch that
       coreboot is missing, doing rework and adding ME Gen 1 support
+
+## Sources of Information
+
+- [`me_cleaner` wiki](https://github.com/corna/me_cleaner/wiki/)
+
+People are regularly [searching for tools and information around Intel platform](
+https://community.intel.com/t5/Embedded-Intel-Core-Processors/Where-to-Download-Flash-Image-Tool-fitc/td-p/249920)
+firmware, resorting to forums because Intel does not publish what they need or
+limits access to the resources to certain customers only, notably not end users.
+Here is a short list of places to find useful information.
+
+- [Win-Raid (Level1Techs) Forum](https://winraid.level1techs.com/t/intel-cs-management-engine-drivers-firmware-and-tools-2-15/30719)
+- [Badcaps Forum](https://www.badcaps.net/forum/troubleshooting-hardware-devices-and-electronics-theory/troubleshooting-desktop-motherboards-graphics-cards-and-pc-peripherals/105308-fit-csme-tool-flash-image-tool-trusted-download-location)
+- [Indiafix Forum](https://www.indiafix.in/2024/09/download-intel-flash-image-tool-fitc.html?m=1)
+- [Vinafix Forum](https://vinafix.com/tags/flash-image-tool/)
+- [AliSaler](https://www.alisaler.com/intel-me-system-tools-v11-6-r8-flash-image-tool-download/)
+
+### Extraction
+
+Newer tools (e.g., v18) contain Python code that can be extracted with
+[pyinstxtractor](https://github.com/extremecoders-re/pyinstxtractor):
+
+```sh
+pyinstxtractor.py ../mfit_18.exe
+ls -l tools.exe_extracted/plugins/
+```
