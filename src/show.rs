@@ -2,7 +2,10 @@ use log::{error, warn};
 
 use intel_fw::{
     Firmware,
-    dir::{gen2::Directory as Gen2Dir, gen3::CodePartitionDirectory},
+    dir::{
+        gen2::{Directory as Gen2Dir, Module},
+        gen3::CodePartitionDirectory,
+    },
     fit::Fit,
     fpt::FPT,
     me::{Directories, ME},
@@ -12,7 +15,14 @@ fn print_gen2_dirs(dirs: &Vec<Gen2Dir>) {
     println!("Gen 2 directories:");
     for dir in dirs {
         println!("{dir}");
-        for e in &dir.entries {
+        for m in &dir.modules {
+            let e = match m {
+                Module::Uncompressed(e) => e,
+                Module::Huffman(Ok((e, _))) => e,
+                Module::Lzma(Ok(e)) => e,
+                Module::Unknown(e) => e,
+                _ => continue,
+            };
             let pos = dir.offset + e.offset as usize;
             let b = e.bin_map();
             println!(" - {e} @ {pos:08x}\n     {b}");
