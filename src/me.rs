@@ -77,7 +77,7 @@ impl ME {
                                 {
                                     gen3dirs.push(cpd);
                                 }
-                            } else if let Ok(dir) = Gen2Directory::new(&data[o..], o) {
+                            } else if let Ok(dir) = Gen2Directory::new(&data[o..], o, s) {
                                 gen2dirs.push(dir);
                             } else if debug {
                                 println!("{name} @ {o:08x} has no CPD signature");
