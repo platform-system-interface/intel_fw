@@ -143,6 +143,40 @@ impl Display for Entry {
 
 #[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C, packed)]
+pub struct HuffmanHeader {
+    magic: [u8; 4],
+    chunk_count: u32,
+    chunk_base: u32,
+    _unk0: u32,
+    hs0: u32,
+    hs1: u32,
+    _unk1: u32,
+    _unk2: u32,
+    _r: [u8; 16], // all 0 in sample
+    chunk_size: u32,
+    _unk3: u32,
+    name: [u8; 8],
+}
+
+const HUFFMAN_HEADER_SIZE: usize = size_of::<HuffmanHeader>();
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[repr(C)]
+pub struct Huffman {
+    header: HuffmanHeader,
+    chunks: Vec<u32>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum Module {
+    Uncompressed(Entry),
+    Huffman(Result<(Entry, Huffman), String>),
+    Lzma(Result<Entry, String>),
+    Unknown(Entry),
+}
+
+#[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
+#[repr(C, packed)]
 pub struct Header {
     name: [u8; 4],
     _pad: [u8; 8],
@@ -153,7 +187,7 @@ pub struct Header {
 pub struct Directory {
     pub manifest: Manifest,
     pub header: Header,
-    pub entries: Vec<Entry>,
+    pub modules: Vec<Module>,
     pub offset: usize,
     pub size: usize,
     pub name: String,
@@ -202,10 +236,50 @@ impl Directory {
             Ok(n) => n.trim_end_matches('\0').to_string(),
             Err(_) => format!("{:02x?}", header.name),
         };
+
+        // Check for consistency and wrap entries with additional information.
+        let modules = entries
+            .iter()
+            .map(|e| {
+                let c = e.flags.compression();
+                let o = e.offset as usize;
+                let sig = &data[o..o + 4];
+                match c {
+                    Compression::Huffman => {
+                        if sig != SIG_LUT_BYTES {
+                            return Module::Huffman(Err(format!(
+                                "Expected {SIG_LUT_BYTES:02x?} @ {o:08x}, got {sig:02x?}"
+                            )));
+                        }
+                        let (header, _) = HuffmanHeader::read_from_prefix(&data[o..]).unwrap();
+                        let count = header.chunk_count as usize;
+                        let co = o + HUFFMAN_HEADER_SIZE;
+                        let (chunks, _) =
+                            Ref::<_, [u32]>::from_prefix_with_elems(&data[co..], count).unwrap();
+                        let huff = Huffman {
+                            header,
+                            chunks: chunks.to_vec(),
+                        };
+                        Module::Huffman(Ok((*e, huff)))
+                    }
+                    Compression::Lzma => {
+                        if sig != SIG_LZMA_BYTES {
+                            return Module::Lzma(Err(format!(
+                                "Expected {SIG_LZMA_BYTES:02x?} @ {o:08x}, got {sig:02x?}"
+                            )));
+                        }
+                        Module::Lzma(Ok(*e))
+                    }
+                    Compression::Uncompressed => Module::Uncompressed(*e),
+                    Compression::Unknown => Module::Unknown(*e),
+                }
+            })
+            .collect();
+
         Ok(Self {
             manifest,
             header,
-            entries,
+            modules,
             offset,
             size,
             name,
