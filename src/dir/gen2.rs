@@ -1,9 +1,11 @@
-use crate::dir::man::{self, Manifest};
 use core::fmt::{self, Display};
+use core::str::from_utf8;
+
 use serde::{Deserialize, Serialize};
-use std::str::from_utf8;
 use zerocopy::{FromBytes, Ref};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
+
+use crate::dir::man::{self, Manifest};
 
 const ENTRY_MAGIC: &[u8] = b"$MME";
 const SIG_LUT: u32 = u32::from_le_bytes(*b"LLUT");
