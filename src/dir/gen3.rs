@@ -1,15 +1,27 @@
 use core::fmt::{self, Display};
+use core::ops::Range;
 
 use bitfield_struct::bitfield;
 use serde::{Deserialize, Serialize};
 use zerocopy::{FromBytes, Ref};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
+use crate::Removables;
 use crate::dir::man::Manifest;
 use crate::meta::get_meta_for_key;
 
+// These must never be removed. They are essential for platform initialization.
+pub const ALWAYS_RETAIN: &[&str] = &[
+    "bup",    // bringup
+    "rbe",    //
+    "kernel", //
+    "syslib", //
+];
+
 pub const CPD_MAGIC: &str = "$CPD";
 pub const CPD_MAGIC_BYTES: &[u8] = CPD_MAGIC.as_bytes();
+
+const FOUR_K: usize = 0x1000;
 
 // see <https://troopers.de/downloads/troopers17/TR17_ME11_Static.pdf>
 #[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
@@ -152,7 +164,7 @@ impl CodePartitionDirectory {
         let entries = r.to_vec();
 
         let manifest = {
-            let name = format!("{}.man", name);
+            let name = format!("{name}.man");
             if let Some(e) = entries.iter().find(|e| e.name() == name) {
                 let b = &data[e.flags_and_offset.offset() as usize..];
                 Manifest::new(b)
@@ -173,9 +185,46 @@ impl CodePartitionDirectory {
         Ok(cpd)
     }
 
+    // Entries sorted by offset
     fn sorted_entries(&self) -> Vec<CPDEntry> {
         let mut entries = self.entries.clone();
         entries.sort_by_key(|e| e.flags_and_offset.offset());
         entries
+    }
+}
+
+impl Removables for CodePartitionDirectory {
+    /// Removable ranges relative to the start of the directory
+    fn removables(self: &Self, retention_list: &Vec<String>) -> Vec<Range<usize>> {
+        use log::info;
+        let mut removables = vec![];
+
+        if self.size > 0 {
+            for e in &self.entries {
+                match &e.name() {
+                    n if n.ends_with(".man") => info!("Retain manifest {n}"),
+                    n if n.ends_with(".met") => info!("Retain metadata {n}"),
+                    n if retention_list.contains(n) => info!("Retain necessary {n}"),
+                    _ => {
+                        let o = e.flags_and_offset.offset() as usize;
+                        let e = o + e.size as usize;
+                        removables.push(o..e);
+                    }
+                }
+            }
+            // Remaining space to free after last entry
+            let sorted = self.sorted_entries();
+            let last = sorted.last().unwrap();
+            let end = (last.flags_and_offset.offset() + last.size) as usize;
+            let o = end.next_multiple_of(FOUR_K);
+            let e = self.size;
+            removables.push(o..e);
+            info!(
+                "Remaining space: {:08x}..{:08x}",
+                o + self.offset,
+                e + self.offset
+            );
+        }
+        removables
     }
 }
