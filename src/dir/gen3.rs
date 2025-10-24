@@ -8,8 +8,26 @@ use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 use crate::dir::man::Manifest;
 use crate::meta::get_meta_for_key;
 
+// These must never be removed. They are essential for platform initialization.
+pub const ALWAYS_RETAIN: &[&str] = &[
+    "bup",    // bringup
+    "rbe",    //
+    "kernel", //
+    "syslib", //
+];
+
 pub const CPD_MAGIC: &str = "$CPD";
 pub const CPD_MAGIC_BYTES: &[u8] = CPD_MAGIC.as_bytes();
+
+const FOUR_K: usize = 0x1000;
+
+fn align_4k(v: usize) -> usize {
+    if v % FOUR_K == 0 {
+        v
+    } else {
+        v - (v % FOUR_K) + FOUR_K
+    }
+}
 
 // see <https://troopers.de/downloads/troopers17/TR17_ME11_Static.pdf>
 #[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
@@ -151,7 +169,7 @@ impl CodePartitionDirectory {
         let entries = r.to_vec();
 
         let manifest = {
-            let name = format!("{}.man", name);
+            let name = format!("{name}.man");
             if let Some(e) = entries.iter().find(|e| e.name() == name) {
                 let b = &data[e.flags_and_offset.offset() as usize..];
                 Manifest::new(b)
@@ -175,5 +193,27 @@ impl CodePartitionDirectory {
         let mut entries = self.entries.clone();
         entries.sort_by_key(|e| e.flags_and_offset.offset());
         entries
+    }
+
+    pub fn remainder(&self) -> usize {
+        let sorted = self.sorted_entries();
+        let last = sorted.last().unwrap();
+        let end = self.offset + (last.flags_and_offset.offset() + last.size) as usize;
+        align_4k(end)
+    }
+
+    pub fn removable_entries(self, blocklist: &Vec<String>) -> Vec<(usize, usize)> {
+        use log::info;
+        let mut removables = Vec::<(usize, usize)>::new();
+
+        for e in &self.entries {
+            match &e.name() {
+                n if n.ends_with(".man") => info!("Keep manifest {n}"),
+                n if n.ends_with(".met") => info!("Keep metadata {n}"),
+                n if blocklist.contains(n) => info!("Keep necessary {n}"),
+                _ => removables.push((e.flags_and_offset.offset() as usize, e.size as usize)),
+            }
+        }
+        removables
     }
 }
