@@ -57,6 +57,17 @@ pub const FS_PARTS: &[&str] = &[
     EFFS, //
 ];
 
+// Those have been found to be safe to remove.
+pub const REMOVABLE_PARTS: &[&str] = &[
+    FLOG, //
+    FTUP, //
+    IVBP, // IVBP is used in hibernation, should probably not be removed?!
+    MFS,  //
+    NFTP, //
+    PSVN, //
+    UTOK, //
+];
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum PartitionType {
     Code,
