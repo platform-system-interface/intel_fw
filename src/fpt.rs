@@ -24,10 +24,71 @@ use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 use crate::ver::Version;
 
-const FPT_MAGIC: &str = "$FPT";
-const FPT_MAGIC_BYTES: &[u8] = FPT_MAGIC.as_bytes();
+pub const FTPR: &str = "FTPR";
+pub const FTUP: &str = "FTUP";
+pub const DLMP: &str = "DLMP";
+pub const MDMV: &str = "MDMV";
+pub const PSVN: &str = "PSVN";
+pub const IVBP: &str = "IVBP";
+pub const MFS: &str = "MFS";
+pub const NFTP: &str = "NFTP";
+pub const ROMB: &str = "ROMB";
+pub const WCOD: &str = "WCOD";
+pub const LOCL: &str = "LOCL";
+pub const FLOG: &str = "FLOG";
+pub const UTOK: &str = "UTOK";
+pub const ISHC: &str = "ISHC";
+pub const AFSP: &str = "AFSP";
+pub const FTPM: &str = "FTPM";
+pub const GLUT: &str = "GLUT";
+pub const EFFS: &str = "EFFS";
+pub const FOVD: &str = "FOVD";
 
-pub const FTPR_NAME: &str = "FTPR";
+pub const DIR_PARTS: &[&str] = &[
+    FTPR, //
+    DLMP, //
+    MDMV, //
+    NFTP, //
+];
+
+pub const FS_PARTS: &[&str] = &[
+    MFS,  //
+    AFSP, //
+    EFFS, //
+];
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum PartitionType {
+    Code,
+    Data,
+    None,
+}
+
+// see https://troopers.de/downloads/troopers17/TR17_ME11_Static.pdf
+pub fn get_part_info(n: &str) -> (PartitionType, &str) {
+    match n {
+        FTPR => (PartitionType::Code, "Main code partition"),
+        FTUP => (PartitionType::Code, "[NFTP]+[WCOD]+[LOCL]"),
+        DLMP => (PartitionType::Code, "IDLM partition"),
+        MDMV => (PartitionType::Code, "Media protection (PAVP, JOM)"),
+        PSVN => (PartitionType::Data, "Secure Version Number"),
+        IVBP => (PartitionType::Data, "IV + Bring Up cache"),
+        MFS => (PartitionType::Data, "ME Flash File System"),
+        NFTP => (PartitionType::Code, "Additional code"),
+        ROMB => (PartitionType::Code, "ROM Bypass"),
+        WCOD => (PartitionType::Code, "WLAN uCode"),
+        LOCL => (PartitionType::Code, "AMT Localization"),
+        FLOG => (PartitionType::Data, "Flash Log"),
+        UTOK => (PartitionType::Data, "Debug Unlock Token"),
+        ISHC => (PartitionType::Code, "Integrated Sensors Hub"),
+        AFSP => (PartitionType::None, "8778 55aa signature like MFS"),
+        FTPM => (PartitionType::Code, "Firmware TPM (unconfirmed)"),
+        GLUT => (PartitionType::Data, "Huffman Look-Up Table"),
+        EFFS => (PartitionType::Data, "EFFS File System"),
+        FOVD => (PartitionType::Data, "FOVD..."),
+        _ => (PartitionType::None, "[> UNKNOWN <]"),
+    }
+}
 
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
@@ -122,6 +183,9 @@ pub struct FPT {
 
 pub const FPT_SIZE: usize = size_of::<FPT>();
 
+const FPT_MAGIC: &str = "$FPT";
+const FPT_MAGIC_BYTES: &[u8] = FPT_MAGIC.as_bytes();
+
 const POSSIBLE_OFFSET: usize = 16;
 
 // The FPT magic is either at the start or at a 16 bytes offset.
@@ -185,50 +249,6 @@ impl<'a> FPT {
         let d = [self.pre_header.as_bytes(), c.as_bytes()].concat();
         let sum = d.iter().map(|e| Wrapping(*e as i8)).sum::<Wrapping<i8>>();
         -sum.0 as u8
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum PartitionType {
-    Code,
-    Data,
-    None,
-}
-
-pub const FTUP: u32 = u32::from_be_bytes(*b"FTUP");
-pub const DLMP: u32 = u32::from_be_bytes(*b"DLMP");
-pub const FTPR: u32 = u32::from_be_bytes(*b"FTPR");
-pub const NFTP: u32 = u32::from_be_bytes(*b"NFTP");
-pub const MDMV: u32 = u32::from_be_bytes(*b"MDMV");
-
-pub const MFS: u32 = u32::from_be_bytes(*b"MFS\0");
-pub const AFSP: u32 = u32::from_be_bytes(*b"AFSP");
-pub const EFFS: u32 = u32::from_be_bytes(*b"EFFS");
-
-// see https://troopers.de/downloads/troopers17/TR17_ME11_Static.pdf
-pub fn get_part_info(n: &str) -> (PartitionType, &str) {
-    match n {
-        FTPR_NAME => (PartitionType::Code, "Main code partition"),
-        "FTUP" => (PartitionType::Code, "[NFTP]+[WCOD]+[LOCL]"),
-        "DLMP" => (PartitionType::Code, "IDLM partition"),
-        "MDMV" => (PartitionType::Code, "Media protection (PAVP, JOM)"),
-        "PSVN" => (PartitionType::Data, "Secure Version Number"),
-        // IVBP is used in hibernation, should probably not be removed?!
-        "IVBP" => (PartitionType::Data, "IV + Bring Up cache"),
-        "MFS" => (PartitionType::Data, "ME Flash File System"),
-        "NFTP" => (PartitionType::Code, "Additional code"),
-        "ROMB" => (PartitionType::Code, "ROM Bypass"),
-        "WCOD" => (PartitionType::Code, "WLAN uCode"),
-        "LOCL" => (PartitionType::Code, "AMT Localization"),
-        "FLOG" => (PartitionType::Data, "Flash Log"),
-        "UTOK" => (PartitionType::Data, "Debug Unlock Token"),
-        "ISHC" => (PartitionType::Code, "Integrated Sensors Hub"),
-        "AFSP" => (PartitionType::None, "8778 55aa signature like MFS"),
-        "FTPM" => (PartitionType::Code, "Firmware TPM (unconfirmed)"),
-        "GLUT" => (PartitionType::Data, "Huffman Look-Up Table"),
-        "EFFS" => (PartitionType::Data, "EFFS File System"),
-        "FOVD" => (PartitionType::Data, "FOVD..."),
-        _ => (PartitionType::None, "[> UNKNOWN <]"),
     }
 }
 

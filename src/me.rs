@@ -6,8 +6,7 @@ use crate::{
         gen3::{CPD_MAGIC_BYTES, CodePartitionDirectory},
         man::Manifest,
     },
-    fpt::FPT_SIZE,
-    fpt::{AFSP, DLMP, EFFS, FPT, FTPR, FTUP, MDMV, MFS, NFTP},
+    fpt::{DIR_PARTS, FPT, FPT_SIZE, FS_PARTS, FTUP},
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -62,13 +61,12 @@ impl ME {
                 let name = match std::str::from_utf8(&e.name) {
                     // some names are shorter than 4 bytes and padded with 0x0
                     Ok(n) => n.trim_end_matches('\0').to_string(),
-                    Err(_) => format!("{:02x?}", &e.name),
+                    Err(_) => format!("{:08x}", u32::from_be_bytes(e.name)),
                 };
-                let n = u32::from_be_bytes(e.name);
                 let o = (e.offset & 0x003f_ffff) as usize;
                 let s = e.size as usize;
-                match n {
-                    MDMV | DLMP | FTPR | NFTP => {
+                match name.as_str() {
+                    n if DIR_PARTS.contains(&n) => {
                         if o + 4 < data.len() {
                             let buf = &data[o..o + 4];
                             if buf.eq(CPD_MAGIC_BYTES) {
@@ -85,10 +83,10 @@ impl ME {
                             }
                         }
                     }
-                    MFS | AFSP | EFFS => {
+                    n if FS_PARTS.contains(&n) => {
                         // TODO: parse MFS
                     }
-                    _ => {
+                    n => {
                         if !debug {
                             continue;
                         }
