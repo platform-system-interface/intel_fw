@@ -169,6 +169,8 @@ impl FPTEntry {
     }
 }
 
+const FPT_ENTRY_SIZE: usize = size_of::<FPTEntry>();
+
 impl Display for FPTEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let o = self.offset as usize;
@@ -188,12 +190,10 @@ pub struct FPT {
     pub pre_header: Vec<u8>,
     pub header: FPTHeader,
     pub entries: Vec<FPTEntry>,
+    pub original_size: usize,
 }
 
 pub const FPT_SIZE: usize = size_of::<FPT>();
-
-// TODO: Look at the number of original entries instead.
-const FPT_FULL_SIZE: usize = 0x200;
 
 const FPT_MAGIC: &str = "$FPT";
 const FPT_MAGIC_BYTES: &[u8] = FPT_MAGIC.as_bytes();
@@ -235,10 +235,13 @@ impl<'a> FPT {
             Err(e) => return Some(Err(FptError::EntryParseError(e))),
         };
 
+        let original_size = pre_header.len() + FPT_HEADER_SIZE + FPT_ENTRY_SIZE * entries.len();
+
         Some(Ok(Self {
             pre_header: pre_header.to_vec(),
             header,
             entries: entries.to_vec(),
+            original_size,
         }))
     }
 
@@ -287,7 +290,7 @@ impl<'a> FPT {
         ]
         .concat();
         let mut res = all.to_vec();
-        res.resize(FPT_FULL_SIZE, EMPTY);
+        res.resize(self.original_size, EMPTY);
         res
     }
 }
@@ -337,6 +340,7 @@ fn checksum() {
 fn clear() {
     let mut fpt = FPT::parse(&DATA).unwrap().unwrap();
     fpt.clear();
-    let cleaned = fpt.to_vec();
-    assert_eq!(&cleaned, FPT_CLEANED);
+    let s = fpt.original_size;
+    let cleaned = &fpt.to_vec();
+    assert_eq!(cleaned, &FPT_CLEANED[..s]);
 }
