@@ -84,6 +84,7 @@ pub struct CodePartitionDirectory {
     pub manifest: Result<Manifest, String>,
     pub entries: Vec<CPDEntry>,
     pub offset: usize,
+    pub size: usize,
     pub name: String,
 }
 
@@ -124,7 +125,7 @@ impl Display for CodePartitionDirectory {
 }
 
 impl CodePartitionDirectory {
-    pub fn new(data: Vec<u8>, offset: usize) -> Result<Self, String> {
+    pub fn new(data: Vec<u8>, offset: usize, size: usize) -> Result<Self, String> {
         let Ok((header, _)) = CPDHeader::read_from_prefix(&data) else {
             return Err("could not parse CPD header".to_string());
         };
@@ -165,6 +166,7 @@ impl CodePartitionDirectory {
             manifest,
             entries,
             offset,
+            size,
             name: name.to_string(),
         };
 
