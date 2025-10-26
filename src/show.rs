@@ -40,16 +40,13 @@ fn print_gen3_dirs(dirs: &Vec<CodePartitionDirectory>) {
 
 fn print_me(me: &ME) {
     println!("FPT at 0x{:08x}:", me.base);
-    let FPT {
-        pre_header,
-        header,
-        entries,
-    } = &me.fpt;
+    let pre_header = &me.fpt.pre_header;
+    let header = &me.fpt.header;
     println!("Pre-header: {pre_header:02x?}");
     println!("{header}");
     println!("Entries:");
     println!("  name     offset     end         size       type  notes");
-    let mut entries = entries.clone();
+    let mut entries = me.fpt.entries.clone();
     entries.sort_by_key(|e| e.offset);
     for e in entries {
         println!("- {e}");
