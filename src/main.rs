@@ -1,3 +1,13 @@
+//! Modern tool to work on Intel firmware images
+//!
+//! Detecting what's given is unfortunately hard, because Intel firmware images
+//! offer no simple indicator of the platform underneath or software features.
+//! E.g. Lenovo ThinkPad X270:
+//! It can be based on Skylake or Kaby Lake (SKL/KBL), 100/200 series chipsets.
+//! Two different X270 laptops may or may not contain Intel AMT and its drivers.
+//! So we can only provide meaningful information by looking at a full firmware
+//! image in its entirety. This tool brings together all publicly known details.
+
 use std::fs;
 
 use clap::{Parser, Subcommand, ValueEnum};
