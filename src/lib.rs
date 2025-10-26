@@ -15,6 +15,9 @@ use fit::{Fit, FitError};
 use ifd::{IFD, IfdError};
 use me::ME;
 
+// An empty byte in a NOR flash is all-1's.
+pub const EMPTY: u8 = 0xff;
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Firmware {
     pub ifd: Result<IFD, IfdError>,
