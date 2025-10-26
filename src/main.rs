@@ -9,9 +9,10 @@
 //! image in its entirety. This tool brings together all publicly known details.
 
 use std::fs;
+use std::io::Write;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use log::{debug, info};
+use log::{debug, error, info};
 
 mod clean;
 mod show;
@@ -163,15 +164,34 @@ fn main() {
                 if let Some(me_file) = extract_me {
                     info!("Dump ME region to {me_file}");
                 }
-                if let Some(out_file) = output {
+                if let Some(out_file) = &output {
                     info!("Output will be written to: {out_file}");
                 }
                 info!("Reading {file_name}...");
-                let data = fs::read(file_name).unwrap();
+                let mut data = fs::read(file_name).unwrap();
                 let fw = Firmware::parse(&data, debug);
                 show::show(&fw, verbose);
                 println!();
-                todo!("clean");
+
+                let Some(me_res) = fw.me else {
+                    return;
+                };
+                let Ok(me) = me_res else {
+                    return;
+                };
+                match clean::clean(&me, &mut data) {
+                    Ok(data) => {
+                        if let Some(out_file) = output {
+                            let mut file = fs::File::create(out_file).unwrap();
+                            file.write_all(&data).unwrap();
+                        } else {
+                            error!("Clean operation failed");
+                        }
+                    }
+                    Err(_) => {
+                        error!("Clean operation failed");
+                    }
+                }
             }
             MeCommand::Scan { file_name } => {
                 let data = fs::read(file_name).unwrap();
