@@ -4,7 +4,9 @@
 
 - [`me_cleaner` wiki](https://github.com/corna/me_cleaner/wiki/)
 - [ME Analyzer](https://github.com/platomav/meanalyzer/)
-- [coreboot documentation](https://doc.coreboot.org/soc/intel)
+- coreboot documentation
+  - [Intel SoCs general overview](https://doc.coreboot.org/soc/intel)
+  - [Authenticated Code Module](https://doc.coreboot.org/security/intel/acm.html)
 
 ## Forums
 
