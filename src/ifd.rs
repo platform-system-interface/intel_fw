@@ -509,21 +509,33 @@ fn extract_bit(byte: u32, bit: u32) -> bool {
     byte >> bit & 1 == 1
 }
 
+// TODO: The straps changed over the generations of processors.
+// Specifically the HAP bit on Skylake and later has moved, so we should not
+// blindly assume it.
 impl IFD {
+    /// Direct Connect Interface
     // from <https://review.coreboot.org/c/coreboot/+/82272>
     // <https://edc.intel.com/content/www/us/en/design/products-and-solutions/processors-and-chipsets/700-series-chipset-family-platform-controller-hub-datasheet-volume-1-of/004/intel-direct-connect-interface-dci/>
     pub fn dci(&self) -> bool {
         extract_bit(self.pch_straps[0], 17)
     }
-
+    /// High-Assurance Platform (ME soft-disable), ME Gen 3
     pub fn hap(&self) -> bool {
         extract_bit(self.pch_straps[0], 16)
     }
-
+    /// I/O Controller Hub, ME Gen 1
     pub fn ich_me_disabled(&self) -> bool {
         extract_bit(self.pch_straps[0], 0)
     }
-
+    /// Memory Controller Hub, ME Gen 1
+    pub fn mch_me_disabled(&self) -> bool {
+        extract_bit(self.mch_straps[0], 0)
+    }
+    /// Memory Controller Hub (alternative), ME Gen 1
+    pub fn mch_alt_me_disabled(&self) -> bool {
+        extract_bit(self.mch_straps[0], 7)
+    }
+    /// Disable ME (alternative), ME Gen 2
     pub fn alt_me_disabled(&self) -> bool {
         extract_bit(self.pch_straps[10], 7)
     }
