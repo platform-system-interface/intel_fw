@@ -51,8 +51,13 @@ use serde::{Deserialize, Serialize};
 use zerocopy::{FromBytes, IntoBytes, Ref};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
+use crate::EMPTY;
+
 // NOTE: This is the LE representation.
 const MAGIC: u32 = 0x0ff0_a55a;
+// This is based on examples, excluding the VSCC table, upper descriptor map and
+// OEM section.
+const SIZE: usize = 0x800;
 
 #[bitfield(u32)]
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize)]
@@ -541,6 +546,40 @@ impl IFD {
     }
 }
 
+impl IFD {
+    pub fn to_vec(self) -> Vec<u8> {
+        let mut res = vec![EMPTY; SIZE];
+        let components_offset = self.header.flmap0.fcba();
+        let regions_offset = self.header.flmap0.frba();
+        let masters_offset = self.header.flmap1.fmba();
+        let pch_straps_offset = self.header.flmap1.fisba();
+        let mch_straps_offset = self.header.flmap2.fmsba();
+
+        for (o, b) in self.header.as_bytes().iter().enumerate() {
+            res[OFFSET + o] = *b;
+        }
+
+        for (o, b) in self.components.as_bytes().iter().enumerate() {
+            res[components_offset + o] = *b;
+        }
+        for (o, b) in self.regions.as_bytes().iter().enumerate() {
+            res[regions_offset + o] = *b;
+        }
+        for (o, b) in self.masters.as_bytes().iter().enumerate() {
+            res[masters_offset + o] = *b;
+        }
+
+        for (o, b) in self.pch_straps.as_bytes().iter().enumerate() {
+            res[pch_straps_offset + o] = *b;
+        }
+        for (o, b) in self.mch_straps.as_bytes().iter().enumerate() {
+            res[mch_straps_offset + o] = *b;
+        }
+
+        res
+    }
+}
+
 const OFFSET: usize = 16;
 
 // NOTE: We cannot use NM here (number of "masters").
@@ -600,4 +639,23 @@ impl IFD {
             pch_straps,
         })
     }
+}
+
+#[cfg(test)]
+static IFD_DATA_GEN2: &[u8] = include_bytes!("../tests/me8.ifd");
+
+#[cfg(test)]
+static IFD_DATA_GEN3: &[u8] = include_bytes!("../tests/me11.ifd");
+
+#[test]
+/// We should be able to write back the original data 1:1.
+fn to_vec_gen2() {
+    let ifd = IFD::parse(IFD_DATA_GEN2).unwrap();
+    assert_eq!(ifd.to_vec(), IFD_DATA_GEN2);
+}
+#[test]
+/// We should be able to write back the original data 1:1.
+fn to_vec_gen3() {
+    let ifd = IFD::parse(IFD_DATA_GEN3).unwrap();
+    assert_eq!(ifd.to_vec(), IFD_DATA_GEN3);
 }
