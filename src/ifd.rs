@@ -48,7 +48,7 @@ use std::fmt::{Debug, Display};
 
 use bitfield_struct::bitfield;
 use serde::{Deserialize, Serialize};
-use zerocopy::{FromBytes, Ref};
+use zerocopy::{FromBytes, IntoBytes, Ref};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 // NOTE: This is the LE representation.
@@ -175,6 +175,112 @@ pub struct Header {
     flmap3: u32,    // TODO: 500, 600, 800 and 900 series
 }
 
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+enum Density {
+    K512,
+    M1,
+    M2,
+    M4,
+    M8,
+    M16,
+    _Undefined,
+    _Reserved,
+}
+
+impl Density {
+    const fn from_bits(val: u8) -> Self {
+        match val {
+            0b000 => Self::K512,
+            0b001 => Self::M1,
+            0b010 => Self::M2,
+            0b011 => Self::M4,
+            0b100 => Self::M8,
+            0b101 => Self::M16,
+            0b111 => Self::_Reserved,
+            _ => Self::_Undefined,
+        }
+    }
+
+    const fn into_bits(self) -> u8 {
+        self as u8
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+enum Frequency {
+    M20,
+    M33,
+    M48,
+    M50_30,
+    M17,
+    _Undefined,
+    _Reserved,
+}
+
+impl Frequency {
+    const fn from_bits(val: u8) -> Self {
+        match val {
+            0b000 => Self::M20,
+            0b001 => Self::M33,
+            0b010 => Self::M48,
+            0b011 => Self::_Undefined,
+            0b100 => Self::M50_30,
+            0b101 => Self::_Undefined,
+            0b110 => Self::M17,
+            _ => Self::_Reserved,
+        }
+    }
+
+    const fn into_bits(self) -> u8 {
+        self as u8
+    }
+}
+
+#[bitfield(u32)]
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize)]
+pub struct FlashComponentConfig {
+    #[bits(3)]
+    comp1_density: Density,
+    #[bits(3)]
+    comp2_density: Density,
+    #[bits(2)]
+    _r: u8,
+
+    #[bits(8)]
+    _r: u8,
+
+    #[bits(1)]
+    _r: u8,
+    #[bits(3)]
+    read_clock_frequency: Frequency,
+    fast_read_support: bool,
+    #[bits(3)]
+    fast_read_clock_frequency: Frequency,
+
+    #[bits(3)]
+    write_erase_clock_frequency: Frequency,
+    #[bits(3)]
+    read_id_status_clock_frequency: Frequency,
+    #[bits(2)]
+    _r: u8,
+}
+
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct FlashInvalidInstructions {
+    inst1: u8,
+    inst2: u8,
+    inst3: u8,
+    inst4: u8,
+}
+
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
+#[repr(C)]
+pub struct Components {
+    FLCOMP: FlashComponentConfig,
+    FLILL0: FlashInvalidInstructions,
+    FLILL1: FlashInvalidInstructions,
+}
+
 #[bitfield(u32)]
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize)]
 pub struct FlashRegion {
@@ -233,11 +339,134 @@ impl Display for Regions {
     }
 }
 
+#[bitfield(u32)]
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize)]
+pub struct FlashMasterV1 {
+    _r: u16,
+    // read access
+    read_fd: bool,
+    read_bios: bool,
+    read_me: bool,
+    read_gbe: bool,
+    read_pd: bool,
+    #[bits(3)]
+    _r: u8,
+    // write access
+    write_fd: bool,
+    write_bios: bool,
+    write_me: bool,
+    write_gbe: bool,
+    write_pd: bool,
+    #[bits(3)]
+    _r: u8,
+}
+
+fn cap_to_str(cap: bool) -> &'static str {
+    if cap { "enabled" } else { "disabled" }
+}
+
+impl Display for FlashMasterV1 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let c = cap_to_str(self.write_pd());
+        writeln!(f, "  Platform Data Region Write Access: {c}")?;
+        let c = cap_to_str(self.write_gbe());
+        writeln!(f, "  GbE Region Write Access:           {c}")?;
+        let c = cap_to_str(self.write_me());
+        writeln!(f, "  Intel ME Region Write Access:      {c}")?;
+        let c = cap_to_str(self.write_bios());
+        writeln!(f, "  Host CPU/BIOS Region Write Access: {c}")?;
+        let c = cap_to_str(self.write_fd());
+        writeln!(f, "  Flash Descriptor Write Access:     {c}")?;
+
+        let c = cap_to_str(self.read_pd());
+        writeln!(f, "  Platform Data Region Read Access:  {c}")?;
+        let c = cap_to_str(self.read_gbe());
+        writeln!(f, "  GbE Region Read Access:            {c}")?;
+        let c = cap_to_str(self.read_me());
+        writeln!(f, "  Intel ME Region Read Access:       {c}")?;
+        let c = cap_to_str(self.read_bios());
+        writeln!(f, "  Host CPU/BIOS Region Read Access:  {c}")?;
+        let c = cap_to_str(self.read_fd());
+        writeln!(f, "  Flash Descriptor Read Access:      {c}")?;
+        write!(f, "")
+    }
+}
+
+#[bitfield(u32)]
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize)]
+pub struct FlashMasterV2 {
+    // 0..7
+    read_gbe10_1: bool,
+    #[bits(3)]
+    _r: u8,
+    write_gbe10_1: bool,
+    #[bits(3)]
+    _r: u8,
+    // 8..15
+    read_fd: bool,
+    read_bios: bool,
+    read_me: bool,
+    read_gbe: bool,
+    read_pd: bool,
+    #[bits(3)]
+    _r: u8,
+    // 16..23
+    read_ec: bool,
+    #[bits(2)]
+    _r: u8,
+    read_gbe10_0: bool,
+    write_fd: bool,
+    write_bios: bool,
+    write_me: bool,
+    write_gbe: bool,
+    // 24..31
+    write_pd: bool,
+    #[bits(3)]
+    _r: u8,
+    write_ec: bool,
+    #[bits(2)]
+    _r: u8,
+    write_gbe10_0: bool,
+}
+
+impl Display for FlashMasterV2 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let c = cap_to_str(self.write_ec());
+        writeln!(f, "  EC Region Write Access:            {c}")?;
+        let c = cap_to_str(self.write_pd());
+        writeln!(f, "  Platform Data Region Write Access: {c}")?;
+        let c = cap_to_str(self.write_gbe());
+        writeln!(f, "  GbE Region Write Access:           {c}")?;
+        let c = cap_to_str(self.write_me());
+        writeln!(f, "  Intel ME Region Write Access:      {c}")?;
+        let c = cap_to_str(self.write_bios());
+        writeln!(f, "  Host CPU/BIOS Region Write Access: {c}")?;
+        let c = cap_to_str(self.write_fd());
+        writeln!(f, "  Flash Descriptor Write Access:     {c}")?;
+
+        let c = cap_to_str(self.read_ec());
+        writeln!(f, "  EC Region Read Access:             {c}")?;
+        let c = cap_to_str(self.read_pd());
+        writeln!(f, "  Platform Data Region Read Access:  {c}")?;
+        let c = cap_to_str(self.read_gbe());
+        writeln!(f, "  GbE Region Read Access:            {c}")?;
+        let c = cap_to_str(self.read_me());
+        writeln!(f, "  Intel ME Region Read Access:       {c}")?;
+        let c = cap_to_str(self.read_bios());
+        writeln!(f, "  Host CPU/BIOS Region Read Access:  {c}")?;
+        let c = cap_to_str(self.read_fd());
+        writeln!(f, "  Flash Descriptor Read Access:      {c}")?;
+        write!(f, "")
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 #[repr(C)]
 pub struct IFD {
     pub header: Header,
+    pub components: Components,
     pub regions: Regions,
+    pub masters: Vec<u32>,
     pub pch_straps: Vec<u32>,
     pub mch_straps: Vec<u32>,
 }
@@ -249,6 +478,8 @@ impl Display for IFD {
         writeln!(f, "{}", self.header.flmap0)?;
         writeln!(f, "{}", self.header.flmap1)?;
         writeln!(f, "{}", self.header.flmap2)?;
+        writeln!(f, "== Components ==")?;
+        writeln!(f, "{:#02x?}", self.components)?;
         writeln!(f, "== Regions ==")?;
         write!(f, "{}", self.regions)
     }
@@ -296,6 +527,14 @@ impl IFD {
 
 const OFFSET: usize = 16;
 
+// NOTE: We cannot use NM here (number of "masters").
+// It is not what it suggests, or found to be not matching the actual
+// count on real firmware images. What is the real number?
+// Do we have to infer it from non-all-ff u32's up to the regions?
+// Or should we adjust it after looking at the regions?
+// Their count is not clear either.
+const REGION_COUNT: usize = 8;
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum IfdError {
     NoIfd(String),
@@ -312,10 +551,17 @@ impl IFD {
             )));
         }
 
-        if false {
-            println!("{header:#010x?}");
-        }
-        let (regions, _) = Regions::read_from_prefix(&data[header.flmap0.frba()..]).unwrap();
+        let components_offset = header.flmap0.fcba();
+        let regions_offset = header.flmap0.frba();
+        let masters_offset = header.flmap1.fmba();
+
+        let (components, _) = Components::read_from_prefix(&data[components_offset..]).unwrap();
+
+        let (regions, _) = Regions::read_from_prefix(&data[regions_offset..]).unwrap();
+
+        let slice = &data[masters_offset..];
+        let (straps, _) = Ref::<_, [u32]>::from_prefix_with_elems(slice, REGION_COUNT).unwrap();
+        let masters = straps.to_vec();
 
         let count = header.flmap1.isl();
         let slice = &data[header.flmap1.fisba()..];
@@ -329,7 +575,9 @@ impl IFD {
 
         Ok(Self {
             header,
+            components,
             regions,
+            masters,
             mch_straps,
             pch_straps,
         })
