@@ -101,7 +101,7 @@ enum Command {
     Bg(BootGuardCommand),
 }
 
-/// Intel firmware tool
+/// Analyze and modify Intel firmware images
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
