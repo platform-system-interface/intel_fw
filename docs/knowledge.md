@@ -1,5 +1,11 @@
 # Knowledge sources
 
+## Official resources
+
+Intel publishes general information on firmware in their developer portal:
+<https://www.intel.com/content/www/us/en/developer/topic-technology/firmware/overview.html>
+Note that the public information mainly focuses on host processor firmware.
+
 ## Other projects
 
 - [`me_cleaner` wiki](https://github.com/corna/me_cleaner/wiki/)
