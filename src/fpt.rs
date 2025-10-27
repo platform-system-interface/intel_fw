@@ -189,6 +189,7 @@ impl Display for FPTEntry {
 pub struct FPT {
     pub pre_header: Vec<u8>,
     pub header: FPTHeader,
+    // TODO: wrap in enum Partition::XXX()
     pub entries: Vec<FPTEntry>,
     pub original_size: usize,
 }

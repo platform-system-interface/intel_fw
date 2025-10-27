@@ -37,6 +37,7 @@ pub struct ME {
     pub base: usize,
     pub generation: Generation,
     pub fpt: FPT,
+    // TODO: move into FPT as part of Partition::XXX() enum, wrapping Entry + Directory
     pub dirs: Directories,
 }
 
