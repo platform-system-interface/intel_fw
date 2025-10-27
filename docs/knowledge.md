@@ -22,6 +22,7 @@ Here is a short list of places to find useful information and tools.
 - [Indiafix Forum](https://www.indiafix.in/2024/09/download-intel-flash-image-tool-fitc.html?m=1)
 - [Vinafix Forum](https://vinafix.com/tags/flash-image-tool/)
 - [AliSaler](https://www.alisaler.com/intel-me-system-tools-v11-6-r8-flash-image-tool-download/)
+- [mostav02's notes on FPT and removals](https://github.com/mostav02/Remove_IntelME_FPT)
 
 ### Extraction
 
