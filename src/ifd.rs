@@ -558,6 +558,8 @@ impl IFD {
         let components_offset = header.flmap0.fcba();
         let regions_offset = header.flmap0.frba();
         let masters_offset = header.flmap1.fmba();
+        let pch_straps_offset = header.flmap1.fisba();
+        let mch_straps_offset = header.flmap2.fmsba();
 
         let (components, _) = Components::read_from_prefix(&data[components_offset..]).unwrap();
 
@@ -568,12 +570,12 @@ impl IFD {
         let masters = straps.to_vec();
 
         let count = header.flmap1.isl();
-        let slice = &data[header.flmap1.fisba()..];
+        let slice = &data[pch_straps_offset..];
         let (straps, _) = Ref::<_, [u32]>::from_prefix_with_elems(slice, count).unwrap();
         let pch_straps = straps.to_vec();
 
         let count = header.flmap2.msl();
-        let slice = &data[header.flmap2.fmsba()..];
+        let slice = &data[mch_straps_offset..];
         let (straps, _) = Ref::<_, [u32]>::from_prefix_with_elems(slice, count).unwrap();
         let mch_straps = straps.to_vec();
 
