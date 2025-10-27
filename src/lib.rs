@@ -18,6 +18,13 @@ use me::ME;
 // An empty byte in a NOR flash is all-1's.
 pub const EMPTY: u8 = 0xff;
 
+/// Common method for anything that has removable parts, such as directories.
+pub trait Removables {
+    /// Get removable ranges relative to the start of a section or directory.
+    /// The respective section/directory needs to know its own offset.
+    fn removables(self: &Self, retention_list: &Vec<String>) -> Vec<core::ops::Range<usize>>;
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Firmware {
     pub ifd: Result<IFD, IfdError>,
