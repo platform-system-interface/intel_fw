@@ -77,8 +77,7 @@ impl ME {
                         if o + 4 < data.len() {
                             let buf = &data[o..o + 4];
                             if buf.eq(CPD_MAGIC_BYTES) {
-                                if let Ok(cpd) =
-                                    CodePartitionDirectory::new(data[o..o + s].to_vec(), o, s)
+                                if let Ok(cpd) = CodePartitionDirectory::new(&data[o..o + s], o, s)
                                 {
                                     gen3dirs.push(cpd);
                                 }
@@ -156,7 +155,7 @@ impl ME {
         while o < data.len() {
             let buf = &data[o..o + 4];
             if buf.eq(CPD_MAGIC_BYTES) {
-                let Ok(cpd) = CodePartitionDirectory::new(data[o..].to_vec(), o, 0) else {
+                let Ok(cpd) = CodePartitionDirectory::new(&data[o..], o, 0) else {
                     continue;
                 };
                 gen3dirs.push(cpd);

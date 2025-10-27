@@ -125,7 +125,7 @@ impl Display for CodePartitionDirectory {
 }
 
 impl CodePartitionDirectory {
-    pub fn new(data: Vec<u8>, offset: usize, size: usize) -> Result<Self, String> {
+    pub fn new(data: &[u8], offset: usize, size: usize) -> Result<Self, String> {
         let Ok((header, _)) = CPDHeader::read_from_prefix(&data) else {
             return Err("could not parse CPD header".to_string());
         };
