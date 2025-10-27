@@ -319,12 +319,16 @@ impl Display for FlashRegion {
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct Regions {
-    flreg0: FlashRegion,
+    pub flreg0: FlashRegion,
     pub flreg1: FlashRegion,
     pub flreg2: FlashRegion,
     pub flreg3: FlashRegion,
     pub flreg4: FlashRegion,
     pub flreg5: FlashRegion,
+    pub flreg6: FlashRegion,
+    pub flreg7: FlashRegion,
+    pub flreg8: FlashRegion,
+    pub flreg9: FlashRegion,
 }
 
 impl Display for Regions {
