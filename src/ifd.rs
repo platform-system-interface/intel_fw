@@ -10,29 +10,31 @@
 //! and <https://opensecuritytraining.info/IntroBIOS_files/Day2_02_Advanced%20x86%20-%20BIOS%20and%20SMM%20Internals%20-%20Flash%20Descriptor.pdf>
 //! and coreboot `util/ifdtool/`.
 //!
-//! The IFD consists of multiple fields and sections, which got more over generations
-//! of processors. Some semantics also changed over time.
-//! Unfortunately, there is no clear single source of truth documenting which
+//! The IFD consists of multiple sections and fields, which got more over generations
+//! of processors. While the ICH8 datasheet still detailed the sections and fields,
+//! some semantics changed over time, without public documentation from Intel.
+//! Unfortunately, there is no other single source of truth documenting which
 //! processors would require which exact fields, either. One major change came with
 //! Skylake, as per coreboot commit `1f7fd720c81755144423f2d4062c39cc651adc0a`.
 //! The following table is based on the 600 series chipset PCH datasheet.
+//! The rough sections have generally stayed the same, but not the fields.
 //! Offsets of specific sections are described via the Descriptor Map,
 //! called base addresses, commonly abbreviation as xxBA.
 //! NOTE: The base addresses are compact values and really mean bits 4..11
 //! of 25-bit values, so we nead to expand them to get the real addresses.
 //! See the implementations for the calculations.
 //!
-//! | Section                      |
-//! | ---------------------------- |
-//! | Signature + Descriptor Map   |
-//! | Components                   |
-//! | Regions                      |
-//! | Masters                      |
-//! | PCH Soft Straps              |
-//! | Reserved                     |
-//! | Management Engine VSCC Table |
-//! | Descriptor Upper Map         |
-//! | OEM Section                  |
+//! | Section                      | Meaning                                |
+//! | ---------------------------- | -------------------------------------- |
+//! | Signature + Descriptor Map   | Offsets of other sections              |
+//! | Components                   | Flash parts and their parameters       |
+//! | Regions                      | Flash partitions as offsets            |
+//! | Masters                      | Access control for regions             |
+//! | PCH Soft Straps              | Platform specific control bits         |
+//! | Reserved                     |                                        |
+//! | Management Engine VSCC Table | Vendor-specific component capabilities |
+//! | Descriptor Upper Map         |                                        |
+//! | OEM Section                  |                                        |
 //!
 //! For a list of acronyms, see the Serial Peripheral Interface (SPI) section
 //! in the 400 or 600 series chipset PCH datasheet volume 1.
