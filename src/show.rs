@@ -1,14 +1,13 @@
 use log::{error, warn};
 
 use intel_fw::{
-    Firmware,
     dir::{
         gen2::{Directory as Gen2Dir, Module},
         gen3::CodePartitionDirectory,
     },
     fit::Fit,
-    fpt::FPT,
     me::{Directories, ME},
+    Firmware,
 };
 
 fn print_gen2_dirs(dirs: &Vec<Gen2Dir>) {
