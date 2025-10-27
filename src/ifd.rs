@@ -336,6 +336,7 @@ pub struct Regions {
     pub flreg9: FlashRegion,
 }
 
+// NOTE: Regions have changed over processors generations.
 impl Display for Regions {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let r0 = format!("   Flash descriptor (IFD):   {}", self.flreg0);
