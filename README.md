@@ -37,7 +37,7 @@ For more understanding, see also any of these additional resources:
       images and extraction utilities (e.g. from Lenovo)
     - [ ] step 1: port core logic to produce the same output as `me_cleaner` for
         Lenovo ThinkPad X230 + X270
-    - [ ] step 2: full parity with `me_cleaner`
+    - [x] step 2: full parity with `me_cleaner`
 - [ ] expand the documentation with a higher-level on Intel platform boot flows
     - [ ] document how the Intel data structures work, in prose
     - [ ] document how to add support for more platforms and variants
