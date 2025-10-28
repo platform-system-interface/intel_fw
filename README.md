@@ -9,6 +9,8 @@ Based on [knowledge](docs/knowledge.md) from other projects, such as
 `intel_fw` is written from scratch in Rust, allowing for integration with other
 projects, including a flexible API.
 
+The [architecture and design](docs/architecture.md) is based on experience.
+
 ## Development
 
 To run the CLI via `cargo` directly, remember to add arguments after an extra
