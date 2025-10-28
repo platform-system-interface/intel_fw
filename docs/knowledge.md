@@ -10,9 +10,19 @@ Note that the public information mainly focuses on host processor firmware.
 
 - [`me_cleaner` wiki](https://github.com/corna/me_cleaner/wiki/)
 - [ME Analyzer](https://github.com/platomav/meanalyzer/)
-- coreboot documentation
-  - [Intel SoCs general overview](https://doc.coreboot.org/soc/intel)
+- coreboot
+  - [Intel SoC documentation](https://doc.coreboot.org/soc/intel)
   - [Authenticated Code Module](https://doc.coreboot.org/security/intel/acm.html)
+  - [`ifdtool`](https://github.com/coreboot/coreboot/tree/main/util/ifdtool)
+  - [`intelmetool`](https://github.com/coreboot/coreboot/tree/main/util/intelmetool)]
+- UEFITool
+  - [IFD](https://github.com/LongSoft/UEFITool/blob/new_engine/common/descriptor.h)
+  - [ME parser](https://github.com/LongSoft/UEFITool/blob/new_engine/common/meparser.cpp)
+  - [FIT parser](https://github.com/LongSoft/UEFITool/blob/new_engine/common/fitparser.cpp)
+- Positive Technologies research
+  - [TXE MFS exploit PoC](https://github.com/ptresearch/IntelTXE-PoC)
+  - [ME disablement](https://github.com/ptresearch/me-disablement)
+  - [many other repositories](https://github.com/ptresearch?tab=repositories)
 
 ## Forums
 
