@@ -4,8 +4,7 @@ This is a new utility to analyze and edit firmware images for [Intel platforms](
 docs/platforms.md).
 
 Based on [knowledge](docs/knowledge.md) from other projects, such as
-[`me_cleaner`](https://github.com/corna/me_cleaner), coreboot's `ifdtool`,
-[MEAnalyzer](https://github.com/platomav/meanalyzer) and related research,
+`me_cleaner`, coreboot's `ifdtool`, ME Analyzer and related research,
 `intel_fw` is written from scratch in Rust, allowing for integration with other
 projects, including a flexible API.
 
