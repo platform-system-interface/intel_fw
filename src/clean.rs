@@ -15,27 +15,35 @@ fn fpt_clean(me: &ME, data: &mut [u8]) {
     }
 }
 
+// Clear out removable ranges in the FTPR directory
+fn dir_clean(
+    dir: &dyn Removables,
+    retention_list: &Vec<String>,
+    dir_offset: usize,
+    data: &mut [u8],
+) {
+    info!("FTPR @ {dir_offset:08x}");
+    for r in dir.removables(&retention_list) {
+        let offset = dir_offset + r.start;
+        let size = r.end - r.start;
+        info!("Freeing {size:8} bytes @ {offset:08x}");
+        for o in r {
+            data[dir_offset + o] = EMPTY;
+        }
+    }
+}
+
 fn gen2clean(me: &ME, dirs: &Vec<Gen2Directory>, data: &mut [u8]) {
     // TODO: Extend with user-provided list
     let retention_list = Vec::from(gen2::ALWAYS_RETAIN)
         .iter()
         .map(|s| String::from(*s))
         .collect();
-    // Clear out removable ranges in the FTPR directory
-    for d in dirs {
-        if d.name == FTPR {
-            let dir_offset = me.base + d.offset;
-            info!("FTPR @ {dir_offset:08x}");
-            for r in d.removables(&retention_list) {
-                let offset = dir_offset + r.start;
-                let size = r.end - r.start;
-                info!("Freeing {size:8} bytes @ {offset:08x}");
-                for o in r {
-                    data[dir_offset + o] = EMPTY;
-                }
-            }
-        }
+    if let Some(d) = dirs.iter().find(|d| d.name == FTPR) {
+        let dir_offset = me.base + d.offset;
+        dir_clean(d, &retention_list, dir_offset, data);
     }
+
     // Clear out fully removable partitions
     for e in &me.fpt.entries {
         match e {
@@ -65,21 +73,11 @@ fn gen3clean(me: &ME, dirs: &Vec<CodePartitionDirectory>, data: &mut [u8]) {
         .iter()
         .map(|s| String::from(*s))
         .collect();
-    // Clear out removable FTPR entries
-    for d in dirs {
-        if d.name == FTPR {
-            let dir_offset = me.base + d.offset;
-            info!("FTPR @ {dir_offset:08x}");
-            for r in d.removables(&retention_list) {
-                let offset = dir_offset + r.start;
-                let size = r.end - r.start;
-                info!("Freeing {size:8} bytes @ {offset:08x}");
-                for o in r {
-                    data[dir_offset + o] = EMPTY;
-                }
-            }
-        }
+    if let Some(d) = dirs.iter().find(|d| d.name == FTPR) {
+        let dir_offset = me.base + d.offset;
+        dir_clean(d, &retention_list, dir_offset, data);
     }
+
     // Clear out fully removable partitions
     for e in &me.fpt.entries {
         match e.name().as_str() {
