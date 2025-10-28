@@ -1,19 +1,16 @@
 # Intel platforms
 
-Over the years and decades, [Intel has developed many hardware platforms](
-https://en.wikipedia.org/wiki/List_of_Intel_processors).
+Over the years and decades, Intel has developed many hardware platforms[^14].
 
 Since the 4-bit 4004 in 1971, they have progressed over 8-bit up to 64-bit
 systems, retaining a lot of backwards compatibility. Starting with the ICH7
-based platforms, Intel introduced their [AMT (Active Management Technology)](
-https://en.wikipedia.org/wiki/Intel_AMT_versions), an out-of-band management
-solution[^1] for remote provisioning and support.
+based platforms, Intel introduced their AMT (Active Management Technology)[^15],
+an out-of-band management solution[^1] for remote provisioning and support.
 
-AMT evolved with more features over time, carrying the [vPro label for machines
-targeting the business market](
-https://www.intel.com/content/www/us/en/architecture-and-technology/vpro/overview.html)
-and finally converging with more security features such as Boot Guard[^2],
-Intel's secure boot implementation, digital content protection (DRM), and more.
+AMT evolved with more features over time, carrying the vPro label for machines
+targeting the business market[^16] and finally converging with more security
+features such as Boot Guard[^2], Intel's secure boot implementation, digital
+content protection (DRM), and more.
 
 Now running on a coprocessor called the (Converged Security and) Manageability
 Engine[^3], or (CS)ME for short, henceforth abbreviated as _ME_, a full second
@@ -89,3 +86,6 @@ The following abbreviations have a second meaning:
 [^11]: <https://web.archive.org/web/20230322090345/https://patrick.georgi.family/2015/02/17/intel-boot-guard/>
 [^12]: <https://www.intel.com/content/www/us/en/processors/processor-numbers.html>
 [^13]: <https://www.intel.com/content/www/us/en/support/articles/000058567/processors/intel-core-processors.html>
+[^14]: <https://en.wikipedia.org/wiki/List_of_Intel_processors>
+[^15]: <https://en.wikipedia.org/wiki/Intel_AMT_versions>
+[^16]: <https://www.intel.com/content/www/us/en/architecture-and-technology/vpro/overview.html>
