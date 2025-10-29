@@ -188,8 +188,8 @@ fn main() {
                             error!("Clean operation failed");
                         }
                     }
-                    Err(_) => {
-                        error!("Clean operation failed");
+                    Err(e) => {
+                        error!("Clean operation failed: {e}");
                     }
                 }
             }
