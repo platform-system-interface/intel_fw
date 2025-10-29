@@ -26,11 +26,13 @@ Note that the public information mainly focuses on host processor firmware.
 
 ## Forums
 
-People are regularly [searching for tools and information around Intel platform](
-https://community.intel.com/t5/Embedded-Intel-Core-Processors/Where-to-Download-Flash-Image-Tool-fitc/td-p/249920)
-firmware, resorting to third-party forums because Intel does not publish what
-they need or limits access to necessary resources to certain customers only,
-notably not end users.
+People keep [asking in Intel's community forum](
+https://community.intel.com/t5/Embedded-Intel-Core-Processors/MFit-Tool-Flash-Image-Tool/m-p/1640753)
+for [tools and information around Intel platform firmware](
+https://community.intel.com/t5/Embedded-Intel-Core-Processors/Where-to-Download-Flash-Image-Tool-fitc/td-p/249920),
+resorting to third-party forums because Intel does not publish what they need or
+limits access to necessary resources to certain customers only, notably not end
+users.
 Here is a short list of places to find useful information and tools.
 
 - [Win-Raid (Level1Techs) Forum](https://winraid.level1techs.com/t/intel-cs-management-engine-drivers-firmware-and-tools-2-15/30719)
