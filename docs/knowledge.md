@@ -14,7 +14,7 @@ Note that the public information mainly focuses on host processor firmware.
   - [Intel SoC documentation](https://doc.coreboot.org/soc/intel)
   - [Authenticated Code Module](https://doc.coreboot.org/security/intel/acm.html)
   - [`ifdtool`](https://github.com/coreboot/coreboot/tree/main/util/ifdtool)
-  - [`intelmetool`](https://github.com/coreboot/coreboot/tree/main/util/intelmetool)]
+  - [`intelmetool`](https://github.com/coreboot/coreboot/tree/main/util/intelmetool)
 - UEFITool
   - [IFD](https://github.com/LongSoft/UEFITool/blob/new_engine/common/descriptor.h)
   - [ME parser](https://github.com/LongSoft/UEFITool/blob/new_engine/common/meparser.cpp)
