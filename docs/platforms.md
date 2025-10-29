@@ -29,6 +29,8 @@ The following diagram is based on knowledge from various sources, including the
 
 <img src="intel_flash_partitioning.png" width=40%>
 
+The boot flow for trusted boot is documented publicly[^17] by Intel.
+
 ## ME classification and security
 
 Security researchers have analyzed the ME and divided hardware variants into 3
@@ -89,3 +91,4 @@ The following abbreviations have a second meaning:
 [^14]: <https://en.wikipedia.org/wiki/List_of_Intel_processors>
 [^15]: <https://en.wikipedia.org/wiki/Intel_AMT_versions>
 [^16]: <https://www.intel.com/content/www/us/en/architecture-and-technology/vpro/overview.html>
+[^17]: <https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/resources/key-usage-in-integrated-firmware-images.html>
