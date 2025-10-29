@@ -164,6 +164,12 @@ impl Fit {
             )));
         }
 
+        if offset > data.len() {
+            return Err(FitError::InvalidPointer(format!(
+                " FIT pointer out of orange: {offset:08x}"
+            )));
+        }
+
         let Ok((header, _)) = FitHeader::read_from_prefix(&data[offset..]) else {
             return Err(FitError::HeaderReadError(format!(
                 "Could not parse FIT header @ {offset:08x}"
