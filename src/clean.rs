@@ -93,12 +93,12 @@ fn gen3clean(me: &ME, dirs: &Vec<CodePartitionDirectory>, data: &mut [u8]) {
     }
 }
 
-pub fn clean(me: &ME, data: &mut [u8]) -> Result<Vec<u8>, ()> {
+pub fn clean(me: &ME, data: &mut [u8]) -> Result<Vec<u8>, String> {
     fpt_clean(me, data);
     match &me.dirs {
         Directories::Gen2(dirs) => gen2clean(&me, &dirs, data),
         Directories::Gen3(dirs) => gen3clean(&me, &dirs, data),
-        _ => return Err(()),
+        _ => return Err("Not recognized as ME Gen 2 or 3".into()),
     };
     Ok(data.to_vec())
 }
