@@ -63,6 +63,7 @@ suffixes mean[^13].
 | {I,M,P}CH | {I/O,Memory,Platform} Controller Hub[^9]    |
 | IFD       | Intel Flash Descriptor                      |
 | PTT       | Platform Trust Technology                   |
+| RBE       | ROM Boot Extensions (part of ME firmware)   |
 | SPS       | Server Platform Services                    |
 | TXE       | Trusted Execution Engine                    |
 | TXT       | Trusted Execution Technology                |
