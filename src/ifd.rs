@@ -279,7 +279,7 @@ pub struct FlashInvalidInstructions {
 }
 
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
-#[repr(C)]
+#[repr(C, packed)]
 pub struct Components {
     FLCOMP: FlashComponentConfig,
     FLILL0: FlashInvalidInstructions,
