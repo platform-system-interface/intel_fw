@@ -16,8 +16,8 @@ pub const ALWAYS_RETAIN: &[&str] = &[
     "ROMP", //
 ];
 
-const ENTRY_MAGIC: &str = "$MME";
-const ENTRY_MAGIC_BYTES: &[u8] = ENTRY_MAGIC.as_bytes();
+const MODULE_MAGIC: &str = "$MME";
+const MODULE_MAGIC_BYTES: &[u8] = MODULE_MAGIC.as_bytes();
 pub const SIG_LUT: &str = "LLUT";
 pub const SIG_LUT_BYTES: &[u8] = SIG_LUT.as_bytes();
 pub const SIG_LZMA_BYTES: &[u8] = &[0x36, 0x00, 0x40, 0x00];
@@ -226,9 +226,9 @@ impl Directory {
         let pos = man::MANIFEST_SIZE + HEADER_SIZE;
         let m = &data[pos..pos + 4];
 
-        if !m.eq(ENTRY_MAGIC_BYTES) {
+        if !m.eq(MODULE_MAGIC_BYTES) {
             return Err(format!(
-                "entry magic not found, got {m:02x?}, wanted {ENTRY_MAGIC_BYTES:02x?} ({ENTRY_MAGIC})"
+                "entry magic not found, got {m:02x?}, wanted {MODULE_MAGIC_BYTES:02x?} ({MODULE_MAGIC})"
             ));
         }
 
