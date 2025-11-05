@@ -268,7 +268,7 @@ impl<'a> FPT {
     }
 
     /// Two's complement of the sum of the bytes
-    pub fn header_checksum(self: &Self) -> u8 {
+    pub fn header_checksum(&self) -> u8 {
         let mut c = self.header.clone();
         // Initial checksum field itself must be 0.
         c.checksum = 0;
