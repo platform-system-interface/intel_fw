@@ -6,7 +6,8 @@ use zerocopy_derive::{FromBytes, IntoBytes};
 use crate::ver::Version;
 
 const VENDOR_INTEL: u32 = 0x8086;
-const MANIFEST2_MAGIC: &[u8] = b"$MN2";
+const MANIFEST2_MAGIC: &str = "$MN2";
+const MANIFEST2_MAGIC_BYTES: &[u8] = MANIFEST2_MAGIC.as_bytes();
 
 #[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
@@ -92,46 +93,38 @@ impl Display for Header {
     }
 }
 
-const HEADER_SIZE: usize = core::mem::size_of::<Header>();
-const KEY_SIZE: usize = 0x100;
-
 #[derive(Serialize, Deserialize, IntoBytes, FromBytes, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct Manifest {
     pub header: Header,
     #[serde(with = "serde_bytes")]
-    pub rsa_pub_key: [u8; KEY_SIZE],
+    pub rsa_pub_key: [u8; 0x100],
     pub rsa_pub_exp: u32,
     #[serde(with = "serde_bytes")]
-    pub rsa_sig: [u8; KEY_SIZE],
+    pub rsa_sig: [u8; 0x100],
 }
 
 pub const MANIFEST_SIZE: usize = core::mem::size_of::<Manifest>();
 
 impl<'a> Manifest {
     pub fn new(data: &'a [u8]) -> Result<Self, String> {
-        let (header, _) = Header::read_from_prefix(data).unwrap();
+        let (manifest, _) = match Self::read_from_prefix(data) {
+            Ok(r) => r,
+            Err(e) => {
+                let err = format!("Manifest cannot be parsed: {e:?}");
+                return Err(err);
+            }
+        };
 
-        if header.magic != *MANIFEST2_MAGIC {
-            let err = format!("manifest magic not found, got: {:02x?}", header.magic);
+        if manifest.header.magic != MANIFEST2_MAGIC_BYTES {
+            let err = format!(
+                "Manifest magic not found: wanted {MANIFEST2_MAGIC_BYTES:02x?} ({MANIFEST2_MAGIC}), got {:02x?}",
+                manifest.header.magic
+            );
             return Err(err);
         }
 
-        let o = HEADER_SIZE;
-        let rsa_pub_key: [u8; KEY_SIZE] = data[o..o + KEY_SIZE].try_into().unwrap();
-        let o = o + KEY_SIZE;
-        let (rsa_pub_exp, _) = u32::read_from_prefix(&data[o..o + 4]).unwrap();
-        let o = o + 4;
-        let rsa_sig: [u8; KEY_SIZE] = data[o..o + KEY_SIZE].try_into().unwrap();
-
-        let m = Self {
-            header,
-            rsa_pub_key,
-            rsa_pub_exp,
-            rsa_sig,
-        };
-
-        Ok(m)
+        Ok(manifest)
     }
 
     /// Get the MD5 hash over the RSA public key and exponent.
