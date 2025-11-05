@@ -22,8 +22,8 @@ use serde::{Deserialize, Serialize};
 use zerocopy::{AlignmentError, ConvertError, FromBytes, IntoBytes, Ref, SizeError};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
-use crate::EMPTY;
 use crate::ver::Version;
+use crate::EMPTY;
 
 pub const FTPR: &str = "FTPR";
 pub const FTUP: &str = "FTUP";
@@ -47,6 +47,7 @@ pub const FOVD: &str = "FOVD";
 
 pub const DIR_PARTS: &[&str] = &[
     FTPR, //
+    FTUP, //
     DLMP, //
     MDMV, //
     NFTP, //
