@@ -22,8 +22,7 @@ use serde::{Deserialize, Serialize};
 use zerocopy::{AlignmentError, ConvertError, FromBytes, IntoBytes, Ref, SizeError};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
-use crate::ver::Version;
-use crate::EMPTY;
+use crate::{EMPTY, ver::Version};
 
 pub const FTPR: &str = "FTPR";
 pub const FTUP: &str = "FTUP";
