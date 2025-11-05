@@ -163,10 +163,11 @@ pub struct FPTEntry {
 }
 
 impl FPTEntry {
-    pub fn name(self) -> String {
+    pub fn name(&self) -> String {
         match std::str::from_utf8(&self.name) {
+            // some names are shorter than 4 bytes and padded with 0x0
             Ok(n) => n.trim_end_matches('\0').to_string(),
-            Err(_) => format!("{:02x?}", &self.name),
+            Err(_) => format!("{:02x?}", self.name),
         }
     }
 }
