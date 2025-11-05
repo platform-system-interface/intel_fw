@@ -103,7 +103,7 @@ pub fn get_part_info(n: &str) -> (PartitionType, &str) {
 }
 
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
-#[repr(C)]
+#[repr(C, packed)]
 pub struct FPTHeader {
     pub signature: [u8; 4],
     pub entries: u32,
@@ -128,9 +128,11 @@ impl Display for FPTHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let hv = format!("  Header version: {}", self.header_ver);
         let ev = format!("  Entry version:  {}", self.entry_ver);
-        let en = format!("  Entries:        {}", self.entries);
+        let en = self.entries;
+        let en = format!("  Entries:        {en}");
         let cs = format!("  Checksum:       {:02x}", self.checksum);
-        let fv = format!("  FITC version:   {}", self.fitc_ver);
+        let fv = self.fitc_ver;
+        let fv = format!("  FITC version:   {fv}");
         write!(f, "{hv}\n{ev}\n{en}\n{cs}\n{fv}")
     }
 }
@@ -148,7 +150,7 @@ pub enum FptError<'a> {
 }
 
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
-#[repr(C)]
+#[repr(C, packed)]
 pub struct FPTEntry {
     pub name: [u8; 4],
     pub owner: [u8; 4],
