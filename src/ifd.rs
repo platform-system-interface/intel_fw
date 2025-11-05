@@ -48,7 +48,7 @@ use std::fmt::{Debug, Display};
 
 use bitfield_struct::bitfield;
 use serde::{Deserialize, Serialize};
-use zerocopy::{FromBytes, IntoBytes, Ref};
+use zerocopy::{FromBytes, IntoBytes};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 use crate::EMPTY;
@@ -596,6 +596,13 @@ pub enum IfdError {
     NoIfd(String),
 }
 
+fn u8_slice_to_u32(slice: &[u8]) -> Vec<u32> {
+    slice
+        .chunks(4)
+        .map(|v| u32::from_le_bytes([v[0], v[1], v[2], v[3]]))
+        .collect()
+}
+
 impl IFD {
     pub fn parse(data: &[u8]) -> Result<Self, IfdError> {
         let (header, _) = Header::read_from_prefix(&data[OFFSET..]).unwrap();
@@ -617,19 +624,14 @@ impl IFD {
 
         let (regions, _) = Regions::read_from_prefix(&data[regions_offset..]).unwrap();
 
-        let slice = &data[masters_offset..];
-        let (straps, _) = Ref::<_, [u32]>::from_prefix_with_elems(slice, REGION_COUNT).unwrap();
-        let masters = straps.to_vec();
+        let slice = &data[masters_offset..masters_offset + REGION_COUNT * 4];
+        let masters = u8_slice_to_u32(slice);
 
-        let count = header.flmap1.isl();
-        let slice = &data[pch_straps_offset..];
-        let (straps, _) = Ref::<_, [u32]>::from_prefix_with_elems(slice, count).unwrap();
-        let pch_straps = straps.to_vec();
+        let slice = &data[pch_straps_offset..pch_straps_offset + header.flmap1.isl() * 4];
+        let pch_straps = u8_slice_to_u32(slice);
 
-        let count = header.flmap2.msl();
-        let slice = &data[mch_straps_offset..];
-        let (straps, _) = Ref::<_, [u32]>::from_prefix_with_elems(slice, count).unwrap();
-        let mch_straps = straps.to_vec();
+        let slice = &data[mch_straps_offset..mch_straps_offset + header.flmap2.msl() * 4];
+        let mch_straps = u8_slice_to_u32(slice);
 
         Ok(Self {
             header,
