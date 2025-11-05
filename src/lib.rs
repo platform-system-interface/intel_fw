@@ -5,10 +5,10 @@ use serde::{Deserialize, Serialize};
 
 pub mod dir;
 pub mod fit;
-pub mod fpt;
 pub mod ifd;
 pub mod me;
 pub mod meta;
+pub mod part;
 pub mod ver;
 
 use fit::{Fit, FitError};
@@ -57,4 +57,14 @@ impl Firmware {
         let fit = Fit::new(&data);
         Self { ifd, me, fit }
     }
+}
+
+/// Dump first 48 bytes of a slice. Meant solely for debugging.
+/// Tip: If you need context to investigate data, pass a reference to
+/// `data[offset-16..]` instead of `data[offset..]`.
+pub(crate) fn dump48(data: &[u8]) {
+    println!("Here are 48 bytes:");
+    println!(" {:02x?}", &data[0x00..0x10]);
+    println!(" {:02x?}", &data[0x10..0x20]);
+    println!(" {:02x?}", &data[0x20..0x30]);
 }

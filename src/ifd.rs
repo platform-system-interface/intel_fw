@@ -483,7 +483,6 @@ pub struct IFD {
 
 impl Display for IFD {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "=== Flash ===")?;
         writeln!(f, "== Configuration ==")?;
         writeln!(f, "{}", self.header.flmap0)?;
         writeln!(f, "{}", self.header.flmap1)?;

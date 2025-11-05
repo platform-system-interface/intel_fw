@@ -137,7 +137,7 @@ impl Display for CodePartitionDirectory {
 }
 
 impl CodePartitionDirectory {
-    pub fn new(data: &[u8], offset: usize, size: usize) -> Result<Self, String> {
+    pub fn new(data: &[u8], offset: usize) -> Result<Self, String> {
         let Ok((header, _)) = CPDHeader::read_from_prefix(&data) else {
             return Err("could not parse CPD header".to_string());
         };
@@ -158,21 +158,22 @@ impl CodePartitionDirectory {
         let Ok((r, _)) = Ref::<_, [CPDEntry]>::from_prefix_with_elems(slice, count) else {
             return Err(format!(
                 "cannot parse ME FW Gen 3 directory entries @ {:08x}",
-                pos
+                offset + pos
             ));
         };
         let entries = r.to_vec();
 
+        let manifest_name = format!("{name}.man");
         let manifest = {
-            let name = format!("{name}.man");
-            if let Some(e) = entries.iter().find(|e| e.name() == name) {
-                let b = &data[e.flags_and_offset.offset() as usize..];
-                Manifest::new(b)
+            if let Some(e) = entries.iter().find(|e| e.name() == manifest_name) {
+                let o = e.flags_and_offset.offset() as usize;
+                Manifest::new(&data[o..])
             } else {
                 Err("no manifest found".to_string())
             }
         };
 
+        let size = data.len();
         let cpd = CodePartitionDirectory {
             header,
             manifest,
@@ -199,32 +200,29 @@ impl Removables for CodePartitionDirectory {
         use log::info;
         let mut removables = vec![];
 
-        if self.size > 0 {
-            for e in &self.entries {
-                match &e.name() {
-                    n if n.ends_with(".man") => info!("Retain manifest {n}"),
-                    n if n.ends_with(".met") => info!("Retain metadata {n}"),
-                    n if retention_list.contains(n) => info!("Retain necessary {n}"),
-                    _ => {
-                        let o = e.flags_and_offset.offset() as usize;
-                        let e = o + e.size as usize;
-                        removables.push(o..e);
-                    }
+        for entry in &self.entries {
+            let o = entry.flags_and_offset.offset() as usize;
+            let e = o + entry.size as usize;
+            let n = entry.name();
+            let r = format!("{o:08x}..{e:08x}: {n:14}");
+            match &n {
+                n if n.ends_with(".man") => info!("Retain manifest  {r}"),
+                n if n.ends_with(".met") => info!("Retain metadata  {r}"),
+                n if retention_list.contains(n) => info!("Retain necessary {r}"),
+                _ => {
+                    info!("Remove           {r}");
+                    removables.push(o..e);
                 }
             }
-            // Remaining space to free after last entry
-            let sorted = self.sorted_entries();
-            let last = sorted.last().unwrap();
-            let end = (last.flags_and_offset.offset() + last.size) as usize;
-            let o = end.next_multiple_of(FOUR_K);
-            let e = self.size;
-            removables.push(o..e);
-            info!(
-                "Remaining space: {:08x}..{:08x}",
-                o + self.offset,
-                e + self.offset
-            );
         }
+        // Remaining space to free after last entry
+        let sorted = self.sorted_entries();
+        let last = sorted.last().unwrap();
+        let end = (last.flags_and_offset.offset() + last.size) as usize;
+        let o = end.next_multiple_of(FOUR_K);
+        let e = self.size;
+        removables.push(o..e);
+        info!("Remaining space: {o:08x}..{e:08x}");
         removables
     }
 }
