@@ -267,6 +267,12 @@ impl<'a> FPT {
         None
     }
 
+    pub fn get_sorted_entries(&self) -> Vec<FPTEntry> {
+        let mut entries = self.entries.clone();
+        entries.sort_by_key(|e| e.offset());
+        entries
+    }
+
     /// Two's complement of the sum of the bytes
     pub fn header_checksum(&self) -> u8 {
         let mut c = self.header.clone();
