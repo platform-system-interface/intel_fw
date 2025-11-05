@@ -170,6 +170,14 @@ impl FPTEntry {
             Err(_) => format!("{:02x?}", self.name),
         }
     }
+
+    pub fn offset(&self) -> usize {
+        self.offset as usize & 0x003f_ffff
+    }
+
+    pub fn size(&self) -> usize {
+        self.size as usize
+    }
 }
 
 const FPT_ENTRY_SIZE: usize = size_of::<FPTEntry>();
