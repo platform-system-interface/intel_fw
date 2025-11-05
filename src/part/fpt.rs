@@ -311,10 +311,10 @@ impl<'a> FPT {
 }
 
 #[cfg(test)]
-static DATA: &[u8] = include_bytes!("../tests/me11.fpt");
+static DATA: &[u8] = include_bytes!("../../tests/me11.fpt");
 
 #[cfg(test)]
-static FPT_CLEANED: &[u8] = include_bytes!("../tests/me11_cleaned.fpt");
+static FPT_CLEANED: &[u8] = include_bytes!("../../tests/me11_cleaned.fpt");
 
 #[test]
 fn parse_size_error() {

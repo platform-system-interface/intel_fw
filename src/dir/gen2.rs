@@ -214,7 +214,7 @@ impl Display for Directory {
 const HEADER_SIZE: usize = core::mem::size_of::<Header>();
 
 impl Directory {
-    pub fn new(data: &[u8], offset: usize, size: usize) -> Result<Self, String> {
+    pub fn new(data: &[u8], offset: usize) -> Result<Self, String> {
         let Ok(manifest) = Manifest::new(data) else {
             return Err("cannot parse Gen 2 directory manifest".to_string());
         };
@@ -284,6 +284,7 @@ impl Directory {
             })
             .collect();
 
+        let size = data.len();
         Ok(Self {
             manifest,
             header,
