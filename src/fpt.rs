@@ -285,13 +285,11 @@ impl<'a> FPT {
 
     /// Remove all entries but FTPR, adjusting header and checksum
     pub fn clear(&mut self) {
-        let new_entries = self
+        self.entries = self
             .entries
             .iter()
-            .filter(|e| e.name() == FTPR)
-            .map(|e| *e)
-            .collect::<Vec<FPTEntry>>();
-        self.entries = new_entries;
+            .filter_map(|e| if e.name() == FTPR { Some(*e) } else { None })
+            .collect();
         self.header.entries = self.entries.len() as u32;
         // clear EFFS presence flag
         // TODO: define bitfield, parameterize via API
