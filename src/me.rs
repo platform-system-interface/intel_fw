@@ -148,7 +148,7 @@ impl ME {
             };
 
             let non_covered = partitions
-                .non_covered_areas()
+                .non_covered_ranges()
                 .iter()
                 .map(|u| {
                     let offset = u.start;

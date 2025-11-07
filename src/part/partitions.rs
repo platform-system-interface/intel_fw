@@ -71,7 +71,7 @@ impl Partitions {
     }
 
     /// Get ranges not covered by FPT entries.
-    pub fn non_covered_areas(&self) -> Vec<Range<usize>> {
+    pub fn non_covered_ranges(&self) -> Vec<Range<usize>> {
         let mut res = vec![];
         for w in self.get_sorted_entries().windows(2) {
             let curr = w[0];
