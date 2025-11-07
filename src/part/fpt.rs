@@ -204,7 +204,7 @@ pub struct FPT {
     pub original_size: usize,
 }
 
-pub const FPT_SIZE: usize = size_of::<FPT>();
+pub const MIN_FPT_SIZE: usize = 0x400;
 
 const FPT_MAGIC: &str = "$FPT";
 const FPT_MAGIC_BYTES: &[u8] = FPT_MAGIC.as_bytes();
@@ -259,7 +259,7 @@ impl<'a> FPT {
     // Find an FPT in a given slice, and if the magic is detected, get the
     // parse result and the offset.
     pub fn scan(data: &'a [u8]) -> Option<(Result<Self, FptError<'a>>, usize)> {
-        for o in (0..data.len() - FPT_SIZE - POSSIBLE_OFFSET).step_by(0x40) {
+        for o in (0..data.len() - MIN_FPT_SIZE - POSSIBLE_OFFSET).step_by(0x40) {
             if let Some(fpt) = Self::parse(&data[o..]) {
                 return Some((fpt, o));
             }
