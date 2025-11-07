@@ -125,6 +125,34 @@ impl Partitions {
         }
     }
 
+    pub fn relocate(&mut self, part_name: &str, offset: u32) -> Result<(), String> {
+        *self = match self {
+            Partitions::Gen2(parts) => {
+                let p = parts.iter_mut().find(|p| p.entry().name() == part_name);
+                if let Some(p) = p {
+                    if let Err(e) = p.relocate(offset) {
+                        return Err(format!("Cannot relocate partition: {e}"));
+                    }
+                }
+                Partitions::Gen2(parts.to_vec())
+            }
+            Partitions::Gen3(parts) => {
+                let p = parts.iter_mut().find(|p| p.entry().name() == part_name);
+                if let Some(p) = p {
+                    if let Err(e) = p.relocate(offset) {
+                        return Err(format!("Cannot relocate partition: {e}"));
+                    }
+                }
+                Partitions::Gen3(parts.to_vec())
+            }
+            Partitions::Unknown(parts) => {
+                let parts = parts.to_vec();
+                Partitions::Unknown(parts)
+            }
+        };
+        Ok(())
+    }
+
     pub fn to_vec(&self) -> Vec<u8> {
         fn copy_parts(parts: &Vec<&dyn Partition>, data: &mut Vec<u8>) {
             for p in parts {
