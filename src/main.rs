@@ -179,7 +179,8 @@ fn main() {
                 let Ok(me) = me_res else {
                     return;
                 };
-                match clean::clean(&me, &mut data) {
+                let opts = clean::Options { relocate };
+                match clean::clean(&me, &mut data, opts) {
                     Ok(data) => {
                         if let Some(out_file) = output {
                             let mut file = fs::File::create(out_file).unwrap();
