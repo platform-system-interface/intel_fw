@@ -35,7 +35,11 @@ limits access to necessary resources to certain customers only, notably not end
 users.
 Here is a short list of places to find useful information and tools.
 
-- [Win-Raid (Level1Techs) Forum](https://winraid.level1techs.com/t/intel-cs-management-engine-drivers-firmware-and-tools-2-15/30719)
+- Win-Raid (Level1Techs) Forum
+  - [(CS)ME firmware and tools](https://winraid.level1techs.com/t/intel-cs-management-engine-drivers-firmware-and-tools-2-15/30719)
+  - [(CS)ME etc firmware repositories](https://winraid.level1techs.com/t/intel-cs-me-cs-txe-cs-sps-gsc-pmc-pchc-phy-orom-firmware-repositories/30869)
+  - [ME Analyzer](https://winraid.level1techs.com/t/me-analyzer-intel-engine-firmware-analysis-tool-discussion/30876)
+  - [EFFS in ME Gen 2](https://winraid.level1techs.com/t/parsing-effs-partition/34609)
 - [Badcaps Forum](https://www.badcaps.net/forum/troubleshooting-hardware-devices-and-electronics-theory/troubleshooting-desktop-motherboards-graphics-cards-and-pc-peripherals/105308-fit-csme-tool-flash-image-tool-trusted-download-location)
 - [Indiafix Forum](https://www.indiafix.in/2024/09/download-intel-flash-image-tool-fitc.html?m=1)
 - [Vinafix Forum](https://vinafix.com/tags/flash-image-tool/)
