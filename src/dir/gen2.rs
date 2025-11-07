@@ -43,7 +43,7 @@ pub struct Entry {
 }
 
 #[bitfield(u32)]
-#[derive(Immutable, FromBytes, IntoBytes, Serialize, Deserialize)]
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize)]
 pub struct Flags {
     #[bits(4)]
     _r: u8,
@@ -149,36 +149,36 @@ impl Display for Entry {
     }
 }
 
-#[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C, packed)]
-pub struct HuffmanHeader {
-    magic: [u8; 4],
-    chunk_count: u32,
-    chunk_base: u32,
-    _unk0: u32,
-    hs0: u32,
-    hs1: u32,
+pub struct LutHeader {
+    pub magic: [u8; 4],
+    pub chunk_count: u32,
+    pub addr_base: u32,
+    pub spi_base: u32,
+    pub hs0: u32,
+    pub hs1: u32,
     _unk1: u32,
     _unk2: u32,
     _r: [u8; 16], // all 0 in sample
-    chunk_size: u32,
+    pub chunk_size: u32,
     _unk3: u32,
-    name: [u8; 8],
+    pub name: [u8; 8],
 }
 
-const HUFFMAN_HEADER_SIZE: usize = size_of::<HuffmanHeader>();
+pub const LUT_HEADER_SIZE: usize = size_of::<LutHeader>();
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[repr(C)]
-pub struct Huffman {
-    header: HuffmanHeader,
-    chunks: Vec<u32>,
+pub struct HuffmanModule {
+    pub header: LutHeader,
+    pub chunks: Vec<u32>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum Module {
     Uncompressed(Entry),
-    Huffman(Result<(Entry, Huffman), String>),
+    Huffman(Result<(Entry, HuffmanModule), String>),
     Lzma(Result<Entry, String>),
     Unknown(Entry),
 }
@@ -254,19 +254,21 @@ impl Directory {
                 let sig = &data[o..o + 4];
                 match c {
                     Compression::Huffman => {
+                        // A Huffman-encoded module starts with a header and a
+                        // lookup-table indexing the chunks.
                         if sig != SIG_LUT_BYTES {
                             return Module::Huffman(Err(format!(
                                 "Expected {SIG_LUT_BYTES:02x?} @ {o:08x}, got {sig:02x?}"
                             )));
                         }
-                        let (header, _) = HuffmanHeader::read_from_prefix(&data[o..]).unwrap();
+                        let (header, _) = LutHeader::read_from_prefix(&data[o..]).unwrap();
                         let count = header.chunk_count as usize;
-                        let co = o + HUFFMAN_HEADER_SIZE;
-                        let (chunks, _) =
-                            Ref::<_, [u32]>::from_prefix_with_elems(&data[co..], count).unwrap();
-                        let huff = Huffman {
+                        let lo = o + LUT_HEADER_SIZE;
+                        let (lut, _) =
+                            Ref::<_, [u32]>::from_prefix_with_elems(&data[lo..], count).unwrap();
+                        let huff = HuffmanModule {
                             header,
-                            chunks: chunks.to_vec(),
+                            chunks: lut.to_vec(),
                         };
                         Module::Huffman(Ok((*e, huff)))
                     }
@@ -387,7 +389,7 @@ impl Removables for Directory {
 
                     const CHUNK_OFFSET: u32 = 0x10000000;
                     // Each module occupies its own range of chunks.
-                    let b = m.mod_base - (h.header.chunk_base + CHUNK_OFFSET);
+                    let b = m.mod_base - (h.header.addr_base + CHUNK_OFFSET);
                     let c = (m.code_size / cs) as usize;
                     let first_chunk = (b / cs) as usize;
                     let last_chunk = first_chunk + c;
