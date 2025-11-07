@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
+use zerocopy::IntoBytes;
 
-use crate::dir::gen2::{ALWAYS_RETAIN, Directory};
+use crate::dir::gen2::{ALWAYS_RETAIN, Directory, LUT_HEADER_SIZE};
 use crate::dump48;
 use crate::part::{
     fpt::{FPT, FPTEntry, FTPR},
@@ -66,6 +67,32 @@ impl Gen2Partition {
             }
             Gen2Partition::Data(DataPartition { entry, data })
         }
+    }
+
+    pub fn relocate(&mut self, offset: u32) -> Result<(), String> {
+        match self {
+            Self::Dir(p) => {
+                let old_offset = p.entry.offset() as u32;
+                p.entry.set_offset(offset);
+                // rebase Huffman chunks
+                let offset_diff = old_offset - offset;
+                println!("Adjust Huffman LUT, diff: {offset_diff:08x}");
+                if let Err(e) = p.dir.rebase_huffman_chunks(offset_diff) {
+                    return Err(e);
+                }
+                if let Some((mod_offset, huffman_mod)) = p.dir.get_huffman_mod() {
+                    let o = mod_offset;
+                    let l = LUT_HEADER_SIZE;
+                    p.data[o..o + l].copy_from_slice(huffman_mod.header.as_bytes());
+                    let o = mod_offset + LUT_HEADER_SIZE;
+                    let l = huffman_mod.chunks.len() * 4;
+                    p.data[o..o + l].copy_from_slice(huffman_mod.chunks.as_bytes());
+                }
+            }
+            Self::Data(p) => p.entry.set_offset(offset),
+            Self::MalformedOrUnknown(p) => p.entry.set_offset(offset),
+        }
+        Ok(())
     }
 }
 
