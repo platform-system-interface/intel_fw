@@ -22,6 +22,10 @@ pub const SIG_LUT: &str = "LLUT";
 pub const SIG_LUT_BYTES: &[u8] = SIG_LUT.as_bytes();
 pub const SIG_LZMA_BYTES: &[u8] = &[0x36, 0x00, 0x40, 0x00];
 
+// The highest byte of a LUT entry contains flags.
+const CHUNK_INACTIVE: u8 = 0x80;
+const CHUNK_OFFSET_MASK: u32 = 0x00ff_ffff;
+
 // https://github.com/skochinsky/me-tools me_unpack.py MeModuleHeader2
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
@@ -319,12 +323,10 @@ impl Directory {
             .iter()
             .map(|c| {
                 let o = *c as usize;
-                // Highest byte contains flags. 0x80 means inactive.
-                const CHUNK_INACTIVE: usize = 0x80;
-                if o >> 24 == CHUNK_INACTIVE {
+                if (o >> 24) as u8 == CHUNK_INACTIVE {
                     0
                 } else {
-                    let xo = o & 0x00ff_ffff;
+                    let xo = o & CHUNK_OFFSET_MASK as usize;
                     if xo != 0 {
                         nonzero_offsets.push(xo);
                     }
