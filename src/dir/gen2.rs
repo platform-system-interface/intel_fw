@@ -301,6 +301,18 @@ impl Directory {
         })
     }
 
+    pub fn calc_new_offset(&self, min_offset: u32) -> Result<u32, String> {
+        if let Some((offset, m)) = self.get_huffman_mod() {
+            let b = (m.header.addr_base & 0x00ff_ffff) >> 8;
+            let lut_offset = (offset + LUT_HEADER_SIZE) as u32;
+            let mx = min_offset.max(b - lut_offset);
+            // NOTE: Must be aligned to 0x20.
+            return Ok(mx.next_multiple_of(0x20));
+        }
+
+        Err("new offset cannot be calculated".into())
+    }
+
     fn dump_ranges(ranges: &Vec<Range<usize>>) {
         let group_size = 4;
         for (i, r) in ranges.iter().enumerate() {
@@ -356,6 +368,40 @@ impl Directory {
                 o..e
             })
             .collect::<Vec<Range<usize>>>()
+    }
+
+    pub fn rebase_huffman_chunks(&mut self, offset_diff: u32) -> Result<(), String> {
+        if let Some(Module::Huffman(Ok((_, h)))) = self
+            .modules
+            .iter_mut()
+            .find(|m| matches!(m, Module::Huffman(Ok(_))))
+        {
+            h.header.spi_base -= offset_diff;
+            h.header.hs1 -= offset_diff;
+            for c in &mut h.chunks {
+                // The 3 low bytes are the actual offset.
+                // An inactive chunk must not be changed and has offset 0.
+                if (*c >> 24) as u8 == CHUNK_INACTIVE {
+                    //
+                } else {
+                    *c = *c - offset_diff;
+                };
+            }
+            return Ok(());
+        }
+        Err("no Huffman chunks found".into())
+    }
+
+    pub fn get_huffman_mod(&self) -> Option<(usize, &HuffmanModule)> {
+        if let Some(Module::Huffman(Ok((e, h)))) = self
+            .modules
+            .iter()
+            .find(|m| matches!(m, Module::Huffman(Ok(_))))
+        {
+            let lut_header_offset = e.offset as usize;
+            return Some((lut_header_offset, &h));
+        }
+        None
     }
 }
 
