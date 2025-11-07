@@ -175,6 +175,12 @@ impl FPTEntry {
         self.offset as usize & 0x003f_ffff
     }
 
+    pub fn set_offset(&mut self, offset: u32) {
+        let u = self.offset & 0xffc0_0000;
+        let o = offset & 0x003f_ffff;
+        self.offset = u | o;
+    }
+
     pub fn size(&self) -> usize {
         self.size as usize
     }
