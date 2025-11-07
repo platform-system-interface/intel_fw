@@ -18,9 +18,9 @@ pub const ALWAYS_RETAIN: &[&str] = &[
 
 const MODULE_MAGIC: &str = "$MME";
 const MODULE_MAGIC_BYTES: &[u8] = MODULE_MAGIC.as_bytes();
-pub const SIG_LUT: &str = "LLUT";
-pub const SIG_LUT_BYTES: &[u8] = SIG_LUT.as_bytes();
-pub const SIG_LZMA_BYTES: &[u8] = &[0x36, 0x00, 0x40, 0x00];
+const SIG_LUT: &str = "LLUT";
+const SIG_LUT_BYTES: &[u8] = SIG_LUT.as_bytes();
+const SIG_LZMA_BYTES: &[u8] = &[0x36, 0x00, 0x40, 0x00];
 
 // The highest byte of a LUT entry contains flags.
 const CHUNK_INACTIVE: u8 = 0x80;
