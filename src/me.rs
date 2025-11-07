@@ -12,6 +12,7 @@ use crate::dir::{
     gen2::Directory as Gen2Directory,
     gen3::{CPD_MAGIC_BYTES, CodePartitionDirectory},
 };
+use crate::part::gen2::Gen2Partition;
 use crate::part::{
     fpt::{FPT, MIN_FPT_SIZE},
     partitions::Partitions,
@@ -60,6 +61,67 @@ impl FPTArea {
             for p in &self.partitions {
                 println!("Remaining: {}", p.entry());
             }
+        }
+    }
+
+    pub fn relocate_partitions(&mut self) -> Result<(), String> {
+        let sorted_parts = &self.partitions.get_sorted();
+        let first = sorted_parts
+            .into_iter()
+            .filter(|p| p.entry().size() > 0)
+            .nth(0);
+        if let Some(p) = first {
+            let e = p.entry();
+            let n = e.name();
+            let min_offset = MIN_FPT_SIZE;
+            let new_offset = match &self.partitions {
+                Partitions::Gen2(parts) => {
+                    // Find a Directory partition to calculate the offset.
+                    let dir_part = parts.iter().find(|p| matches!(p, Gen2Partition::Dir(_)));
+                    match dir_part {
+                        Some(Gen2Partition::Dir(d)) => d.dir.calc_new_offset(min_offset as u32)?,
+                        _ => return Err("no directory partition found".into()),
+                    }
+                }
+                Partitions::Gen3(_) => e.offset().min(min_offset) as u32,
+                _ => todo!(),
+            };
+
+            let old_offset = e.offset();
+            println!("old offset: {old_offset:08x}");
+            println!("new offset: {new_offset:08x}");
+
+            if let Err(e) = self.partitions.relocate(&n, new_offset) {
+                return Err(format!("Cannot relocate partitions: {e}"));
+            }
+
+            let offset = new_offset as usize;
+            // It may happen that some part of the FPT area had not been covered
+            // by an FPT entry, but it contained data that can now be overwritten
+            // when relocating partitions.
+            let mut non_covered = vec![];
+            let r = offset..offset + e.size();
+            for nc in &self.non_covered {
+                let o = nc.offset;
+                let e = o + nc.data.len();
+                if r.contains(&o) || r.contains(&e) {
+                    println!("Drop data not covered by FPT and now overlapping: {o:08x}..{e:08x}");
+                } else {
+                    non_covered.push(nc.clone());
+                }
+            }
+            self.non_covered = non_covered;
+
+            // Update partition table entry
+            for e in &mut self.fpt.entries {
+                if e.name() == n {
+                    e.set_offset(offset as u32);
+                }
+            }
+
+            Ok(())
+        } else {
+            Err("no FPT partitions found".into())
         }
     }
 
