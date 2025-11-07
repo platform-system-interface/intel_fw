@@ -13,7 +13,7 @@ use crate::dir::{
     gen3::{CPD_MAGIC_BYTES, CodePartitionDirectory},
 };
 use crate::part::{
-    fpt::{FPT, FPT_SIZE},
+    fpt::{FPT, MIN_FPT_SIZE},
     partitions::Partitions,
 };
 
@@ -183,7 +183,7 @@ impl ME {
     // which includes the offset where it was found as its base address.
     pub fn scan(data: &[u8], debug: bool) -> Option<Result<Self, String>> {
         fn find_me(data: &[u8], debug: bool) -> Option<Result<ME, String>> {
-            for o in (0..data.len() - FPT_SIZE - 0x10).step_by(0x40) {
+            for o in (0..data.len() - MIN_FPT_SIZE - 0x10).step_by(0x40) {
                 if let Some(r) = ME::parse(&data[o..], o, debug) {
                     return Some(r);
                 }
