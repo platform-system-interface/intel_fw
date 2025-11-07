@@ -301,6 +301,12 @@ impl Directory {
         })
     }
 
+    /// Calculate a new minimum possible offset for relocation to save space.
+    ///
+    /// As taken from `me_cleaner`:
+    /// The two bytes in the middle of addr_base are added to spi_base to
+    /// compute the final start of the LUT. However, addr_base is not
+    /// modifiable, so act only on spi_base.
     pub fn calc_new_offset(&self, min_offset: u32) -> Result<u32, String> {
         if let Some((offset, m)) = self.get_huffman_mod() {
             let b = (m.header.addr_base & 0x00ff_ffff) >> 8;
@@ -325,7 +331,7 @@ impl Directory {
         println!();
     }
 
-    // Get the offset ranges of the chunks.
+    /// Get the offset ranges of the chunks.
     fn chunks_as_ranges(self: &Self, chunks: &Vec<u32>, stream_end: usize) -> Vec<Range<usize>> {
         // NOTE: This is the end of the directory.
         // me_cleaner uses the end of the ME region.
@@ -370,6 +376,11 @@ impl Directory {
             .collect::<Vec<Range<usize>>>()
     }
 
+    /// Rebase all Huffman chunks based on the offset difference.
+    ///
+    /// Use [`calc_new_offset`] to find a suitable offset.
+    ///
+    /// [`calc_new_offset`]: Directory::calc_new_offset
     pub fn rebase_huffman_chunks(&mut self, offset_diff: u32) -> Result<(), String> {
         if let Some(Module::Huffman(Ok((_, h)))) = self
             .modules
@@ -392,6 +403,11 @@ impl Directory {
         Err("no Huffman chunks found".into())
     }
 
+    /// Find a Huffman module and its offset within the Directory.
+    ///
+    /// Note that all Huffman modules share the same lookup-table to define
+    /// their chunks, so finding any such module suffices to obtain the offset
+    /// and the LUT itself through the module header.
     pub fn get_huffman_mod(&self) -> Option<(usize, &HuffmanModule)> {
         if let Some(Module::Huffman(Ok((e, h)))) = self
             .modules
@@ -406,7 +422,7 @@ impl Directory {
 }
 
 impl Removables for Directory {
-    /// Removable ranges relative to the start of the directory
+    /// Removable ranges relative to the start of the Directory
     fn removables(self: &Self, retention_list: &Vec<String>) -> Vec<Range<usize>> {
         use log::{debug, info, warn};
         let debug = false;
