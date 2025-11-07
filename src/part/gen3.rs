@@ -141,7 +141,9 @@ pub fn parse(fpt: &FPT, data: &[u8], debug: bool) -> Vec<Gen3Partition> {
 
 pub fn clean(parts: &Vec<Gen3Partition>) -> Vec<Gen3Partition> {
     use log::info;
-    let res = parts
+    // Step 1: Reduce down to the partitions to be kept, i.e., non-removable
+    // ones.
+    let mut reduced = parts
         .iter()
         .filter(|p| {
             let e = p.entry();
@@ -153,24 +155,23 @@ pub fn clean(parts: &Vec<Gen3Partition>) -> Vec<Gen3Partition> {
                 true
             }
         })
-        .map(|p| {
-            let mut p = p.clone();
-            if p.entry().name() == FTPR {
-                let offset = p.entry().offset();
-                info!("FTPR @ {offset:08x}");
-                // TODO: Extend with user-provided list
-                let retention_list = strs_to_strings(ALWAYS_RETAIN);
-                let mut cleaned = p.data().clone();
-                match &p {
-                    Gen3Partition::Dir(dir) => {
-                        dir_clean(&dir.cpd, &retention_list, &mut cleaned);
-                    }
-                    _ => {}
-                };
-                p.set_data(cleaned);
+        .map(|p| p.clone())
+        .collect::<Vec<Gen3Partition>>();
+    // Step 2: Clean the FTPR directory, retaining non-removable modules.
+    if let Some(p) = reduced.iter_mut().find(|p| p.entry().name() == FTPR) {
+        let offset = p.entry().offset();
+        info!("FTPR @ {offset:08x}");
+        // TODO: Extend with user-provided list
+        let retention_list = strs_to_strings(ALWAYS_RETAIN);
+        let mut cleaned = p.data().clone();
+        match &p {
+            Gen3Partition::Dir(dir) => {
+                dir_clean(&dir.cpd, &retention_list, &mut cleaned);
             }
-            p
-        })
-        .collect();
-    res
+            _ => {}
+        };
+        p.set_data(cleaned);
+    }
+    // Step 3: Profit.
+    reduced
 }
