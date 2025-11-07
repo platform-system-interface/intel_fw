@@ -18,6 +18,8 @@ pub struct UnknownOrMalformedPartition {
 pub trait Partition {
     fn entry(&self) -> &FPTEntry;
     fn data(&self) -> &Vec<u8>;
+    fn set_entry(&mut self, entry: FPTEntry);
+    fn set_data(&mut self, data: Vec<u8>);
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -37,6 +39,18 @@ impl Partition for GenUnknownPartition {
         match self {
             Self::Data(d) => &d.entry,
             Self::Unknown(d) => &d.entry,
+        }
+    }
+    fn set_data(&mut self, data: Vec<u8>) {
+        match self {
+            Self::Data(d) => d.data = data,
+            Self::Unknown(d) => d.data = data,
+        }
+    }
+    fn set_entry(&mut self, entry: FPTEntry) {
+        match self {
+            Self::Data(d) => d.entry = entry,
+            Self::Unknown(d) => d.entry = entry,
         }
     }
 }
