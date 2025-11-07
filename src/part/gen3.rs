@@ -111,6 +111,15 @@ impl Gen3Partition {
             }
         }
     }
+
+    pub fn relocate(&mut self, offset: u32) -> Result<(), String> {
+        match self {
+            Self::Dir(p) => p.entry.set_offset(offset),
+            Self::Data(p) => p.entry.set_offset(offset),
+            Self::MalformedOrUnknown(p) => p.entry.set_offset(offset),
+        }
+        Ok(())
+    }
 }
 
 pub fn parse(fpt: &FPT, data: &[u8], debug: bool) -> Vec<Gen3Partition> {
