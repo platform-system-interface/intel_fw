@@ -46,6 +46,20 @@ impl Partition for Gen3Partition {
             Self::MalformedOrUnknown(d) => &d.entry,
         }
     }
+    fn set_data(&mut self, data: Vec<u8>) {
+        match self {
+            Self::Dir(d) => d.data = data,
+            Self::Data(d) => d.data = data,
+            Self::MalformedOrUnknown(d) => d.data = data,
+        }
+    }
+    fn set_entry(&mut self, entry: FPTEntry) {
+        match self {
+            Self::Dir(d) => d.entry = entry,
+            Self::Data(d) => d.entry = entry,
+            Self::MalformedOrUnknown(d) => d.entry = entry,
+        }
+    }
 }
 
 impl Gen3Partition {
@@ -95,14 +109,6 @@ impl Gen3Partition {
                 }
                 Gen3Partition::MalformedOrUnknown(UnknownOrMalformedPartition { entry, data, note })
             }
-        }
-    }
-
-    pub fn set_data(&mut self, data: Vec<u8>) {
-        match self {
-            Self::Dir(p) => p.data = data,
-            Self::Data(p) => p.data = data,
-            Self::MalformedOrUnknown(p) => p.data = data,
         }
     }
 }
