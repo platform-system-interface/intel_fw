@@ -18,8 +18,9 @@ operating system of its own is backing the platform.
 
 ## Boot flow
 
-The ME has its own firmware and bootstraps an Intel platform. The main x86 cores
-are held in reset until the ME releases them to boot with their own firmware.
+The ME has its own firmware and bootstraps an Intel platform[^19]. The main x86
+cores are held in reset until the ME releases them to boot with their own
+firmware.
 
 Both the ME firmware and the main x86 firmware are stored in the same flash part
 on a mainboard, partitioned via the Intel Flash Descriptior (IFD).
@@ -94,3 +95,4 @@ The following abbreviations have a second meaning:
 [^16]: <https://www.intel.com/content/www/us/en/architecture-and-technology/vpro/overview.html>
 [^17]: <https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/resources/key-usage-in-integrated-firmware-images.html>
 [^18]: <https://bitkeks.eu/blog/2017/12/the-intel-management-engine.html>
+[^19]: <https://www.intel.com/content/dam/www/public/us/en/security-advisory/documents/intel-csme-security-white-paper.pdf>
