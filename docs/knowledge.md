@@ -1,4 +1,7 @@
-# Knowledge sources
+# Knowledge on Firmware Images for Intel Platforms
+
+The knowledge here focuses on firmware images, their partitioning and data
+structures.
 
 ## Official resources
 
