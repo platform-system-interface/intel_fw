@@ -33,8 +33,8 @@ The boot flow for trusted boot is documented publicly[^17] by Intel.
 
 ## ME classification and security
 
-Security researchers have analyzed the ME and divided hardware variants into 3
-generations[^4] thus far, each with their own multiple firmware versions,
+Security researchers have analyzed the ME[^18] and divided hardware variants
+into 3 generations[^4] thus far, each with their own multiple firmware versions,
 including security patch releases[^5][^6].
 One core aspect in security research has been Boot Guard[^7][^8], which had
 been introduced with Haswell, Intel's 4th generation Core series platforms[^10],
@@ -93,3 +93,4 @@ The following abbreviations have a second meaning:
 [^15]: <https://en.wikipedia.org/wiki/Intel_AMT_versions>
 [^16]: <https://www.intel.com/content/www/us/en/architecture-and-technology/vpro/overview.html>
 [^17]: <https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/resources/key-usage-in-integrated-firmware-images.html>
+[^18]: <https://bitkeks.eu/blog/2017/12/the-intel-management-engine.html>
