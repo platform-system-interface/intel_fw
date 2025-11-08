@@ -10,7 +10,7 @@ an out-of-band management solution[^1] for remote provisioning and support.
 AMT evolved with more features over time, carrying the vPro label for machines
 targeting the business market[^16] and finally converging with more security
 features such as Boot Guard[^2], Intel's secure boot implementation, digital
-content protection (DRM), and more.
+content protection (DRM), and more[^20].
 
 Now running on a coprocessor called the (Converged Security and) Manageability
 Engine[^3], or (CS)ME for short, henceforth abbreviated as _ME_, a full second
@@ -96,3 +96,4 @@ The following abbreviations have a second meaning:
 [^17]: <https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/resources/key-usage-in-integrated-firmware-images.html>
 [^18]: <https://bitkeks.eu/blog/2017/12/the-intel-management-engine.html>
 [^19]: <https://www.intel.com/content/dam/www/public/us/en/security-advisory/documents/intel-csme-security-white-paper.pdf>
+[^20]: <https://www.intel.com/content/dam/support/us/en/documents/technologies/intel_amt_linux_enablement_guide_revision_1_1.pdf>
