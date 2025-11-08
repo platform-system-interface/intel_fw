@@ -24,6 +24,14 @@ Note that the public information mainly focuses on host processor firmware.
   - [ME disablement](https://github.com/ptresearch/me-disablement)
   - [many other repositories](https://github.com/ptresearch?tab=repositories)
 
+## Research
+
+Many researchers have looked into the Intel Management Engine over the years and
+presented on their findings:
+
+- <https://media.ccc.de/v/34c3-8762-inside_intel_management_engine>
+- <https://media.ccc.de/v/36c3-10694-intel_management_engine_deep_dive>
+
 ## Forums
 
 People keep [asking in Intel's community forum](
