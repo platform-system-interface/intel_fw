@@ -51,7 +51,7 @@ use serde::{Deserialize, Serialize};
 use zerocopy::{FromBytes, IntoBytes};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
-use crate::EMPTY;
+use crate::{EMPTY, me::Generation, ver::Version};
 
 // NOTE: This is the LE representation.
 const MAGIC: u32 = 0x0ff0_a55a;
@@ -509,40 +509,116 @@ impl Debug for IFD {
     }
 }
 
-// Extract a bit from a given byte, as bool.
-fn extract_bit(byte: u32, bit: u32) -> bool {
-    byte >> bit & 1 == 1
+/// Extract a bit from a given byte, as bool.
+fn extract_bit(straps: &Vec<u32>, byte: usize, bit: u32) -> bool {
+    straps[byte] >> bit & 1 == 1
+}
+
+/// Set or clear a bit in a given strap, identified by its number.
+fn set_bit(straps: &mut Vec<u32>, byte: usize, bit: u32, s: bool) {
+    let b = straps[byte];
+    straps[byte] = b & !(1 << bit) | ((s as u32) << bit);
 }
 
 // TODO: The straps changed over the generations of processors.
 // Specifically the HAP bit on Skylake and later has moved, so we should not
 // blindly assume it.
 impl IFD {
+    // TODO: What is CSE in debug mode?
+    // https://review.coreboot.org/c/coreboot/+/88307/5
+
     /// Direct Connect Interface
     // from <https://review.coreboot.org/c/coreboot/+/82272>
     // <https://edc.intel.com/content/www/us/en/design/products-and-solutions/processors-and-chipsets/700-series-chipset-family-platform-controller-hub-datasheet-volume-1-of/004/intel-direct-connect-interface-dci/>
     pub fn dci(&self) -> bool {
-        extract_bit(self.pch_straps[0], 17)
+        extract_bit(&self.pch_straps, 0, 17)
     }
+    /// Direct Connect Interface
+    pub fn set_dci(&mut self, s: bool) {
+        set_bit(&mut self.pch_straps, 0, 17, s)
+    }
+
+    // TODO: there is a _different_ soft-disable feature
+    // https://review.coreboot.org/c/coreboot/+/78911/comments/61e2b541_b4faa3e4
+    // TODO: make ME version a parameter to infer platform
     /// High-Assurance Platform (ME soft-disable), ME Gen 3
     pub fn hap(&self) -> bool {
-        extract_bit(self.pch_straps[0], 16)
+        extract_bit(&self.pch_straps, 0, 16)
     }
+    /// High-Assurance Platform (ME soft-disable), ME Gen 3
+    pub fn set_hap(&mut self, s: bool) {
+        set_bit(&mut self.pch_straps, 0, 16, s)
+    }
+
     /// I/O Controller Hub, ME Gen 1
     pub fn ich_me_disabled(&self) -> bool {
-        extract_bit(self.pch_straps[0], 0)
+        extract_bit(&self.pch_straps, 0, 0)
     }
+    /// I/O Controller Hub, ME Gen 1
+    pub fn set_ich_me_disabled(&mut self, s: bool) {
+        set_bit(&mut self.pch_straps, 0, 0, s)
+    }
+
     /// Memory Controller Hub, ME Gen 1
     pub fn mch_me_disabled(&self) -> bool {
-        extract_bit(self.mch_straps[0], 0)
+        extract_bit(&self.mch_straps, 0, 0)
     }
+    /// Memory Controller Hub, ME Gen 1
+    pub fn set_mch_me_disabled(&mut self, s: bool) {
+        set_bit(&mut self.mch_straps, 0, 0, s)
+    }
+
     /// Memory Controller Hub (alternative), ME Gen 1
     pub fn mch_alt_me_disabled(&self) -> bool {
-        extract_bit(self.mch_straps[0], 7)
+        extract_bit(&self.mch_straps, 0, 7)
     }
+    /// Memory Controller Hub (alternative), ME Gen 1
+    pub fn set_mch_alt_me_disabled(&mut self, s: bool) {
+        set_bit(&mut self.mch_straps, 0, 7, s)
+    }
+
     /// Disable ME (alternative), ME Gen 2
     pub fn alt_me_disabled(&self) -> bool {
-        extract_bit(self.pch_straps[10], 7)
+        extract_bit(&self.pch_straps, 10, 7)
+    }
+    /// Disable ME (alternative), ME Gen 2
+    pub fn set_alt_me_disabled(&mut self, s: bool) {
+        set_bit(&mut self.pch_straps, 10, 7, s)
+    }
+
+    /// Disable ME for ME generation 3.
+    /// Requires passing the ME version in order to infer the platform.
+    pub fn disable_me_gen3(&mut self, me_ver: &Option<Version>) -> Result<(), String> {
+        if let Some(ver) = me_ver {
+            match ver.major {
+                11 => self.set_hap(true),
+                _ => return Err("ME > 11 not yet supported".into()),
+            }
+        }
+        Ok(())
+    }
+
+    /// Disable the ME using any mechanism given the ME generation and version.
+    pub fn disable_me(
+        &mut self,
+        me_gen: &Generation,
+        me_ver: &Option<Version>,
+    ) -> Result<(), String> {
+        match me_gen {
+            Generation::Gen1 => {
+                self.set_ich_me_disabled(true);
+                self.set_mch_me_disabled(true);
+                // NOTE: coreboot ifdtool would also set the AltMeDisable bit here.
+                // TODO: self.set_alt_me_disabled(true);
+                Ok(())
+            }
+            Generation::Gen2 => {
+                self.set_alt_me_disabled(true);
+                Ok(())
+            }
+            Generation::Gen3 => self.disable_me_gen3(me_ver),
+            _ => Err("Unknown ME generation/version".into()),
+        }
     }
 }
 
