@@ -139,8 +139,8 @@ impl Display for FPTHeader {
 
 #[derive(Debug)]
 pub enum FptError<'a> {
-    HeaderParseError(SizeError<&'a [u8], FPTHeader>),
-    EntryParseError(
+    ParseHeaderError(SizeError<&'a [u8], FPTHeader>),
+    ParseEntryError(
         ConvertError<
             AlignmentError<&'a [u8], [FPTEntry]>,
             SizeError<&'a [u8], [FPTEntry]>,
@@ -242,14 +242,14 @@ impl<'a> FPT {
         let d = &data[offset..];
         let header = match FPTHeader::read_from_prefix(d) {
             Ok((h, _)) => h,
-            Err(e) => return Some(Err(FptError::HeaderParseError(e))),
+            Err(e) => return Some(Err(FptError::ParseHeaderError(e))),
         };
         // NOTE: Skip $FPT (header) itself
         let slice = &d[FPT_HEADER_SIZE..];
         let count = header.entries as usize;
         let entries = match Ref::<_, [FPTEntry]>::from_prefix_with_elems(slice, count) {
             Ok((r, _)) => r,
-            Err(e) => return Some(Err(FptError::EntryParseError(e))),
+            Err(e) => return Some(Err(FptError::ParseEntryError(e))),
         };
 
         let original_size = pre_header.len() + FPT_HEADER_SIZE + FPT_ENTRY_SIZE * entries.len();
@@ -327,7 +327,7 @@ fn parse_size_error() {
     let parsed = FPT::parse(&DATA[..70]);
     assert!(parsed.is_some());
     let fpt_res = parsed.unwrap();
-    assert!(matches!(fpt_res, Err(FptError::EntryParseError(_))));
+    assert!(matches!(fpt_res, Err(FptError::ParseEntryError(_))));
 }
 
 #[test]
