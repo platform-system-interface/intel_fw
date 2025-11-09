@@ -148,7 +148,11 @@ fn main() {
                 debug!("  Retain FTPR modules:     {keep_modules}");
                 debug!("  Relocate FTPR partition: {relocate}");
                 debug!("  Truncate empty parts:    {truncate}");
-                let disable_me = soft_disable || soft_disable_only;
+                let disable_me = match (soft_disable, soft_disable_only) {
+                    (true, false) => "yes",
+                    (false, false) => "no",
+                    (_, true) => "only this and nothing more",
+                };
                 debug!("  Soft disable ME:         {disable_me}");
                 debug!("");
                 if let Some(allowlist) = whitelist {
@@ -179,8 +183,12 @@ fn main() {
                 let Ok(me) = me_res else {
                     return;
                 };
-                let opts = clean::Options { relocate };
-                match clean::clean(&me, &mut data, opts) {
+                let opts = clean::Options {
+                    relocate,
+                    disable_me: soft_disable,
+                    disable_me_only: soft_disable_only,
+                };
+                match clean::clean(&fw.ifd, &me, &mut data, opts) {
                     Ok(data) => {
                         if let Some(out_file) = output {
                             let mut file = fs::File::create(out_file).unwrap();
