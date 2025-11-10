@@ -10,6 +10,9 @@ projects, including a flexible API.
 
 The [architecture and design](docs/architecture.md) is based on experience.
 
+To test this tool, you will need sample [firmware images](docs/images.md).
+For convenience, take a look at the [scripts](scripts/) used for development.
+
 ## Development
 
 To run the CLI via `cargo` directly, remember to add arguments after an extra
