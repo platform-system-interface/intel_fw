@@ -184,6 +184,7 @@ fn main() {
                     return;
                 };
                 let opts = clean::Options {
+                    keep_modules,
                     relocate,
                     disable_me: soft_disable,
                     disable_me_only: soft_disable_only,

@@ -1,10 +1,12 @@
 use intel_fw::{
     ifd::{IFD, IfdError},
     me::ME,
+    part::part::ClearOptions,
 };
 use log::warn;
 
 pub struct Options {
+    pub keep_modules: bool,
     pub relocate: bool,
     pub disable_me: bool,
     pub disable_me_only: bool,
@@ -36,7 +38,10 @@ pub fn clean(
         }
     }
     let mut new_me = me.clone();
-    new_me.fpt_area.clean();
+    let opts = ClearOptions {
+        keep_modules: options.keep_modules,
+    };
+    new_me.fpt_area.clean(&opts);
     if options.relocate {
         if let Err(e) = new_me.fpt_area.relocate_partitions() {
             warn!("Could not relocate: {e}")

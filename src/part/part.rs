@@ -59,6 +59,10 @@ pub fn strs_to_strings(strs: &[&str]) -> Vec<String> {
     Vec::from(strs).iter().map(|s| String::from(*s)).collect()
 }
 
+pub struct ClearOptions {
+    pub keep_modules: bool,
+}
+
 // Clear out removable ranges in the FTPR directory
 pub fn dir_clean(dir: &dyn Removables, retention_list: &Vec<String>, data: &mut Vec<u8>) {
     use log::info;
