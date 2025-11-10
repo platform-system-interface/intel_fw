@@ -30,6 +30,7 @@ impl Display for Meta {
 }
 
 static KEY_TO_META: phf::Map<&'static str, Meta> = phf_map! {
+    // (CS)ME
     "8431285d43b0f2a2f520d7cab3d34178" => Meta {
         variant: Variant::ME,
         version: &["2.0.x.x", "2.1.x.x", "2.2.x.x"],
@@ -90,6 +91,7 @@ static KEY_TO_META: phf::Map<&'static str, Meta> = phf_map! {
         variant: Variant::ME,
         version: &["16.x.x.x"]
     },
+    // TXE
     "bda0b6bb8ca0bf0cac55ac4c4d55e0f2" => Meta {
         variant: Variant::TXE,
         version: &["1.x.x.x"],
@@ -106,6 +108,7 @@ static KEY_TO_META: phf::Map<&'static str, Meta> = phf_map! {
         variant: Variant::TXE,
         version: &["3.x.x.x"],
     },
+    // SPS
     "be900fef868f770d266b1fc67e887e69" => Meta {
         variant: Variant::SPS,
         version: &["2.x.x.x"],
@@ -120,7 +123,9 @@ static KEY_TO_META: phf::Map<&'static str, Meta> = phf_map! {
     },
 };
 
-/// Pass the MD5 hash (hex str) of a manifest signing key (pub key with exponent).
-pub fn get_meta_for_key(key: &str) -> Option<&Meta> {
-    KEY_TO_META.get(key)
+/// Get metadata for a given manifest signing key (pub key with exponent).
+///
+/// * `key_hash` - MD5 hash (hex str) of the key
+pub fn get_meta_for_key(key_hash: &str) -> Option<&Meta> {
+    KEY_TO_META.get(key_hash)
 }
