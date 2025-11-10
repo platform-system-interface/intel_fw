@@ -7,7 +7,7 @@ use crate::dir::{
 use crate::dump48;
 use crate::part::{
     fpt::{DIR_PARTS, FPT, FPTEntry, FS_PARTS, FTPR, REMOVABLE_PARTS},
-    part::{Partition, UnknownOrMalformedPartition, dir_clean, strs_to_strings},
+    part::{ClearOptions, Partition, UnknownOrMalformedPartition, dir_clean, strs_to_strings},
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -148,7 +148,7 @@ pub fn parse(fpt: &FPT, data: &[u8], debug: bool) -> Vec<Gen3Partition> {
     parts
 }
 
-pub fn clean(parts: &Vec<Gen3Partition>) -> Vec<Gen3Partition> {
+pub fn clean(parts: &Vec<Gen3Partition>, options: &ClearOptions) -> Vec<Gen3Partition> {
     use log::info;
     // Step 1: Reduce down to the partitions to be kept, i.e., non-removable
     // ones.
@@ -166,6 +166,9 @@ pub fn clean(parts: &Vec<Gen3Partition>) -> Vec<Gen3Partition> {
         })
         .map(|p| p.clone())
         .collect::<Vec<Gen3Partition>>();
+    if options.keep_modules {
+        return reduced;
+    }
     // Step 2: Clean the FTPR directory, retaining non-removable modules.
     if let Some(p) = reduced.iter_mut().find(|p| p.entry().name() == FTPR) {
         let offset = p.entry().offset();

@@ -5,6 +5,7 @@ use zerocopy::IntoBytes;
 
 use crate::EMPTY;
 use crate::dir::gen3::CPD_MAGIC_BYTES;
+use crate::part::part::ClearOptions;
 use crate::part::{
     fpt::{FPT, FPTEntry},
     gen2::{self, Gen2Partition},
@@ -116,14 +117,14 @@ impl Partitions {
 
     // TODO: retention list
     /// Clear out fully removable partitions, adjusting header and checksum
-    pub fn clear(&mut self) {
+    pub fn clear(&mut self, options: &ClearOptions) {
         let parts = match &self {
             Partitions::Gen2(parts) => {
-                let res = gen2::clean(&parts);
+                let res = gen2::clean(&parts, options);
                 Partitions::Gen2(res)
             }
             Partitions::Gen3(parts) => {
-                let res = gen3::clean(&parts);
+                let res = gen3::clean(&parts, options);
                 Partitions::Gen3(res)
             }
             Partitions::Unknown(p) => {

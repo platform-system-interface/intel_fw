@@ -5,7 +5,10 @@ use crate::dir::gen2::{ALWAYS_RETAIN, Directory, LUT_HEADER_SIZE};
 use crate::dump48;
 use crate::part::{
     fpt::{FPT, FPTEntry, FTPR},
-    part::{DataPartition, Partition, UnknownOrMalformedPartition, dir_clean, strs_to_strings},
+    part::{
+        ClearOptions, DataPartition, Partition, UnknownOrMalformedPartition, dir_clean,
+        strs_to_strings,
+    },
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -122,7 +125,7 @@ pub fn parse(fpt: &FPT, data: &[u8], debug: bool) -> Vec<Gen2Partition> {
     parts
 }
 
-pub fn clean(parts: &Vec<Gen2Partition>) -> Vec<Gen2Partition> {
+pub fn clean(parts: &Vec<Gen2Partition>, options: &ClearOptions) -> Vec<Gen2Partition> {
     use log::info;
     let res = parts
         .iter()
@@ -138,7 +141,7 @@ pub fn clean(parts: &Vec<Gen2Partition>) -> Vec<Gen2Partition> {
         })
         .map(|p| {
             let mut p = p.clone();
-            if p.entry().name() == FTPR {
+            if p.entry().name() == FTPR && !options.keep_modules {
                 let offset = p.entry().offset();
                 info!("FTPR @ {offset:08x}");
                 // TODO: Extend with user-provided list

@@ -15,6 +15,7 @@ use crate::dir::{
 use crate::part::gen2::Gen2Partition;
 use crate::part::{
     fpt::{FPT, MIN_FPT_SIZE},
+    part::ClearOptions,
     partitions::Partitions,
 };
 use crate::ver::Version;
@@ -50,12 +51,12 @@ pub struct FPTArea {
 
 impl FPTArea {
     /// Clear out fully removable partitions and adjust FPT
-    pub fn clean(&mut self) {
+    pub fn clean(&mut self, options: &ClearOptions) {
         let mut fpt = self.fpt.clone();
         fpt.clear();
         self.fpt = fpt;
         let mut parts = self.partitions.clone();
-        parts.clear();
+        parts.clear(options);
         self.partitions = parts;
         let debug = true;
         if debug {
