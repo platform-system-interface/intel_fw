@@ -162,10 +162,10 @@ fn main() {
                     debug!("Blocklist: {blocklist:?}");
                 }
                 debug!("");
-                if let Some(descriptor_file) = extract_descriptor {
+                if let Some(descriptor_file) = &extract_descriptor {
                     info!("Dump flash descriptor to {descriptor_file}");
                 }
-                if let Some(me_file) = extract_me {
+                if let Some(me_file) = &extract_me {
                     info!("Dump ME region to {me_file}");
                 }
                 if let Some(out_file) = &output {
@@ -191,11 +191,23 @@ fn main() {
                 };
                 match clean::clean(&fw.ifd, &me, &mut data, opts) {
                     Ok(data) => {
-                        if let Some(out_file) = output {
-                            let mut file = fs::File::create(out_file).unwrap();
-                            file.write_all(&data).unwrap();
+                        if let Some(f) = output {
+                            let mut f = fs::File::create(f).unwrap();
+                            f.write_all(&data).unwrap();
                         } else {
-                            error!("Clean operation failed");
+                            error!("No output file given");
+                        }
+                        if let Ok(ifd) = &fw.ifd {
+                            if let Some(f) = extract_descriptor {
+                                let mut f = fs::File::create(f).unwrap();
+                                let ifd_range = ifd.regions.ifd_range();
+                                f.write_all(&data[ifd_range]).unwrap();
+                            }
+                            if let Some(f) = extract_me {
+                                let mut f = fs::File::create(f).unwrap();
+                                let me_range = ifd.regions.me_range();
+                                f.write_all(&data[me_range]).unwrap();
+                            }
                         }
                     }
                     Err(e) => {
