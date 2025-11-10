@@ -11,6 +11,7 @@ use crate::part::{
     gen3::{self, Gen3Partition},
     part::{GenUnknownPartition, Partition},
 };
+use crate::ver::Version;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum Partitions {
@@ -68,6 +69,34 @@ impl Partitions {
         };
 
         partitions
+    }
+
+    pub fn get_me_version(&self) -> Option<Version> {
+        match self {
+            Partitions::Gen2(parts) => {
+                if let Some(Gen2Partition::Dir(d)) =
+                    parts.iter().find(|p| matches!(p, Gen2Partition::Dir(_)))
+                {
+                    Some(d.dir.manifest.header.version)
+                } else {
+                    None
+                }
+            }
+            Partitions::Gen3(parts) => {
+                if let Some(Gen3Partition::Dir(d)) =
+                    parts.iter().find(|p| matches!(p, Gen3Partition::Dir(_)))
+                {
+                    if let Ok(m) = d.cpd.manifest {
+                        Some(m.header.version)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
     }
 
     /// Get ranges not covered by FPT entries.
