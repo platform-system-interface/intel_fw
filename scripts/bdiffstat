@@ -1,0 +1,8 @@
+#!/bin/sh
+
+DIFF=`cmp -l "$1" "$2" | wc -l`
+SIZE=`ls -l "$1" | awk '{print $5}'`
+STAT=`echo | awk "{print 100*$DIFF/$SIZE}"`
+
+echo "$1" vs "$2":
+echo "  $DIFF / $SIZE bytes differ (${STAT}%)"
