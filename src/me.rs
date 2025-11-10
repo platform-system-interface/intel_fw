@@ -17,6 +17,7 @@ use crate::part::{
     fpt::{FPT, MIN_FPT_SIZE},
     partitions::Partitions,
 };
+use crate::ver::Version;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub enum Generation {
@@ -175,6 +176,7 @@ impl FPTArea {
 pub struct ME {
     pub base: usize,
     pub generation: Generation,
+    pub version: Option<Version>,
     pub fpt_area: FPTArea,
     // NOTE: There _may_ be directories outside the FPT area.
     // It is yet unclear how they are referenced.
@@ -209,6 +211,8 @@ impl ME {
                 Generation::Gen3
             };
 
+            let version = partitions.get_me_version();
+
             let non_covered = partitions
                 .non_covered_ranges()
                 .iter()
@@ -234,6 +238,7 @@ impl ME {
                 base,
                 fpt_area,
                 generation,
+                version,
                 cpds,
             }))
         } else {
