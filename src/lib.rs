@@ -37,10 +37,10 @@ impl Firmware {
         let ifd = IFD::parse(&data);
         let me = match &ifd {
             Ok(ifd) => {
-                let me_region = ifd.regions.flreg2.range();
-                let (b, l) = me_region;
+                let me_region = ifd.regions.me_range();
+                let b = me_region.start;
                 info!("ME region start @ {b:08x}");
-                ME::parse(&data[b..l], b, debug)
+                ME::parse(&data[me_region], b, debug)
             }
             Err(e) => {
                 warn!("Not a full image: {e:?}");

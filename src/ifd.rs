@@ -44,7 +44,10 @@
 // Lowercase helpers are provided through implementations.
 #![allow(non_snake_case)]
 
-use std::fmt::{Debug, Display};
+use std::{
+    fmt::{Debug, Display},
+    ops::Range,
+};
 
 use bitfield_struct::bitfield;
 use serde::{Deserialize, Serialize};
@@ -307,8 +310,8 @@ impl FlashRegion {
         self.limit() as usize * 4096 + 4095
     }
 
-    pub fn range(self) -> (usize, usize) {
-        (self.ba(), self.la() + 1)
+    pub fn range(self) -> Range<usize> {
+        self.ba()..self.la() + 1
     }
 }
 
@@ -334,6 +337,18 @@ pub struct Regions {
     pub flreg7: FlashRegion,
     pub flreg8: FlashRegion,
     pub flreg9: FlashRegion,
+}
+
+impl Regions {
+    pub fn ifd_range(&self) -> Range<usize> {
+        self.flreg0.range()
+    }
+    pub fn bios_range(&self) -> Range<usize> {
+        self.flreg1.range()
+    }
+    pub fn me_range(&self) -> Range<usize> {
+        self.flreg2.range()
+    }
 }
 
 // NOTE: Regions have changed over processors generations.
