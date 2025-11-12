@@ -220,6 +220,12 @@ impl ME {
                 .map(|u| {
                     let offset = u.start;
                     let end = u.end;
+                    if offset > data.len() || end > data.len() {
+                        return Data {
+                            data: vec![],
+                            offset,
+                        };
+                    }
                     let data = data[offset..end].to_vec();
                     Data { data, offset }
                 })
