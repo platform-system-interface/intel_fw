@@ -255,6 +255,9 @@ impl Directory {
             .map(|e| {
                 let c = e.flags.compression();
                 let o = e.offset as usize;
+                if o + 4 > data.len() {
+                    return Module::Unknown(*e);
+                }
                 let sig = &data[o..o + 4];
                 match c {
                     Compression::Huffman => {
