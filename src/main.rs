@@ -19,13 +19,6 @@ mod show;
 
 use intel_fw::Firmware;
 
-#[derive(Clone, Copy, Debug, ValueEnum)]
-enum Partition {
-    MFS,
-    FTPR,
-    CODE, // only Gen 1
-}
-
 #[derive(Subcommand, Debug)]
 enum MeCommand {
     /// Clean up (CS)ME partitions and related platform features
@@ -50,10 +43,10 @@ enum MeCommand {
         keep_modules: bool,
         /// Comma separated list of partitions to keep unconditionally
         #[clap(short, long, value_delimiter = ',')]
-        whitelist: Option<Vec<Partition>>,
+        whitelist: Option<Vec<String>>,
         /// Comma separated list of partitions to remove unconditionally
         #[clap(short, long, value_delimiter = ',')]
-        blacklist: Option<Vec<Partition>>,
+        blacklist: Option<Vec<String>>,
         /// Remove ME/TXE write permissions on other flash regions (requires a full image)
         #[clap(long, short)]
         descriptor: bool,
