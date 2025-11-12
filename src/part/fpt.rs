@@ -18,6 +18,7 @@ use core::{
     num::Wrapping,
 };
 
+use bitfield_struct::bitfield;
 use serde::{Deserialize, Serialize};
 use zerocopy::{AlignmentError, ConvertError, FromBytes, IntoBytes, Ref, SizeError};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
@@ -149,6 +150,71 @@ pub enum FptError<'a> {
     ),
 }
 
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PartitionKind {
+    Code,
+    Data,
+    NVRAM,
+    XXData,
+    EFFS,
+    Unknown,
+}
+
+impl PartitionKind {
+    const fn from_bits(val: u8) -> Self {
+        match val {
+            0 => Self::Code,
+            1 => Self::Data,
+            2 => Self::NVRAM,
+            3 => Self::XXData,
+            4 => Self::EFFS,
+            _ => Self::Unknown,
+        }
+    }
+
+    const fn into_bits(self) -> u8 {
+        self as u8
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq)]
+#[repr(u8)]
+pub enum Validity {
+    Valid,
+    Invalid,
+    Unknown,
+}
+
+impl Validity {
+    const fn from_bits(val: u8) -> Self {
+        match val {
+            0x00 => Self::Valid,
+            0xff => Self::Invalid,
+            _ => Self::Unknown,
+        }
+    }
+
+    const fn into_bits(self) -> u8 {
+        self as u8
+    }
+}
+
+#[bitfield(u32)]
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize)]
+pub struct EntryFlags {
+    #[bits(7)]
+    kind: PartitionKind,
+    copy_to_dram_cache: bool,
+    #[bits(7)]
+    _res: u8,
+    len1: bool,
+    len2: bool,
+    #[bits(7)]
+    _res: u8,
+    #[bits(8)]
+    validity: Validity,
+}
+
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C, packed)]
 pub struct FPTEntry {
@@ -159,7 +225,7 @@ pub struct FPTEntry {
     pub start_tokens: u32,
     pub max_tokens: u32,
     pub scratch_sectors: u32,
-    pub flags: u32,
+    pub flags: EntryFlags,
 }
 
 impl FPTEntry {
@@ -198,7 +264,9 @@ impl Display for FPTEntry {
         let part_info = format!("{part_type:?}: {full_name}");
         let name_offset_end_size = format!("{name:>4} @ 0x{o:08x}:0x{end:08x} (0x{s:08x})");
 
-        write!(f, "{name_offset_end_size}  {part_info}")
+        let fl = self.flags;
+        let fb = fl.into_bits();
+        write!(f, "{name_offset_end_size}  {part_info}\n  {fb:08x}: {fl:?}")
     }
 }
 
