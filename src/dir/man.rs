@@ -1,7 +1,7 @@
 use core::fmt::{self, Display};
 use serde::{Deserialize, Serialize};
 use zerocopy::{FromBytes, IntoBytes};
-use zerocopy_derive::{FromBytes, IntoBytes};
+use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 use crate::ver::Version;
 
@@ -9,7 +9,7 @@ const VENDOR_INTEL: u32 = 0x8086;
 const MANIFEST2_MAGIC: &str = "$MN2";
 const MANIFEST2_MAGIC_BYTES: &[u8] = MANIFEST2_MAGIC.as_bytes();
 
-#[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct Date {
     day: u8,
@@ -24,7 +24,7 @@ impl Display for Date {
     }
 }
 
-#[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct Vendor(u32);
 
@@ -39,7 +39,7 @@ impl Display for Vendor {
     }
 }
 
-#[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct HeaderVersion {
     minor: u16,
@@ -54,7 +54,7 @@ impl Display for HeaderVersion {
 }
 
 // https://github.com/skochinsky/me-tools me_unpack.py MeManifestHeader
-#[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct Header {
     pub mod_type: u16,
@@ -93,7 +93,7 @@ impl Display for Header {
     }
 }
 
-#[derive(Serialize, Deserialize, IntoBytes, FromBytes, Clone, Copy, Debug)]
+#[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
 pub struct Manifest {
     pub header: Header,
