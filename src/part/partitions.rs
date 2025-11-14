@@ -5,6 +5,7 @@ use zerocopy::IntoBytes;
 
 use crate::EMPTY;
 use crate::dir::gen3::CPD_MAGIC_BYTES;
+use crate::part::fpt::PartitionKind;
 use crate::part::part::ClearOptions;
 use crate::part::{
     fpt::{FPT, FPTEntry},
@@ -184,6 +185,7 @@ impl Partitions {
     }
 
     pub fn to_vec(&self) -> Vec<u8> {
+        use log::debug;
         fn copy_parts(parts: &Vec<&dyn Partition>, data: &mut Vec<u8>) {
             for p in parts {
                 let offset = p.entry().offset();
@@ -202,8 +204,20 @@ impl Partitions {
         let sorted_parts = &self.get_sorted();
 
         // This gets us the smallest possible slice to copy into.
-        let last = &sorted_parts.into_iter().last().unwrap().entry();
-        let size = last.offset() + last.size();
+        // NOTE: We need to filter out NVRAM partitions, which have an offset of
+        // 0xffff_ffff.
+        let last = &sorted_parts
+            .into_iter()
+            .filter(|p| {
+                let f = p.entry().flags;
+                f.kind() != PartitionKind::NVRAM
+            })
+            .last()
+            .unwrap()
+            .entry();
+        let o = last.offset();
+        let size = o + last.size();
+        debug!("Last partition @ {o:08x}; final size: {size:08x}");
         let mut data = vec![EMPTY; size];
 
         match sorted_parts {
