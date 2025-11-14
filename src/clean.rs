@@ -51,8 +51,12 @@ pub fn clean(
             warn!("Could not relocate: {e}")
         }
     }
-    let cleaned = new_me.fpt_area.to_vec();
-    let size = cleaned.len();
-    data[me.base..me.base + size].copy_from_slice(&cleaned);
-    Ok(data.to_vec())
+    match new_me.fpt_area.to_vec() {
+        Ok(cleaned) => {
+            let size = cleaned.len();
+            data[me.base..me.base + size].copy_from_slice(&cleaned);
+            Ok(data.to_vec())
+        }
+        Err(e) => Err(e),
+    }
 }
