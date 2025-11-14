@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{EMPTY, Removables, part::fpt::FPTEntry};
+use crate::{
+    EMPTY, Removables,
+    part::fpt::{FPTEntry, FTPR},
+};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DataPartition {
@@ -61,9 +64,19 @@ pub fn strs_to_strings(strs: &[&str]) -> Vec<String> {
 
 pub struct ClearOptions {
     pub keep_modules: bool,
+    pub parts_force_retention: Vec<String>,
+    pub parts_force_deletion: Vec<String>,
 }
 
-// Clear out removable ranges in the FTPR directory
+/// Shared logic for deciding whether a partition should be retained.
+pub fn retain(part_name: String, options: &ClearOptions) -> bool {
+    part_name == FTPR
+        || options.parts_force_retention.contains(&part_name)
+        || (options.parts_force_deletion.len() > 0
+            && !options.parts_force_deletion.contains(&part_name))
+}
+
+/// Clear out removable ranges in the FTPR directory
 pub fn dir_clean(dir: &dyn Removables, retention_list: &Vec<String>, data: &mut Vec<u8>) {
     use log::info;
     for r in dir.removables(&retention_list) {

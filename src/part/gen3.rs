@@ -6,8 +6,10 @@ use crate::dir::{
 };
 use crate::dump48;
 use crate::part::{
-    fpt::{DIR_PARTS, FPT, FPTEntry, FS_PARTS, FTPR, REMOVABLE_PARTS},
-    part::{ClearOptions, Partition, UnknownOrMalformedPartition, dir_clean, strs_to_strings},
+    fpt::{DIR_PARTS, FPT, FPTEntry, FS_PARTS, FTPR},
+    part::{
+        ClearOptions, Partition, UnknownOrMalformedPartition, dir_clean, retain, strs_to_strings,
+    },
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -156,12 +158,13 @@ pub fn clean(parts: &Vec<Gen3Partition>, options: &ClearOptions) -> Vec<Gen3Part
         .iter()
         .filter(|p| {
             let e = p.entry();
-            if REMOVABLE_PARTS.contains(&e.name().as_str()) {
-                info!("Remove {e}");
-                false
-            } else {
+            let n = e.name();
+            if retain(n, options) {
                 info!("Retain {e}");
                 true
+            } else {
+                info!("Remove {e}");
+                false
             }
         })
         .map(|p| p.clone())

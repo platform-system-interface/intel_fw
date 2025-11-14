@@ -23,7 +23,11 @@ use serde::{Deserialize, Serialize};
 use zerocopy::{AlignmentError, ConvertError, FromBytes, IntoBytes, Ref, SizeError};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
-use crate::{EMPTY, ver::Version};
+use crate::{
+    part::part::{retain, ClearOptions},
+    ver::Version,
+    EMPTY,
+};
 
 pub const FTPR: &str = "FTPR";
 pub const FTUP: &str = "FTUP";
@@ -358,16 +362,28 @@ impl<'a> FPT {
     }
 
     /// Remove all entries but FTPR, adjusting header and checksum
-    pub fn clear(&mut self) {
+    ///
+    /// Honor force retention/deletion lists, except for NVRAM entries and
+    /// empty partitions, i.e. those of size 0; these are always removed.
+    pub fn clear(&mut self, options: &ClearOptions) {
         self.entries = self
             .entries
             .iter()
-            .filter_map(|e| if e.name() == FTPR { Some(*e) } else { None })
+            .filter(|e| {
+                let f = e.flags;
+                retain(e.name(), options) && e.size() > 0 && f.kind() != PartitionKind::NVRAM
+            })
+            .map(|e| *e)
             .collect();
         self.header.entries = self.entries.len() as u32;
-        // clear EFFS presence flag
-        // TODO: define bitfield, parameterize via API
-        self.header.flash_layout_or_flags &= 0xffff_fffe;
+        // clear EFFS presence flag if applicable
+        if (!options.parts_force_retention.contains(&EFFS.into())
+            && options.parts_force_deletion.len() == 0)
+            || options.parts_force_deletion.contains(&EFFS.into())
+        {
+            // TODO: define bitfield, parameterize via API
+            self.header.flash_layout_or_flags &= 0xffff_fffe;
+        }
         self.header.checksum = self.header_checksum();
     }
 
@@ -428,7 +444,12 @@ fn checksum() {
 #[test]
 fn clear() {
     let mut fpt = FPT::parse(&DATA).unwrap().unwrap();
-    fpt.clear();
+    let opts = ClearOptions {
+        keep_modules: false,
+        parts_force_retention: vec![],
+        parts_force_deletion: vec![],
+    };
+    fpt.clear(&opts);
     let s = fpt.original_size;
     let cleaned = &fpt.to_vec();
     assert_eq!(cleaned, &FPT_CLEANED[..s]);

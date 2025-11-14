@@ -53,7 +53,7 @@ impl FPTArea {
     /// Clear out fully removable partitions and adjust FPT
     pub fn clean(&mut self, options: &ClearOptions) {
         let mut fpt = self.fpt.clone();
-        fpt.clear();
+        fpt.clear(options);
         self.fpt = fpt;
         let mut parts = self.partitions.clone();
         parts.clear(options);
