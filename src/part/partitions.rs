@@ -185,7 +185,28 @@ impl Partitions {
         Ok(())
     }
 
-    pub fn to_vec(&self) -> Vec<u8> {
+    /// Get the last FPT entry based on offsets, i.e., the one with the highest
+    /// offset. Use its offset and size and round to next 4K to calculate the
+    /// smallest possible ME region.
+    pub fn last_entry(&self) -> Option<FPTEntry> {
+        let sorted_parts = &self.get_sorted();
+        // NOTE: We need to filter out NVRAM partitions, which have an offset of
+        // 0xffff_ffff.
+        if let Some(last) = &sorted_parts
+            .into_iter()
+            .filter(|p| {
+                let f = p.entry().flags;
+                f.kind() != PartitionKind::NVRAM
+            })
+            .last()
+        {
+            Some(last.entry().clone())
+        } else {
+            None
+        }
+    }
+
+    pub fn to_vec(&self) -> Result<Vec<u8>, String> {
         use log::debug;
         fn copy_parts(parts: &Vec<&dyn Partition>, data: &mut Vec<u8>) {
             for p in parts {
@@ -208,40 +229,31 @@ impl Partitions {
             }
         }
 
-        let sorted_parts = &self.get_sorted();
-
         // This gets us the smallest possible slice to copy into.
-        // NOTE: We need to filter out NVRAM partitions, which have an offset of
-        // 0xffff_ffff.
-        let last = &sorted_parts
-            .into_iter()
-            .filter(|p| {
-                let f = p.entry().flags;
-                f.kind() != PartitionKind::NVRAM
-            })
-            .last()
-            .unwrap()
-            .entry();
-        let o = last.offset();
-        let size = o + last.size();
-        debug!("Last partition @ {o:08x}; final size: {size:08x}");
-        let mut data = vec![EMPTY; size];
+        if let Some(last) = self.last_entry() {
+            let o = last.offset();
+            let size = o + last.size();
+            debug!("Last partition @ {o:08x}; final size: {size:08x}");
+            let mut data = vec![EMPTY; size];
 
-        match sorted_parts {
-            Partitions::Gen2(parts) => copy_parts(
-                &parts.iter().map(|p| p as &dyn Partition).collect(),
-                &mut data,
-            ),
-            Partitions::Gen3(parts) => copy_parts(
-                &parts.iter().map(|p| p as &dyn Partition).collect(),
-                &mut data,
-            ),
-            Partitions::Unknown(parts) => copy_parts(
-                &parts.iter().map(|p| p as &dyn Partition).collect(),
-                &mut data,
-            ),
-        };
+            match &self {
+                Partitions::Gen2(parts) => copy_parts(
+                    &parts.iter().map(|p| p as &dyn Partition).collect(),
+                    &mut data,
+                ),
+                Partitions::Gen3(parts) => copy_parts(
+                    &parts.iter().map(|p| p as &dyn Partition).collect(),
+                    &mut data,
+                ),
+                Partitions::Unknown(parts) => copy_parts(
+                    &parts.iter().map(|p| p as &dyn Partition).collect(),
+                    &mut data,
+                ),
+            };
 
-        data
+            Ok(data)
+        } else {
+            Err("no partition entries found".into())
+        }
     }
 }

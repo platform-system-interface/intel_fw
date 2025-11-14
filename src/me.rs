@@ -128,14 +128,17 @@ impl FPTArea {
     }
 
     /// Clear out fully removable partitions and adjust FPT
-    pub fn to_vec(&self) -> Vec<u8> {
+    pub fn to_vec(&self) -> Result<Vec<u8>, String> {
         let debug = true;
 
         if debug {
             println!("Recreate ME region from components");
         }
 
-        let mut res = self.partitions.to_vec();
+        let mut res = match self.partitions.to_vec() {
+            Ok(r) => r,
+            Err(e) => return Err(e),
+        };
         if debug {
             println!("  Minimum size: {:08x}", res.len());
         }
@@ -168,7 +171,7 @@ impl FPTArea {
         }
         res[..s].copy_from_slice(&raw_fpt);
 
-        res
+        Ok(res)
     }
 }
 
