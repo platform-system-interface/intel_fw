@@ -136,6 +136,7 @@ impl Partitions {
         *self = parts;
     }
 
+    /// Get a sorted copy of all partitions.
     pub fn get_sorted(&self) -> Self {
         match self {
             Partitions::Gen2(parts) => {
