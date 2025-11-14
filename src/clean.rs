@@ -8,6 +8,8 @@ use log::warn;
 pub struct Options {
     pub keep_modules: bool,
     pub relocate: bool,
+    pub parts_force_retention: Vec<String>,
+    pub parts_force_deletion: Vec<String>,
     pub disable_me: bool,
     pub disable_me_only: bool,
 }
@@ -40,6 +42,8 @@ pub fn clean(
     let mut new_me = me.clone();
     let opts = ClearOptions {
         keep_modules: options.keep_modules,
+        parts_force_retention: options.parts_force_retention,
+        parts_force_deletion: options.parts_force_deletion,
     };
     new_me.fpt_area.clean(&opts);
     if options.relocate {

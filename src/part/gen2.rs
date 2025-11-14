@@ -6,7 +6,7 @@ use crate::dump48;
 use crate::part::{
     fpt::{FPT, FPTEntry, FTPR},
     part::{
-        ClearOptions, DataPartition, Partition, UnknownOrMalformedPartition, dir_clean,
+        ClearOptions, DataPartition, Partition, UnknownOrMalformedPartition, dir_clean, retain,
         strs_to_strings,
     },
 };
@@ -131,7 +131,8 @@ pub fn clean(parts: &Vec<Gen2Partition>, options: &ClearOptions) -> Vec<Gen2Part
         .iter()
         .filter(|p| {
             let e = p.entry();
-            if e.name() == FTPR {
+            let n = e.name();
+            if retain(n, options) {
                 info!("Retain {e}");
                 true
             } else {

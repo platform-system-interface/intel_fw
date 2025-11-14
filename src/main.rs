@@ -11,7 +11,7 @@
 use std::fs;
 use std::io::Write;
 
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand};
 use log::{debug, error, info};
 
 mod clean;
@@ -148,10 +148,10 @@ fn main() {
                 };
                 debug!("  Soft disable ME:         {disable_me}");
                 debug!("");
-                if let Some(allowlist) = whitelist {
+                if let Some(allowlist) = &whitelist {
                     debug!("Allowlist: {allowlist:?}");
                 }
-                if let Some(blocklist) = blacklist {
+                if let Some(blocklist) = &blacklist {
                     debug!("Blocklist: {blocklist:?}");
                 }
                 debug!("");
@@ -181,6 +181,8 @@ fn main() {
                     relocate,
                     disable_me: soft_disable,
                     disable_me_only: soft_disable_only,
+                    parts_force_retention: whitelist.unwrap_or(vec![]),
+                    parts_force_deletion: blacklist.unwrap_or(vec![]),
                 };
                 match clean::clean(&fw.ifd, &me, &mut data, opts) {
                     Ok(data) => {
