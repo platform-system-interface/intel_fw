@@ -188,15 +188,21 @@ impl Partitions {
         use log::debug;
         fn copy_parts(parts: &Vec<&dyn Partition>, data: &mut Vec<u8>) {
             for p in parts {
+                let e = p.entry();
                 let offset = p.entry().offset();
-                if offset == 0xffff_ffff {
+                let f = e.flags;
+                if f.kind() == PartitionKind::NVRAM {
+                    debug!("Ignore {e}");
                     continue;
                 }
                 let raw_part = p.data().as_bytes();
                 let size = raw_part.len();
                 let end = offset + size;
                 if end <= data.len() {
+                    debug!("Copy {e}");
                     data[offset..end].copy_from_slice(raw_part);
+                } else {
+                    debug!("Out of bounds: {e}");
                 }
             }
         }
