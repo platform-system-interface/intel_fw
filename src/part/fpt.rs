@@ -203,16 +203,16 @@ impl Validity {
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize)]
 pub struct EntryFlags {
     #[bits(7)]
-    kind: PartitionKind,
-    copy_to_dram_cache: bool,
+    pub kind: PartitionKind,
+    pub copy_to_dram_cache: bool,
     #[bits(7)]
     _res: u8,
-    len1: bool,
-    len2: bool,
+    pub len1: bool,
+    pub len2: bool,
     #[bits(7)]
     _res: u8,
     #[bits(8)]
-    validity: Validity,
+    pub validity: Validity,
 }
 
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
