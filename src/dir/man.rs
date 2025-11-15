@@ -127,6 +127,23 @@ impl<'a> Manifest {
         Ok(manifest)
     }
 
+    /// Get the header length
+    pub fn header_len(&self) -> usize {
+        self.header.header_len as usize * 4
+    }
+
+    /// Get the size of the manifest and its data
+    pub fn size(&self) -> usize {
+        self.header.size as usize * 4
+    }
+
+    /// Get the length of the data after the manifest
+    pub fn data_len(&self) -> usize {
+        let mlen = self.size();
+        let hlen = self.header_len();
+        mlen - hlen
+    }
+
     /// Get the MD5 hash over the RSA public key and exponent.
     pub fn hash_key(self: Self) -> Vec<u8> {
         let k = self.rsa_pub_key.as_bytes();
