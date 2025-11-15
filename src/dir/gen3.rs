@@ -35,6 +35,17 @@ pub struct CPDHeader {
     // _10: u32,
 }
 
+impl CPDHeader {
+    pub fn name(&self) -> String {
+        let n = self.part_name;
+        match std::str::from_utf8(&n) {
+            // some names are shorter than 4 bytes and padded with 0x0
+            Ok(n) => n.trim_end_matches('\0').to_string(),
+            Err(_) => format!("{:02x?}", n),
+        }
+    }
+}
+
 const HEADER_SIZE: usize = core::mem::size_of::<CPDHeader>();
 
 // See <https://github.com/corna/me_cleaner> `check_and_remove_modules_gen3()`
@@ -141,12 +152,7 @@ impl CodePartitionDirectory {
         let Ok((header, _)) = CPDHeader::read_from_prefix(&data) else {
             return Err("could not parse CPD header".to_string());
         };
-        let n = header.part_name;
-        let name = match std::str::from_utf8(&n) {
-            // some names are shorter than 4 bytes and padded with 0x0
-            Ok(n) => n.trim_end_matches('\0').to_string(),
-            Err(_) => format!("{:02x?}", n),
-        };
+        let name = header.name();
         let header_size = if header.version_or_checksum == 0x00140102 {
             HEADER_SIZE + 4
         } else {
