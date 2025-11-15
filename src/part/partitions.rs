@@ -37,7 +37,7 @@ impl<'a> IntoIterator for &'a Partitions {
 }
 
 impl Partitions {
-    pub fn get_entries(self: &Self) -> Vec<FPTEntry> {
+    pub fn get_entries(&self) -> Vec<FPTEntry> {
         self.into_iter().map(|p| *p.entry()).collect()
     }
 
