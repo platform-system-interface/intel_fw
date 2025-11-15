@@ -212,7 +212,7 @@ impl CodePartitionDirectory {
 
 impl Removables for CodePartitionDirectory {
     /// Removable ranges relative to the start of the directory
-    fn removables(self: &Self, retention_list: &Vec<String>) -> Vec<Range<usize>> {
+    fn removables(&self, retention_list: &Vec<String>) -> Vec<Range<usize>> {
         use log::info;
         let mut removables = vec![];
 
