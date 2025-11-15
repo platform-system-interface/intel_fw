@@ -56,6 +56,9 @@ enum MeCommand {
         /// Extract ME region to a file if given a full image
         #[clap(long, short = 'M')]
         extract_me: Option<String>,
+        /// Perform basic integrity checks
+        #[clap(long, short)]
+        check: bool,
         /// File to read
         file_name: String,
     },
@@ -135,6 +138,7 @@ fn main() {
                 output,
                 extract_descriptor,
                 extract_me,
+                check,
             } => {
                 debug!("Configuration:");
                 debug!("  Adjust flash descriptor: {descriptor}");
@@ -154,6 +158,7 @@ fn main() {
                 if let Some(blocklist) = &blacklist {
                     debug!("Blocklist: {blocklist:?}");
                 }
+                debug!("  Check:                   {check}");
                 debug!("");
                 if let Some(descriptor_file) = &extract_descriptor {
                     info!("Dump flash descriptor to {descriptor_file}");
@@ -176,6 +181,23 @@ fn main() {
                 let Ok(me) = me_res else {
                     return;
                 };
+                if check {
+                    let fpt = &me.fpt_area.fpt;
+                    let cs = fpt.header_checksum();
+                    if cs == fpt.header.checksum {
+                        println!("FPT checksum is correct");
+                    } else {
+                        println!(
+                            "FPT checksum error: is {:02x}, should be {cs:08x}",
+                            fpt.header.checksum
+                        );
+                    }
+                    match &me.fpt_area.check_ftpr_sig() {
+                        Ok(()) => println!("FTPR signature is valid"),
+                        Err(e) => println!("FTPR signature error: {e:}"),
+                    }
+                    return;
+                }
                 let opts = clean::Options {
                     keep_modules,
                     relocate,
