@@ -19,6 +19,20 @@ pub struct CPDPartition {
     pub cpd: CodePartitionDirectory,
 }
 
+impl CPDPartition {
+    pub fn check_signature(&self) -> Result<(), String> {
+        if let Ok((m, mdata)) = &self.cpd.manifest {
+            if m.verify(&mdata) {
+                return Ok(());
+            } else {
+                return Err("hash mismatch".into());
+            }
+        } else {
+            Err("no manifest found".into())
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DataPartition {
     pub entry: FPTEntry,
