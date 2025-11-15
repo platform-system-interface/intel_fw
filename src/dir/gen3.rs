@@ -104,7 +104,7 @@ impl Display for CPDEntry {
 #[repr(C)]
 pub struct CodePartitionDirectory {
     pub header: CPDHeader,
-    pub manifest: Result<Manifest, String>,
+    pub manifest: Result<(Manifest, Vec<u8>), String>,
     pub entries: Vec<CPDEntry>,
     pub offset: usize,
     pub size: usize,
@@ -125,7 +125,7 @@ impl Display for CodePartitionDirectory {
         let n = &self.name;
         let l1 = format!("{n} @ {o:08x}, checksum or version: {checksum:08x}");
         let l2 = match &self.manifest {
-            Ok(m) => {
+            Ok((m, _)) => {
                 let h = stringify_vec(m.hash_key());
                 let m = format!("{m}");
                 let kh = format!("Key hash: {h}");
@@ -173,7 +173,17 @@ impl CodePartitionDirectory {
         let manifest = {
             if let Some(e) = entries.iter().find(|e| e.name() == manifest_name) {
                 let o = e.flags_and_offset.offset() as usize;
-                Manifest::new(&data[o..])
+                let end = o + e.size as usize;
+                match Manifest::new(&data[o..end]) {
+                    Ok(m) => {
+                        // The manifest carries additional data after its header
+                        // and key material.
+                        let header_len = m.header_len();
+                        let mdata = data[o + header_len..end].to_vec();
+                        Ok((m, mdata))
+                    }
+                    Err(e) => Err(e),
+                }
             } else {
                 Err("no manifest found".to_string())
             }

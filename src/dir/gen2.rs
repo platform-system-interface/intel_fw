@@ -197,7 +197,7 @@ pub struct Header {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[repr(C)]
 pub struct Directory {
-    pub manifest: Manifest,
+    pub manifest: (Manifest, Vec<u8>),
     pub header: Header,
     pub modules: Vec<Module>,
     pub offset: usize,
@@ -210,7 +210,7 @@ impl Display for Directory {
         let n = &self.name;
         let o = self.offset;
         let s = self.size;
-        let m = self.manifest;
+        let (m, _) = self.manifest;
         write!(f, "{n} @ {o:08x}, {s} bytes, {m}")
     }
 }
@@ -222,21 +222,29 @@ impl Directory {
         let Ok(manifest) = Manifest::new(data) else {
             return Err("cannot parse Gen 2 directory manifest".to_string());
         };
-        let count = manifest.header.entries as usize;
-        let d = &data[man::MANIFEST_SIZE..];
-        let Ok((header, _)) = Header::read_from_prefix(d) else {
+
+        let data_len = manifest.data_len();
+        let mdata = &data[man::MANIFEST_SIZE..man::MANIFEST_SIZE + data_len];
+
+        let Ok((header, _)) = Header::read_from_prefix(mdata) else {
             return Err("cannot parse ME FW Gen 2 directory header".to_string());
         };
-        let pos = man::MANIFEST_SIZE + HEADER_SIZE;
-        let m = &data[pos..pos + 4];
+        let name = match from_utf8(&header.name) {
+            Ok(n) => n.trim_end_matches('\0').to_string(),
+            Err(_) => format!("{:02x?}", header.name),
+        };
 
+        // Check magic bytes of first entry.
+        let pos = HEADER_SIZE;
+        let m = &mdata[pos..pos + 4];
         if !m.eq(MODULE_MAGIC_BYTES) {
             return Err(format!(
                 "entry magic not found, got {m:02x?}, wanted {MODULE_MAGIC_BYTES:02x?} ({MODULE_MAGIC})"
             ));
         }
-
-        let slice = &data[pos..];
+        // Parse the entries themselves.
+        let slice = &mdata[pos..];
+        let count = manifest.header.entries as usize;
         let Ok((r, _)) = Ref::<_, [Entry]>::from_prefix_with_elems(slice, count) else {
             return Err(format!(
                 "cannot parse ME FW Gen 2 directory entries @ {:08x}",
@@ -244,10 +252,6 @@ impl Directory {
             ));
         };
         let entries = r.to_vec();
-        let name = match from_utf8(&header.name) {
-            Ok(n) => n.trim_end_matches('\0').to_string(),
-            Err(_) => format!("{:02x?}", header.name),
-        };
 
         // Check for consistency and wrap entries with additional information.
         let modules = entries
@@ -295,7 +299,7 @@ impl Directory {
 
         let size = data.len();
         Ok(Self {
-            manifest,
+            manifest: (manifest, mdata.to_vec()),
             header,
             modules,
             offset,
