@@ -151,6 +151,27 @@ impl<'a> Manifest {
         let ke = [k, &e.to_le_bytes()].concat();
         md5::compute(ke).to_vec()
     }
+
+    /// Verify the manifest. Pass extra bytes from after the manifest.
+    pub fn verify(&self, ebytes: &[u8]) -> bool {
+        use num_bigint::BigUint;
+        use sha2::{Digest, Sha256};
+
+        let modulus = BigUint::from_bytes_le(&self.rsa_pub_key);
+        let exponent = BigUint::from(self.rsa_pub_exp);
+        let signature = BigUint::from_bytes_le(&self.rsa_sig);
+        let sb = signature.modpow(&exponent, &modulus).to_bytes_be();
+
+        let header = self.header.as_bytes();
+        let mut hasher = Sha256::new();
+        hasher.update(&header);
+        hasher.update(&ebytes);
+        let hash = hasher.finalize();
+        let hb = hash.as_bytes();
+
+        let sl = sb.len();
+        sb[sl - hb.len()..sl].eq(hb)
+    }
 }
 
 impl Display for Manifest {
