@@ -91,7 +91,7 @@ impl FPTArea {
                     Err("FTPR partition not found".into())
                 }
             }
-            _ => Err("no recognized as ME generation 2 or 3".into()),
+            _ => Err("not recognized as ME generation 2 or 3".into()),
         }
     }
 
