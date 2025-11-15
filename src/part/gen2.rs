@@ -18,6 +18,17 @@ pub struct DirPartition {
     pub data: Vec<u8>,
 }
 
+impl DirPartition {
+    pub fn check_signature(&self) -> Result<(), String> {
+        let (m, mdata) = &self.dir.manifest;
+        if m.verify(&mdata) {
+            return Ok(());
+        } else {
+            return Err("hash mismatch".into());
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum Gen2Partition {
     Dir(DirPartition),
