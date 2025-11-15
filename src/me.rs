@@ -12,9 +12,12 @@ use crate::dir::{
     gen2::Directory as Gen2Directory,
     gen3::{CPD_MAGIC_BYTES, CodePartitionDirectory},
 };
-use crate::part::gen2::Gen2Partition;
+use crate::part::fpt::FTPR;
+use crate::part::part::Partition;
 use crate::part::{
     fpt::{FPT, MIN_FPT_SIZE},
+    gen2::Gen2Partition,
+    gen3::Gen3Partition,
     part::ClearOptions,
     partitions::Partitions,
 };
@@ -63,6 +66,32 @@ impl FPTArea {
             for p in &self.partitions {
                 println!("Remaining: {}", p.entry());
             }
+        }
+    }
+
+    pub fn check_ftpr_sig(&self) -> Result<(), String> {
+        match &self.partitions {
+            Partitions::Gen2(parts) => {
+                if let Some(ftpr) = parts.iter().find(|p| p.entry().name() == FTPR) {
+                    match ftpr {
+                        Gen2Partition::Dir(dir) => dir.check_signature(),
+                        _ => Err("FTPR partition not recognized as directory".into()),
+                    }
+                } else {
+                    Err("FTPR partition not found".into())
+                }
+            }
+            Partitions::Gen3(parts) => {
+                if let Some(ftpr) = parts.iter().find(|p| p.entry().name() == FTPR) {
+                    match ftpr {
+                        Gen3Partition::Dir(dir) => dir.check_signature(),
+                        _ => Err("FTPR partition not recognized as directory".into()),
+                    }
+                } else {
+                    Err("FTPR partition not found".into())
+                }
+            }
+            _ => Err("no recognized as ME generation 2 or 3".into()),
         }
     }
 
