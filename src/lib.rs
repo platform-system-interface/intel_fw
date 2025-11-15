@@ -22,7 +22,7 @@ pub const EMPTY: u8 = 0xff;
 pub trait Removables {
     /// Get removable ranges relative to the start of a section or directory.
     /// The respective section/directory needs to know its own offset.
-    fn removables(self: &Self, retention_list: &Vec<String>) -> Vec<core::ops::Range<usize>>;
+    fn removables(&self, retention_list: &Vec<String>) -> Vec<core::ops::Range<usize>>;
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
