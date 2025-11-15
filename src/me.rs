@@ -13,6 +13,8 @@ use crate::dir::{
     gen3::{CPD_MAGIC_BYTES, CodePartitionDirectory},
 };
 use crate::part::fpt::FTPR;
+use crate::part::gen2::DirPartition;
+use crate::part::gen3::CPDPartition;
 use crate::part::part::Partition;
 use crate::part::{
     fpt::{FPT, MIN_FPT_SIZE},
@@ -69,26 +71,50 @@ impl FPTArea {
         }
     }
 
-    pub fn check_ftpr_sig(&self) -> Result<(), String> {
+    pub fn check_dir_sigs(&self) -> Vec<(String, Result<(), String>)> {
         match &self.partitions {
             Partitions::Gen2(parts) => {
-                if let Some(ftpr) = parts.iter().find(|p| p.entry().name() == FTPR) {
-                    match ftpr {
-                        Gen2Partition::Dir(dir) => dir.check_signature(),
-                        _ => Err("FTPR partition not recognized as directory".into()),
-                    }
+                let dirs = parts
+                    .iter()
+                    .filter_map(|p| match p {
+                        Gen2Partition::Dir(d) => Some(d.clone()),
+                        _ => None,
+                    })
+                    .collect::<Vec<DirPartition>>();
+                dirs.iter()
+                    .map(|d| (d.entry.name(), d.check_signature()))
+                    .collect()
+            }
+            Partitions::Gen3(parts) => {
+                let dirs = parts
+                    .iter()
+                    .filter_map(|p| match p {
+                        Gen3Partition::Dir(d) => Some(d.clone()),
+                        _ => None,
+                    })
+                    .collect::<Vec<CPDPartition>>();
+                dirs.iter()
+                    .map(|d| (d.entry.name(), d.check_signature()))
+                    .collect()
+            }
+            _ => vec![],
+        }
+    }
+
+    pub fn check_ftpr_presence(&self) -> Result<(), String> {
+        match &self.partitions {
+            Partitions::Gen2(parts) => {
+                if parts.iter().find(|p| p.entry().name() == FTPR).is_some() {
+                    Ok(())
                 } else {
-                    Err("FTPR partition not found".into())
+                    Err("not found".into())
                 }
             }
             Partitions::Gen3(parts) => {
-                if let Some(ftpr) = parts.iter().find(|p| p.entry().name() == FTPR) {
-                    match ftpr {
-                        Gen3Partition::Dir(dir) => dir.check_signature(),
-                        _ => Err("FTPR partition not recognized as directory".into()),
-                    }
+                if parts.iter().find(|p| p.entry().name() == FTPR).is_some() {
+                    Ok(())
                 } else {
-                    Err("FTPR partition not found".into())
+                    Err("not found".into())
                 }
             }
             _ => Err("not recognized as ME generation 2 or 3".into()),

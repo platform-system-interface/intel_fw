@@ -192,9 +192,15 @@ fn main() {
                             fpt.header.checksum
                         );
                     }
-                    match &me.fpt_area.check_ftpr_sig() {
-                        Ok(()) => println!("FTPR signature is valid"),
-                        Err(e) => println!("FTPR signature error: {e:}"),
+                    match &me.fpt_area.check_ftpr_presence() {
+                        Ok(()) => println!("FTPR exists"),
+                        Err(e) => println!("FTPR error: {e:}"),
+                    }
+                    for (n, r) in me.fpt_area.check_dir_sigs() {
+                        match r {
+                            Ok(()) => println!("  {n}: signature is valid"),
+                            Err(e) => println!("  {n}: signature error: {e}"),
+                        }
                     }
                     return;
                 }
