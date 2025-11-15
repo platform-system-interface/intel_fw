@@ -339,7 +339,7 @@ impl Directory {
     }
 
     /// Get the offset ranges of the chunks.
-    fn chunks_as_ranges(self: &Self, chunks: &Vec<u32>, stream_end: usize) -> Vec<Range<usize>> {
+    fn chunks_as_ranges(&self, chunks: &Vec<u32>, stream_end: usize) -> Vec<Range<usize>> {
         // NOTE: This is the end of the directory.
         // me_cleaner uses the end of the ME region.
         let dir_end = self.offset + self.size;
@@ -430,7 +430,7 @@ impl Directory {
 
 impl Removables for Directory {
     /// Removable ranges relative to the start of the Directory
-    fn removables(self: &Self, retention_list: &Vec<String>) -> Vec<Range<usize>> {
+    fn removables(&self, retention_list: &Vec<String>) -> Vec<Range<usize>> {
         use log::{debug, info, warn};
         let debug = false;
         let mut removables = vec![];
