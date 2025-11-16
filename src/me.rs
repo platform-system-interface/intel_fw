@@ -8,6 +8,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::EMPTY;
+use crate::dir::gen2::Module;
 use crate::dir::{
     gen2::Directory as Gen2Directory,
     gen3::{CPD_MAGIC_BYTES, CodePartitionDirectory},
@@ -50,6 +51,12 @@ pub struct FPTArea {
     pub original_size: usize,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct File {
+    pub name: String,
+    pub data: Vec<u8>,
+}
+
 impl FPTArea {
     /// Clear out fully removable partitions and adjust FPT
     pub fn clean(&mut self, options: &ClearOptions) {
@@ -64,6 +71,67 @@ impl FPTArea {
             for p in &self.partitions {
                 println!("Remaining: {}", p.entry());
             }
+        }
+    }
+
+    pub fn files_for_dir(&self, part_name: &String) -> Vec<File> {
+        match &self.partitions {
+            Partitions::Gen2(parts) => {
+                let dir = parts.iter().find(|p| p.entry().name() == *part_name);
+                match dir {
+                    Some(Gen2Partition::Dir(d)) => {
+                        let mut res = vec![];
+                        for m in &d.dir.modules {
+                            match m {
+                                Module::Huffman(Ok((e, _))) => {
+                                    let o = e.offset as usize;
+                                    let s = e.size as usize;
+                                    let data = d.data[o..o + s].to_vec();
+                                    let name = format!("{}.huff", e.name());
+                                    res.push(File { name, data });
+                                }
+                                Module::Uncompressed(e) => {
+                                    let o = e.offset as usize;
+                                    let s = e.size as usize;
+                                    let data = d.data[o..o + s].to_vec();
+                                    let name = format!("{}.bin", e.name());
+                                    res.push(File { name, data });
+                                }
+                                Module::Lzma(Ok(e)) => {
+                                    let o = e.offset as usize;
+                                    let s = e.size as usize;
+                                    let data = d.data[o..o + s].to_vec();
+                                    let name = format!("{}.lzma", e.name());
+                                    res.push(File { name, data });
+                                }
+                                _ => {}
+                            }
+                        }
+                        res
+                    }
+                    _ => vec![],
+                }
+            }
+            Partitions::Gen3(parts) => {
+                let dir = parts.iter().find(|p| p.entry().name() == *part_name);
+                match dir {
+                    Some(Gen3Partition::Dir(d)) => {
+                        let mut res = vec![];
+                        for e in &d.cpd.entries {
+                            let f = e.flags_and_offset;
+                            let o = f.offset() as usize;
+                            let s = e.size as usize;
+                            let data = d.data[o..o + s].to_vec();
+                            // NOTE: already includes extension
+                            let name = e.name();
+                            res.push(File { name, data });
+                        }
+                        res
+                    }
+                    _ => vec![],
+                }
+            }
+            _ => vec![],
         }
     }
 
