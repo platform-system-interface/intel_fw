@@ -8,8 +8,8 @@
 //! So we can only provide meaningful information by looking at a full firmware
 //! image in its entirety. This tool brings together all publicly known details.
 
-use std::fs;
 use std::io::{self, Write};
+use std::{fs, path};
 
 use clap::{Parser, Subcommand};
 use log::{debug, error, info, warn};
@@ -77,6 +77,15 @@ enum MeCommand {
     /// Check for consistency (full image or ME region)
     #[clap(verbatim_doc_comment)]
     Check {
+        /// File to read
+        file_name: String,
+    },
+    /// Extract directory partition
+    #[clap(verbatim_doc_comment)]
+    Extract {
+        /// Partition to extract
+        #[clap(long, short)]
+        part_name: Option<String>,
         /// File to read
         file_name: String,
     },
@@ -256,6 +265,70 @@ fn main() -> Result<(), io::Error> {
                 let data = fs::read(file_name)?;
                 let fw = Firmware::parse(&data, debug);
                 show::show(&fw, verbose);
+            }
+            MeCommand::Extract {
+                part_name,
+                file_name,
+            } => {
+                use intel_fw::part::gen2::Gen2Partition;
+                use intel_fw::part::gen3::Gen3Partition;
+                use intel_fw::part::partitions::Partitions;
+
+                let data = fs::read(&file_name)?;
+                info!("Extracting {}", file_name);
+
+                let fw = Firmware::parse(&data, debug);
+                let me = fw
+                    .me
+                    .ok_or(io::Error::new(
+                        io::ErrorKind::NotFound,
+                        "no ME firmware recognized",
+                    ))?
+                    .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+
+                let extract_dir = |dir_name: &String| -> Result<(), std::io::Error> {
+                    let target_dir = path::Path::new("extracted").join(dir_name);
+                    fs::create_dir_all(&target_dir)?;
+                    let mods = &me.fpt_area.files_for_dir(dir_name);
+                    for m in mods {
+                        let f = target_dir.join(&m.name);
+                        info!("    Extracting file {f:?}");
+                        let mut f = fs::File::create(f)?;
+                        f.write_all(&m.data)?;
+                    }
+                    Ok(())
+                };
+
+                // TODO: For partitions not holding a directory, extract the
+                // whole partition.
+                if let Some(p) = part_name {
+                    extract_dir(&p)?;
+                } else {
+                    match &me.fpt_area.partitions {
+                        Partitions::Gen2(parts) => {
+                            info!("ME Gen 2 recognized");
+                            warn!("NOTE: Huffman modules will not be decompressed yet.");
+                            for p in parts {
+                                if let Gen2Partition::Dir(d) = p {
+                                    let pname = &d.dir.name;
+                                    info!(" Extracting partition {pname}");
+                                    extract_dir(pname)?;
+                                }
+                            }
+                        }
+                        Partitions::Gen3(parts) => {
+                            info!("ME Gen 3 recognized");
+                            for p in parts {
+                                if let Gen3Partition::Dir(d) = p {
+                                    let pname = &d.cpd.name;
+                                    info!(" Extracting partition {pname}");
+                                    extract_dir(pname)?;
+                                }
+                            }
+                        }
+                        _ => error!("Unknown/unrecognized partitioning scheme"),
+                    }
+                }
             }
         },
     }
