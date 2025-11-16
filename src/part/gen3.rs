@@ -21,8 +21,8 @@ pub struct CPDPartition {
 
 impl CPDPartition {
     pub fn check_signature(&self) -> Result<(), String> {
-        if let Ok((m, mdata)) = &self.cpd.manifest {
-            if m.verify(&mdata) {
+        if let Ok(m) = &self.cpd.manifest {
+            if m.verify() {
                 return Ok(());
             } else {
                 return Err("hash mismatch".into());
