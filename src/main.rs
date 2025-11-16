@@ -80,6 +80,15 @@ enum MeCommand {
         /// File to read
         file_name: String,
     },
+    /// Extract directory partition
+    #[clap(verbatim_doc_comment)]
+    Extract {
+        /// Partition to extract
+        #[clap(long, short)]
+        part_name: Option<String>,
+        /// File to read
+        file_name: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -262,6 +271,36 @@ fn main() -> Result<(), io::Error> {
                 let data = fs::read(file_name)?;
                 let fw = Firmware::parse(&data, debug);
                 show::show(&fw, verbose);
+            }
+            MeCommand::Extract {
+                part_name,
+                file_name,
+            } => {
+                let data = fs::read(file_name)?;
+                let fw = Firmware::parse(&data, debug);
+
+                let me_res = match fw.me {
+                    Some(r) => r,
+                    None => {
+                        return Err(io::Error::new(
+                            io::ErrorKind::NotFound,
+                            "no ME firmware recognized",
+                        ));
+                    }
+                };
+                let me = match me_res {
+                    Ok(r) => r,
+                    Err(e) => return Err(io::Error::new(io::ErrorKind::InvalidData, e)),
+                };
+
+                if let Some(p) = part_name {
+                    let mods = me.fpt_area.files_for_dir(&p);
+                    for m in mods {
+                        let n = format!("{p}/{}.lzma", m.0);
+                        let mut f = fs::File::create(n)?;
+                        f.write_all(&m.1)?;
+                    }
+                }
             }
         },
     }
