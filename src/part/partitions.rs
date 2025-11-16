@@ -79,7 +79,7 @@ impl Partitions {
                 if let Some(Gen2Partition::Dir(d)) =
                     parts.iter().find(|p| matches!(p, Gen2Partition::Dir(_)))
                 {
-                    let (m, _) = d.dir.manifest;
+                    let m = &d.dir.manifest;
                     Some(m.header.version)
                 } else {
                     None
@@ -89,7 +89,7 @@ impl Partitions {
                 if let Some(Gen3Partition::Dir(d)) =
                     parts.iter().find(|p| matches!(p, Gen3Partition::Dir(_)))
                 {
-                    if let Ok((m, _)) = d.cpd.manifest {
+                    if let Ok(m) = &d.cpd.manifest {
                         Some(m.header.version)
                     } else {
                         None

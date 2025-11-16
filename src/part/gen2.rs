@@ -20,8 +20,7 @@ pub struct DirPartition {
 
 impl DirPartition {
     pub fn check_signature(&self) -> Result<(), String> {
-        let (m, mdata) = &self.dir.manifest;
-        if m.verify(&mdata) {
+        if self.dir.manifest.verify() {
             return Ok(());
         } else {
             return Err("hash mismatch".into());

@@ -64,7 +64,7 @@ pub struct Header {
     pub flags: u32,
     pub vendor: Vendor,
     pub date: Date,
-    pub size: u32, // in dwords, dword size is 32bit
+    pub manifest_len: u32, // in dwords, dword size is 32bit
     pub magic: [u8; 4],
     // NOTE: only for Gen 2 ME firmware
     pub entries: u32,
@@ -93,10 +93,28 @@ impl Display for Header {
     }
 }
 
+impl Header {
+    /// Get the header length including signature
+    pub fn header_len(&self) -> usize {
+        self.header_len as usize * 4
+    }
+
+    /// Get the length of the manifest including its data
+    pub fn manifest_len(&self) -> usize {
+        self.manifest_len as usize * 4
+    }
+
+    /// Get the length of the data after the header
+    pub fn data_len(&self) -> usize {
+        let mlen = self.manifest_len();
+        let hlen = self.header_len();
+        mlen - hlen
+    }
+}
+
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C)]
-pub struct Manifest {
-    pub header: Header,
+pub struct Signature {
     #[serde(with = "serde_bytes")]
     pub rsa_pub_key: [u8; 0x100],
     pub rsa_pub_exp: u32,
@@ -104,11 +122,19 @@ pub struct Manifest {
     pub rsa_sig: [u8; 0x100],
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[repr(C)]
+pub struct Manifest {
+    pub header: Header,
+    pub signature: Signature,
+    pub mdata: Vec<u8>,
+}
+
 pub const MANIFEST_SIZE: usize = core::mem::size_of::<Manifest>();
 
 impl<'a> Manifest {
     pub fn new(data: &'a [u8]) -> Result<Self, String> {
-        let (manifest, _) = match Self::read_from_prefix(data) {
+        let (header, slice) = match Header::read_from_prefix(data) {
             Ok(r) => r,
             Err(e) => {
                 let err = format!("Manifest cannot be parsed: {e:?}");
@@ -116,56 +142,57 @@ impl<'a> Manifest {
             }
         };
 
-        if manifest.header.magic != MANIFEST2_MAGIC_BYTES {
+        if header.magic != MANIFEST2_MAGIC_BYTES {
             let err = format!(
                 "Manifest magic not found: wanted {MANIFEST2_MAGIC_BYTES:02x?} ({MANIFEST2_MAGIC}), got {:02x?}",
-                manifest.header.magic
+                header.magic
             );
             return Err(err);
         }
 
-        Ok(manifest)
-    }
+        let (signature, _) = match Signature::read_from_prefix(slice) {
+            Ok(r) => r,
+            Err(e) => {
+                let err = format!("Signature cannot be parsed: {e:?}");
+                return Err(err);
+            }
+        };
 
-    /// Get the header length
-    pub fn header_len(&self) -> usize {
-        self.header.header_len as usize * 4
-    }
+        // The manifest carries additional data after its header and signature.
+        // Note that header_len includes the signature.
+        let header_len = header.header_len();
+        let size = header.manifest_len();
+        let mdata = &data[header_len..size];
 
-    /// Get the size of the manifest and its data
-    pub fn size(&self) -> usize {
-        self.header.size as usize * 4
-    }
-
-    /// Get the length of the data after the manifest
-    pub fn data_len(&self) -> usize {
-        let mlen = self.size();
-        let hlen = self.header_len();
-        mlen - hlen
+        Ok(Self {
+            header,
+            signature,
+            mdata: mdata.to_vec(),
+        })
     }
 
     /// Get the MD5 hash over the RSA public key and exponent.
-    pub fn hash_key(self: Self) -> Vec<u8> {
-        let k = self.rsa_pub_key.as_bytes();
-        let e = self.rsa_pub_exp;
+    pub fn hash_key(&self) -> Vec<u8> {
+        let k = self.signature.rsa_pub_key.as_bytes();
+        let e = self.signature.rsa_pub_exp;
         let ke = [k, &e.to_le_bytes()].concat();
         md5::compute(ke).to_vec()
     }
 
-    /// Verify the manifest. Pass extra bytes from after the manifest.
-    pub fn verify(&self, ebytes: &[u8]) -> bool {
+    /// Verify the manifest.
+    pub fn verify(&self) -> bool {
         use num_bigint::BigUint;
         use sha2::{Digest, Sha256};
 
-        let modulus = BigUint::from_bytes_le(&self.rsa_pub_key);
-        let exponent = BigUint::from(self.rsa_pub_exp);
-        let signature = BigUint::from_bytes_le(&self.rsa_sig);
+        let modulus = BigUint::from_bytes_le(&self.signature.rsa_pub_key);
+        let exponent = BigUint::from(self.signature.rsa_pub_exp);
+        let signature = BigUint::from_bytes_le(&self.signature.rsa_sig);
         let sb = signature.modpow(&exponent, &modulus).to_bytes_be();
 
         let header = self.header.as_bytes();
         let mut hasher = Sha256::new();
         hasher.update(&header);
-        hasher.update(&ebytes);
+        hasher.update(&self.mdata);
         let hash = hasher.finalize();
         let hb = hash.as_bytes();
 
@@ -177,7 +204,7 @@ impl<'a> Manifest {
 impl Display for Manifest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let h = self.header;
-        let exp = self.rsa_pub_exp;
+        let exp = self.signature.rsa_pub_exp;
         write!(f, "{h}, RSA exp {exp}")
     }
 }
