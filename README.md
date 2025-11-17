@@ -33,6 +33,16 @@ To run the CLI via `cargo` directly, remember to add arguments after an extra
 `--`; i.e., to print the general help, invoke `cargo run --relase -- -h`, or,
 for a subcommand, e.g. `cargo run --relase -- me clean -h`.
 
+## Caveats
+
+be careful with sizes; always check to avoid potentially large worloads
+
+## Notes
+
+gen 3 directory modules start aligned at 0x20 boundary
+
+hashes are for _metadata_; in LE notation
+
 ## TODOs
 
 - [ ] sync up; <https://github.com/corna/me_cleaner> has another patch that
