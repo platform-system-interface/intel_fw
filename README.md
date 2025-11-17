@@ -48,13 +48,13 @@ For more understanding, see also any of these additional resources:
 - [x] bootstrap a new, general CLI, `intel_fw`, with an `me` subcommand
     - mimic the `me_cleaner` CLI, using similar+same arguments and switches for
       compatibility
-- [ ] port the logic to Rust, using `me_cleaner`-edited images as test fixtures
+- [x] port the logic to Rust, using `me_cleaner`-edited images as test fixtures
     - NOTE: committing the test fixtures would be big and a potential license
       issue; instead, add notes on how to reproduce them, via public vendor
       images and extraction utilities (e.g. from Lenovo)
     - [x] step 1: port core logic to produce the same output as `me_cleaner` for
         Lenovo ThinkPad X230 + X270
-    - [x] step 2: full parity with `me_cleaner`
+    - [x] step 2: full feature parity with `me_cleaner`
 - [ ] expand the documentation
     - [ ] higher-level view on Intel platform boot flows
     - [ ] how the Intel data structures work, in prose
