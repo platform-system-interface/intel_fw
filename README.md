@@ -33,6 +33,18 @@ To run the CLI via `cargo` directly, remember to add arguments after an extra
 `--`; i.e., to print the general help, invoke `cargo run --relase -- -h`, or,
 for a subcommand, e.g. `cargo run --relase -- me clean -h`.
 
+For inspiration of how to explore and add new features, take a look at the notes
+on the [analysis process](docs/analysis.md) and [extending](docs/extend.md).
+
+### Caveats
+
+Be careful: Always check claimed offsets and sizes in binary data structures to
+be both reasonable and within the bounds of the given slices. Sizes can be
+direct values, such as "this here points to that 8KB other thing", or counts,
+which may lead to overallocation. Say a thing that typically has about a dozen
+entries uses a `u32` to represent its count, which may end up being huge. As a
+defensive measure, implement a maximum, say 100, to avoid running out of memory.
+
 ## TODOs
 
 - [ ] sync up; <https://github.com/corna/me_cleaner> has another patch that
