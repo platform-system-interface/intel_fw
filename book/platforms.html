@@ -1,0 +1,328 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Intel platforms - intel_fw</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">intel_fw</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/platform-system-interface/intel_fw" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="intel-platforms"><a class="header" href="#intel-platforms">Intel platforms</a></h1>
+<p>Over the years and decades, Intel has developed many hardware platforms<sup class="footnote-reference" id="fr-14-1"><a href="#footnote-14">1</a></sup>.</p>
+<p>Since the 4-bit 4004 in 1971, they have progressed over 8-bit up to 64-bit
+systems, retaining a lot of backwards compatibility. Starting with the ICH7
+based platforms, Intel introduced their AMT (Active Management Technology)<sup class="footnote-reference" id="fr-15-1"><a href="#footnote-15">2</a></sup>,
+an out-of-band management solution<sup class="footnote-reference" id="fr-1-1"><a href="#footnote-1">3</a></sup> for remote provisioning and support.</p>
+<p>AMT evolved with more features over time, carrying the vPro label for machines
+targeting the business market<sup class="footnote-reference" id="fr-16-1"><a href="#footnote-16">4</a></sup> and finally converging with more security
+features such as Boot Guard<sup class="footnote-reference" id="fr-2-1"><a href="#footnote-2">5</a></sup>, Intel's secure boot implementation, digital
+content protection (DRM), and more<sup class="footnote-reference" id="fr-20-1"><a href="#footnote-20">6</a></sup>.</p>
+<p>Now running on a coprocessor called the (Converged Security and) Manageability
+Engine<sup class="footnote-reference" id="fr-3-1"><a href="#footnote-3">7</a></sup>, or (CS)ME for short, henceforth abbreviated as <em>ME</em>, a full second
+operating system of its own is backing the platform.</p>
+<h2 id="boot-flow"><a class="header" href="#boot-flow">Boot flow</a></h2>
+<p>The ME has its own firmware and bootstraps an Intel platform<sup class="footnote-reference" id="fr-19-1"><a href="#footnote-19">8</a></sup>. The main x86
+cores are held in reset until the ME releases them to boot with their own
+firmware.</p>
+<p>Both the ME firmware and the main x86 firmware are stored in the same flash part
+on a mainboard, partitioned via the Intel Flash Descriptior (IFD).</p>
+<p>The following diagram is based on knowledge from various sources, including the
+<a href="https://doc.coreboot.org/soc/intel/fit.html">coreboot documentation on Intel</a>.</p>
+<img src="intel_flash_partitioning.png" width=40%>
+<p>The boot flow for trusted boot is documented publicly<sup class="footnote-reference" id="fr-17-1"><a href="#footnote-17">9</a></sup> by Intel.</p>
+<h2 id="me-classification-and-security"><a class="header" href="#me-classification-and-security">ME classification and security</a></h2>
+<p>Security researchers have analyzed the ME<sup class="footnote-reference" id="fr-18-1"><a href="#footnote-18">10</a></sup> and divided hardware variants
+into 3 generations<sup class="footnote-reference" id="fr-4-1"><a href="#footnote-4">11</a></sup> thus far, each with their own multiple firmware versions,
+including security patch releases[^5]<sup class="footnote-reference" id="fr-6-1"><a href="#footnote-6">12</a></sup>.
+One core aspect in security research has been Boot Guard[^7]<sup class="footnote-reference" id="fr-8-1"><a href="#footnote-8">13</a></sup>, which had
+been introduced with Haswell, Intel's 4th generation Core series platforms<sup class="footnote-reference" id="fr-10-1"><a href="#footnote-10">14</a></sup>,
+and discussed in the coreboot community<sup class="footnote-reference" id="fr-11-1"><a href="#footnote-11">15</a></sup>.</p>
+<p>Note that the ME generations roughly correspond with the overall platform, in
+that ranges of Intel platforms are expected to carry a certain ME hardware
+generation and specific platforms a certain firmware version range.</p>
+<h2 id="processor-names"><a class="header" href="#processor-names">Processor names</a></h2>
+<p>Intel publicly documents how to interpret procesor names<sup class="footnote-reference" id="fr-12-1"><a href="#footnote-12">16</a></sup> and what their
+suffixes mean<sup class="footnote-reference" id="fr-13-1"><a href="#footnote-13">17</a></sup>.</p>
+<h2 id="abbreviations"><a class="header" href="#abbreviations">Abbreviations</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>abbr.</th><th>expansion</th></tr></thead><tbody>
+<tr><td>ACM</td><td>Authenticated Code Module</td></tr>
+<tr><td>AMT</td><td>Active Management Technology</td></tr>
+<tr><td>CSME</td><td>Converged Security and Manageability Engine</td></tr>
+<tr><td>DAL</td><td>Dynamic Application Loader</td></tr>
+<tr><td>FIT</td><td>Firmware Interface Table</td></tr>
+<tr><td>FPT</td><td>Firmware Partition Table</td></tr>
+<tr><td>HAP</td><td>High-Assurance Platform</td></tr>
+<tr><td>{I,M,P}CH</td><td>{I/O,Memory,Platform} Controller Hub<sup class="footnote-reference" id="fr-9-1"><a href="#footnote-9">18</a></sup></td></tr>
+<tr><td>IFD</td><td>Intel Flash Descriptor</td></tr>
+<tr><td>PTT</td><td>Platform Trust Technology</td></tr>
+<tr><td>RBE</td><td>ROM Boot Extensions (part of ME firmware)</td></tr>
+<tr><td>SPS</td><td>Server Platform Services</td></tr>
+<tr><td>TXE</td><td>Trusted Execution Engine</td></tr>
+<tr><td>TXT</td><td>Trusted Execution Technology</td></tr>
+</tbody></table>
+</div>
+<h3 id="ambiguities"><a class="header" href="#ambiguities">Ambiguities</a></h3>
+<p>There are colliding acronyms, even within this domain.
+The following abbreviations have a second meaning:</p>
+<ul>
+<li>FIT: <em>Flash Image Tool</em> (sometimes also called <em>FITC</em>)</li>
+<li>FPT: <em>Flash Programming Tool</em></li>
+</ul>
+<hr>
+<ol class="footnote-definition"><li id="footnote-14">
+<p><a href="https://en.wikipedia.org/wiki/List_of_Intel_processors">https://en.wikipedia.org/wiki/List_of_Intel_processors</a> <a href="#fr-14-1">↩</a></p>
+</li>
+<li id="footnote-15">
+<p><a href="https://en.wikipedia.org/wiki/Intel_AMT_versions">https://en.wikipedia.org/wiki/Intel_AMT_versions</a> <a href="#fr-15-1">↩</a></p>
+</li>
+<li id="footnote-1">
+<p><a href="https://www.amplicon-usa.com/actions/viewDoc.cfm?doc=iAMT-white-paper.pdf">https://www.amplicon-usa.com/actions/viewDoc.cfm?doc=iAMT-white-paper.pdf</a> <a href="#fr-1-1">↩</a></p>
+</li>
+<li id="footnote-16">
+<p><a href="https://www.intel.com/content/www/us/en/architecture-and-technology/vpro/overview.html">https://www.intel.com/content/www/us/en/architecture-and-technology/vpro/overview.html</a> <a href="#fr-16-1">↩</a></p>
+</li>
+<li id="footnote-2">
+<p><a href="https://edc.intel.com/content/www/us/en/design/ipla/software-development-platforms/client/platforms/alder-lake-desktop/12th-generation-intel-core-processors-datasheet-volume-1-of-2/010/boot-guard-technology/">https://edc.intel.com/content/www/us/en/design/ipla/software-development-platforms/client/platforms/alder-lake-desktop/12th-generation-intel-core-processors-datasheet-volume-1-of-2/010/boot-guard-technology/</a> <a href="#fr-2-1">↩</a></p>
+</li>
+<li id="footnote-20">
+<p><a href="https://www.intel.com/content/dam/support/us/en/documents/technologies/intel_amt_linux_enablement_guide_revision_1_1.pdf">https://www.intel.com/content/dam/support/us/en/documents/technologies/intel_amt_linux_enablement_guide_revision_1_1.pdf</a> <a href="#fr-20-1">↩</a></p>
+</li>
+<li id="footnote-3">
+<p><a href="https://i.blackhat.com/USA-19/Wednesday/us-19-Hasarfaty-Behind-The-Scenes-Of-Intel-Security-And-Manageability-Engine.pdf">https://i.blackhat.com/USA-19/Wednesday/us-19-Hasarfaty-Behind-The-Scenes-Of-Intel-Security-And-Manageability-Engine.pdf</a> <a href="#fr-3-1">↩</a></p>
+</li>
+<li id="footnote-19">
+<p><a href="https://www.intel.com/content/dam/www/public/us/en/security-advisory/documents/intel-csme-security-white-paper.pdf">https://www.intel.com/content/dam/www/public/us/en/security-advisory/documents/intel-csme-security-white-paper.pdf</a> <a href="#fr-19-1">↩</a></p>
+</li>
+<li id="footnote-17">
+<p><a href="https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/resources/key-usage-in-integrated-firmware-images.html">https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/resources/key-usage-in-integrated-firmware-images.html</a> <a href="#fr-17-1">↩</a></p>
+</li>
+<li id="footnote-18">
+<p><a href="https://bitkeks.eu/blog/2017/12/the-intel-management-engine.html">https://bitkeks.eu/blog/2017/12/the-intel-management-engine.html</a> <a href="#fr-18-1">↩</a></p>
+</li>
+<li id="footnote-4">
+<p><a href="https://papers.put.as/papers/firmware/2014/2014-10_Breakpoint_Intel_ME_-_Two_Years_Later.pdf">https://papers.put.as/papers/firmware/2014/2014-10_Breakpoint_Intel_ME_-_Two_Years_Later.pdf</a> <a href="#fr-4-1">↩</a></p>
+</li>
+<li id="footnote-6">
+<p><a href="https://www.intel.com/content/www/us/en/support/articles/000055675/technologies.html?wapkw=csme">https://www.intel.com/content/www/us/en/support/articles/000055675/technologies.html?wapkw=csme</a> <a href="#fr-6-1">↩</a></p>
+</li>
+<li id="footnote-8">
+<p><a href="https://github.com/flothrone/bootguard">https://github.com/flothrone/bootguard</a> <a href="#fr-8-1">↩</a></p>
+</li>
+<li id="footnote-10">
+<p><a href="https://web.archive.org/web/20201129154607/https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/4th-gen-core-family-mobile-brief.pdf">https://web.archive.org/web/20201129154607/https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/4th-gen-core-family-mobile-brief.pdf</a> <a href="#fr-10-1">↩</a></p>
+</li>
+<li id="footnote-11">
+<p><a href="https://web.archive.org/web/20230322090345/https://patrick.georgi.family/2015/02/17/intel-boot-guard/">https://web.archive.org/web/20230322090345/https://patrick.georgi.family/2015/02/17/intel-boot-guard/</a> <a href="#fr-11-1">↩</a></p>
+</li>
+<li id="footnote-12">
+<p><a href="https://www.intel.com/content/www/us/en/processors/processor-numbers.html">https://www.intel.com/content/www/us/en/processors/processor-numbers.html</a> <a href="#fr-12-1">↩</a></p>
+</li>
+<li id="footnote-13">
+<p><a href="https://www.intel.com/content/www/us/en/support/articles/000058567/processors/intel-core-processors.html">https://www.intel.com/content/www/us/en/support/articles/000058567/processors/intel-core-processors.html</a> <a href="#fr-13-1">↩</a></p>
+</li>
+<li id="footnote-9">
+<p><a href="https://en.wikipedia.org/wiki/Intel_Hub_Architecture">https://en.wikipedia.org/wiki/Intel_Hub_Architecture</a> <a href="#fr-9-1">↩</a></p>
+</li>
+</ol>
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="architecture.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="knowledge.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="architecture.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="knowledge.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
