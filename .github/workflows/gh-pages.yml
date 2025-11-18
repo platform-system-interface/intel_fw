@@ -23,7 +23,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           # mdbook-version: 'latest'
-          mdbook-version: "0.4.48"
+          mdbook-version: "0.5.0"
 
       - name: Build
         run: |
