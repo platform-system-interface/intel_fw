@@ -3,3 +3,4 @@
 - [Intel platforms](platforms.md)
     - [Knowledge on Firmware Images](knowledge.md)
     - [Obtaining firmware images](images.md)
+    - [Unpacking firmware](unpacking.md)
