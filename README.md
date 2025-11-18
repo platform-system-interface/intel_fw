@@ -13,6 +13,19 @@ The [architecture and design](docs/architecture.md) is based on experience.
 To test this tool, you will need sample [firmware images](docs/images.md).
 For convenience, take a look at the [scripts](scripts/) used for development.
 
+## Commands
+
+### `me`
+
+The `me` command lets you print, edit and check the (CS)ME firmware.
+The `me clean` command is compatible with `me_cleaner`, with minor differences:
+
+- The `--whitelist` and `--blacklist` flags do not cause deletion of partitions
+  when multiple partitions refer to the same range, but at least one of them is
+  to be retained. This is considered a bug fix.
+- The `--check` flag checks _all_ directory partitions as well as the presence
+  of the FTPR. Analysis details are printed unconditionally.
+
 ## Development
 
 To run the CLI via `cargo` directly, remember to add arguments after an extra
