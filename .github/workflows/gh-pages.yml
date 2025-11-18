@@ -1,0 +1,37 @@
+name: github pages
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up mdBook
+        # https://github.com/jontze/action-mdbook
+        uses: jontze/action-mdbook@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # mdbook-version: 'latest'
+          mdbook-version: "0.4.48"
+
+      - name: Build
+        run: |
+          mdbook build
+          mkdir pages
+          mv book pages/
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./pages
