@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b5271eba.js";
+            window.path_to_searchindex_js = "searchindex-9219133f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-de266211.js"></script>
+        <script src="toc-204d27e3.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,7 +180,7 @@
                     <main>
                         <h1 id="intel_fw"><a class="header" href="#intel_fw"><code>intel_fw</code></a></h1>
 <p>This is both a command-line interface (CLI) and a library for analyzing and
-editing firmware images for <a href="#intel-platforms">Intel hardware platforms</a>.</p>
+editing <a href="#firmware-images">firmware images</a> for <a href="#intel-platforms">Intel platforms</a>.</p>
 <p>The <a href="#architecture-and-design">architecture</a> is based on <a href="#knowledge-on-firmware-images-for-intel-platforms">knowledge</a>
 from prior research.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -462,6 +462,61 @@ code is in the <code>plugins/</code> directory:</p>
 <pre><code class="language-sh">pyinstxtractor.py ../mfit_18.exe
 ls -l tools.exe_extracted/plugins/
 </code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="firmware-images"><a class="header" href="#firmware-images">Firmware images</a></h1>
+<p>There are multiple ways of obtaining firmware images:</p>
+<ul>
+<li>read out from one’s own mainboard, e.g. using
+<a href="https://flashprog.org/"><code>flashprog</code></a></li>
+<li>download from a vendor; however, those are mostly <em>upgrade</em> images, not the
+same as what would be found on real hardware, usually in a proprietary format</li>
+<li>download from an archive, obtain a full backup image, or similar</li>
+</ul>
+<h2 id="full-images"><a class="header" href="#full-images">Full images</a></h2>
+<h3 id="chromeos"><a class="header" href="#chromeos">ChromeOS</a></h3>
+<p>The <a href="https://coreboot.org">coreboot project</a> offers a utility to download full
+recovery images for ChromeOS (Chromebooks) including a base system and firmware,
+and extract the firmware image:
+<a href="https://github.com/coreboot/coreboot/blob/main/util/chromeos/crosfirmware.sh"><code>util/chromeos/crosfirmware.sh</code></a></p>
+<p>To download all the images and extract the firmware, run:
+<code>./crosfirmware.sh all</code></p>
+<p>As the time of writing this, that will download:
+<a href="https://dl.google.com/dl/edgedl/chromeos/recovery/recovery.conf">https://dl.google.com/dl/edgedl/chromeos/recovery/recovery.conf</a></p>
+<p>Which looks somewhat like this:</p>
+<pre><code>recovery_tool_version=0.9.2
+recovery_tool_linux_version=0.9.2
+recovery_tool_update=
+
+
+name=Dell Chromebook 13 (3380)
+version=15393.58.0
+desc=
+channel=STABLE
+hwidmatch=^ASUKA .*
+hwid=
+md5=9e3788b775f0c55f37682a6db6add00a
+sha1=b54a3762e22d08dc3b67846e3ab16bd7333e519d
+zipfilesize=1275561266
+file=chromeos_15393.58.0_asuka_recovery_stable-channel_mp-v2.bin
+filesize=2330960384
+url=https://dl.google.com/dl/edgedl/chromeos/recovery/chromeos_15393.58.0_asuka_recovery_stable-channel_mp-v2.bin.zip
+</code></pre>
+<p>and so on. Each entry is about 12 lines. How much is in there?</p>
+<pre><code>wc recovery.conf
+  9186  11369 297858 recovery.conf
+</code></pre>
+<p>More than 650 images?! … no, there are lots of duplicates. But not exactly.
+Some recovery images contain firmware for multiple devices!</p>
+<pre><code>grep url= recovery.conf | uniq | wc
+    76     76   9310
+</code></pre>
+<p>A good bunch of downloads would fail, though. I reduced the script to fewer
+entries. Note that Chromebooks may be based on any platform, not only Intel.</p>
+<p>How many images that you downloaded are for Intel?</p>
+<pre><code>for f in coreboot*.bin; intel_fw me scan $f; end 2&gt;&amp;1 | grep 'No ME' | wc
+    19    133   1235
+</code></pre>
+<p>The remaining images can now be used to test <code>intel_fw</code>.</p>
 
                     </main>
 
