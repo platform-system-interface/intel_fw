@@ -5,4 +5,3 @@ title = "intel_fw"
 
 [output.html]
 git-repository-url = "https://github.com/platform-system-interface/intel_fw"
-site-url = "/book/"
