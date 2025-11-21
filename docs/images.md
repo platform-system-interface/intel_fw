@@ -73,3 +73,6 @@ for f in coreboot*.bin; intel_fw me scan $f; end 2>&1 | grep 'No ME' | wc
 The remaining images can now be used to test `intel_fw`.
 
 ### Win-Raid Forum
+
+Many samples can be found via this forum post:
+<https://winraid.level1techs.com/t/intel-cs-me-cs-txe-cs-sps-gsc-pmc-pchc-phy-orom-firmware-repositories/30869>
