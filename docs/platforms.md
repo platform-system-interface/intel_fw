@@ -43,7 +43,9 @@ and discussed in the coreboot community[^11].
 
 Note that the ME generations roughly correspond with the overall platform, in
 that ranges of Intel platforms are expected to carry a certain ME hardware
-generation and specific platforms a certain firmware version range.
+generation and specific platforms a certain firmware version range. For example,
+Lenovo ThinkPad X270 laptops came with 6th/7th gen Intel Core processors, which
+means 3rd generation ME hardware and version 11.x.x.x ME firmware.
 
 ## Processor names
 
