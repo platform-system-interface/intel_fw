@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-51af2096.js";
+            window.path_to_searchindex_js = "searchindex-be3bdc30.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-905e7556.js"></script>
@@ -192,7 +192,8 @@ that is able to distinguish at any given level and allows for extraction.</p>
 a container that may be of either one or another kind.
 And in turn, it would contain one or another kind of entries.</p>
 <p><img src="./analyze_unpack.png" alt=""></p>
-<p>In Rust, we can use <code>enum</code> types to express this:</p>
+<p>In Rust, we can use <a href="https://doc.rust-lang.org/book/ch06-00-enums.html"><code>enum</code></a>
+types to express this:</p>
 <pre><code class="language-rs">enum Container {
     AContainer(Vec&lt;AEntry&gt;),
     BContainer(Vec&lt;BEntry&gt;),
