@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9219133f.js";
+            window.path_to_searchindex_js = "searchindex-2826e453.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-204d27e3.js"></script>
+        <script src="toc-905e7556.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -517,6 +517,45 @@ entries. Note that Chromebooks may be based on any platform, not only Intel.</p>
     19    133   1235
 </code></pre>
 <p>The remaining images can now be used to test <code>intel_fw</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="unpacking-firmware"><a class="header" href="#unpacking-firmware">Unpacking Firmware</a></h1>
+<p>Firmware images are typically packed and consist of various pieces henceforth
+called <em>components</em>. In different places, they may be called more specific
+terms, such as partitions, directories, modules, files, etc.</p>
+<p>Many components are <em>containers</em>, which in turn are comprised of other things.
+As it happens over time, a firmware image for a platform of today may look very
+different from one meant for a platform from the past. It may be, however, that
+the target platform cannot be recognized right away, making analysis harder.
+Such is the case for Intel. We thus need an <a href="#architecture-and-design">architecture</a>
+that is able to distinguish at any given level and allows for extraction.</p>
+<h2 id="partitions"><a class="header" href="#partitions">Partitions</a></h2>
+<p>The following diagram is a generic example of a partitioned firmware image with
+a container that may be of either one or another kind.
+And in turn, it would contain one or another kind of entries.</p>
+<p><img src="analyze_unpack.png" alt=""></p>
+<p>In Rust, we can use <code>enum</code> types to express this:</p>
+<pre><code class="language-rs">enum Container {
+    AContainer(Vec&lt;AEntry&gt;),
+    BContainer(Vec&lt;BEntry&gt;),
+}
+</code></pre>
+<h2 id="intel-me-generation-3"><a class="header" href="#intel-me-generation-3">Intel ME Generation 3</a></h2>
+<p>With the third hardware generation of Intel ME based platforms, a new operating
+system was introduced, based on MINIX 3. It needs bootstrapping first.</p>
+<p>There are multiple kinds of partitions, including Code Partition Directory (CPD)
+partitions. Those contain executables, their corresponding metadata files, and a
+manifest that holds a signature over the manifest.</p>
+<p>The signed data in the manifest includes hashes of the metadata files and other
+things, so that the manifest suffices to verify the entire CPD’s integrity.
+Each metadata file contains the counterpart binary’s hash.
+The binaries themselves are mostly compressed, commonly using LZMA and a few via
+Huffman encoding.</p>
+<p>Knowledge on CPDs, manifests, metadata and binaries can be found in PT Research
+utilities for unpacking:</p>
+<ul>
+<li><a href="https://github.com/ptresearch/unME11">https://github.com/ptresearch/unME11</a></li>
+<li><a href="https://github.com/ptresearch/unME12">https://github.com/ptresearch/unME12</a></li>
+</ul>
 
                     </main>
 
