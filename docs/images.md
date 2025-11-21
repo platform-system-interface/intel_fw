@@ -20,7 +20,7 @@ and extract the firmware image:
 To download all the images and extract the firmware, run:
 `./crosfirmware.sh all`
 
-As the time of writing this, that will download:
+As of the time of writing this, that will download:
 <https://dl.google.com/dl/edgedl/chromeos/recovery/recovery.conf>
 
 Which looks somewhat like this:
@@ -71,3 +71,5 @@ for f in coreboot*.bin; intel_fw me scan $f; end 2>&1 | grep 'No ME' | wc
 ```
 
 The remaining images can now be used to test `intel_fw`.
+
+### Win-Raid Forum
