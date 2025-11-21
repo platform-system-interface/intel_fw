@@ -19,7 +19,8 @@ And in turn, it would contain one or another kind of entries.
 
 ![](./analyze_unpack.png)
 
-In Rust, we can use `enum` types to express this:
+In Rust, we can use [`enum`](https://doc.rust-lang.org/book/ch06-00-enums.html)
+types to express this:
 
 ```rs
 enum Container {
