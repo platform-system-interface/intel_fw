@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9b2f5134.js";
+            window.path_to_searchindex_js = "searchindex-dad56501.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-905e7556.js"></script>
+        <script src="toc-85b9e334.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -253,6 +253,37 @@ editing and returning a new slice to replace the original one.
 The IFD is similar in that it is also small, but has its own unique features.
 And the FIT is yet again very different.</p>
 <p>See also the <a href="https://rust-unofficial.github.io/patterns/patterns/behavioural/strategy.html">strategy pattern</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="extend-with-new-variants-and-features"><a class="header" href="#extend-with-new-variants-and-features">Extend with new variants and features</a></h1>
+<p>The following is a brief list of guiding principles to extend <code>intel_fw</code>.
+As a library, it should to adhere to those as requirements in order to provide
+guarantees to applications working with it. Generally, it should follow the
+<a href="https://rust-lang.github.io/api-guidelines/about.html">Rust API guidelines</a>.</p>
+<h2 id="do-not-panic"><a class="header" href="#do-not-panic">Do not panic!</a></h2>
+<p>Parsing firmware means looking for and acting on offsets and sizes frequently,
+and they always need to be checked to stay within the bounds of the given data.
+Never <code>unwrap()</code>, which means an <em>intentional panic</em>, in case something cannot
+be found, read, or recognized. Instead, return instances of <code>Self</code> for structs,
+wrapped in a <code>Result&lt;Self, CustomError&gt;</code> or possibly <code>Option&lt;Self&gt;</code>.</p>
+<h2 id="continuous-parsing"><a class="header" href="#continuous-parsing">Continuous parsing</a></h2>
+<p>There are circumstances under which a parser encounters an issue. It can be
+that offsets do not make sense, magic bytes (struct markers) are not as they
+were expected, or new variants are found with samples not encountered before.
+In those situations, it is desirable to follow a best-effort strategy. I.e.,
+when there is still remaining data that could be parsed, keep going.</p>
+<h2 id="let-apps-provide-feedback"><a class="header" href="#let-apps-provide-feedback">Let apps provide feedback</a></h2>
+<p>In other words, <strong>let the consuming application take care</strong> of taking the result
+apart. Nested structures mean that whenever a node in a graph turns into an
+<code>Error</code> or <code>None</code>, other nodes beside it may still provide useful information.
+That information helps the user of an app to understand the context and possibly
+report what they are facing or look into the issue themselves.</p>
+<h2 id="errors-and-context"><a class="header" href="#errors-and-context">Errors and context</a></h2>
+<p>In order to make sense of an error, context is important. During development, it
+can be helpful to print out information right within a specific parser. However,
+a final app is typically not run in development mode, but as a release. In that
+moment, semantic errors will help to identify possible problems. Include offsets
+and sizes (or <code>Range</code>s) for the application to tell exactly where the problem
+is, and it can choose to e.g. dump a contextual hex view on the data.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="intel-platforms"><a class="header" href="#intel-platforms">Intel platforms</a></h1>
 <p>Over the years and decades, Intel has developed many hardware platforms<sup class="footnote-reference" id="fr-14-1"><a href="#footnote-14">1</a></sup>.</p>
