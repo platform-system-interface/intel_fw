@@ -47,6 +47,22 @@ generation and specific platforms a certain firmware version range. For example,
 Lenovo ThinkPad X270 laptops came with 6th/7th gen Intel Core processors, which
 means 3rd generation ME hardware and version 11.x.x.x ME firmware.
 
+| Year | Microarchitecture | Generation  | ME version |
+| ---- | ----------------- | ----------- | ---------- |
+| 2015 | Broadwell         |    5th      |  11.x.x.x  |
+|      | Skylake           |    6th      |  11.x.x.x  |
+| 2016 |                   |             |            |
+| 2017 | Kaby Lake         |    7th      |  11.x.x.x  |
+|      | Coffee Lake       |    8th      |  11.x.x.x  |
+| 2018 | Coffee Lake       |    9th      |  11.x.x.x  |
+| 2019 |                   |             |            |
+| 2020 | Comet Lake        |    10th     |  12.x.x.x  |
+| 2021 | Rocket Lake       |    11th     |  12.x.x.x  |
+| 2022 | Alder Lake        |    12th     |  13.x.x.x  |
+| 2023 | Raptor Lake       |    13th     |  14.x.x.x  |
+|      | Raptor Lake       |    14th     |  14.x.x.x  |
+| 2024 | Arrow Lake        |  Series 2   |  15.x.x.x  |
+
 ## Processor names
 
 Intel publicly documents how to interpret procesor names[^12] and what their
