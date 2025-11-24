@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3618174f.js";
+            window.path_to_searchindex_js = "searchindex-e33bb2a8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-0695aabd.js"></script>
@@ -187,6 +187,13 @@ similar utilities to cut out and decompress data are very handy.</p>
 <p>The following example shall help understanding the thought process when trying
 to get behind the meaning of unknown data. Mind that this takes a lot of time.
 It often starts with the simple question: What is this?</p>
+<p>A first helpful step is to try to identify headers and formats. Binary data
+structures often start with markers called signatures, <em>magic</em> bytes or numbers,
+commonly four ASCII characters or significant numbers that suggest a meaning.
+There are tools such as <code>file</code> to recognize them, as well as lists of common
+<a href="https://en.wikipedia.org/wiki/List_of_file_signatures">file signatures</a> and
+<a href="https://tool.lu/en_US/magicbytes/">magic bytes</a>. Search engines and communities
+are quick to assist with a first effort.</p>
 <p>Often enough, other researchers have already performed initial work to build on
 top of. In the case of Intel ME generation 3 hardware, there are manifests with
 lots of metadata, described through what are called <em>extensions</em> by Positive
