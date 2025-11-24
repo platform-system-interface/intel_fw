@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-dad56501.js";
+            window.path_to_searchindex_js = "searchindex-410de32a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-85b9e334.js"></script>
@@ -178,16 +178,23 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="extend-with-new-variants-and-features"><a class="header" href="#extend-with-new-variants-and-features">Extend with new variants and features</a></h1>
-<p>The following is a brief list of guiding principles to extend <code>intel_fw</code>.
-As a library, it should to adhere to those as requirements in order to provide
+<p>These guiding principles are meant to help extending <code>intel_fw</code> over time.
+As a library, it should adhere to those as requirements in order to provide
 guarantees to applications working with it. Generally, it should follow the
 <a href="https://rust-lang.github.io/api-guidelines/about.html">Rust API guidelines</a>.</p>
 <h2 id="do-not-panic"><a class="header" href="#do-not-panic">Do not panic!</a></h2>
 <p>Parsing firmware means looking for and acting on offsets and sizes frequently,
 and they always need to be checked to stay within the bounds of the given data.
-Never <code>unwrap()</code>, which means an <em>intentional panic</em>, in case something cannot
-be found, read, or recognized. Instead, return instances of <code>Self</code> for structs,
-wrapped in a <code>Result&lt;Self, CustomError&gt;</code> or possibly <code>Option&lt;Self&gt;</code>.</p>
+Never <code>.unwrap()</code> or <code>.expect()</code>, which mean an <em>intentional panic</em>, in case
+something cannot be found, read, or recognized. Instead, return instances of
+<code>Self</code> for structs, wrapped in a <code>Result&lt;Self, CustomError&gt;</code> or possibly
+<code>Option&lt;Self&gt;</code>. Do not <code>assert!()</code> or explicitly <code>panic!()</code> either.</p>
+<h2 id="option-or-result"><a class="header" href="#option-or-result"><code>Option</code> or <code>Result</code></a></h2>
+<p>In general, use <code>Option&lt;Self&gt;</code> for things that might not be found. For example,
+a full image from a production system would have an IFD at the beginning,
+whereas an ME-only image would not. On the other hand, either image is expected
+to contain an FPT, so in this case, provide a <code>Result&lt;Self, CustomError&gt;</code>,
+because not finding an FPT means that something is clearly wrong with the image.</p>
 <h2 id="continuous-parsing"><a class="header" href="#continuous-parsing">Continuous parsing</a></h2>
 <p>There are circumstances under which a parser encounters an issue. It can be
 that offsets do not make sense, magic bytes (struct markers) are not as they
@@ -195,8 +202,9 @@ were expected, or new variants are found with samples not encountered before.
 In those situations, it is desirable to follow a best-effort strategy. I.e.,
 when there is still remaining data that could be parsed, keep going.</p>
 <h2 id="let-apps-provide-feedback"><a class="header" href="#let-apps-provide-feedback">Let apps provide feedback</a></h2>
-<p>In other words, <strong>let the consuming application take care</strong> of taking the result
-apart. Nested structures mean that whenever a node in a graph turns into an
+<p>Finally, <strong>let the consuming application take care</strong> of taking the result apart.
+Nested structures can be thought of as trees, similar to ASTs in programming
+languages. Whenever a node in the tree that is a parsing result turns into an
 <code>Error</code> or <code>None</code>, other nodes beside it may still provide useful information.
 That information helps the user of an app to understand the context and possibly
 report what they are facing or look into the issue themselves.</p>
