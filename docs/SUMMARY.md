@@ -1,6 +1,7 @@
 - [`intel_fw`](intro.md)
     - [Architecture and Design](architecture.md)
     - [Extend with new variants and features](extend.md)
+    - [Firmware analysis](analysis.md)
 - [Intel platforms](platforms.md)
     - [Knowledge on Firmware Images](knowledge.md)
     - [Obtaining firmware images](images.md)
