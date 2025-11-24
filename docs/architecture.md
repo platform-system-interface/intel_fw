@@ -36,7 +36,7 @@ E.g., wrap partition entry structs in another struct that carries supporting
 metadata with it, such as offset and size, parsing result of what the partition
 entry points to, etc..
 
-Follow the [Rust API guidelines](https://rust-lang.github.io/api-guidelines/).
+Follow the [guidelines for extending `intel_fw`](./extend.md).
 
 ## Approaches
 
