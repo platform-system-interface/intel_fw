@@ -12,6 +12,14 @@ The following example shall help understanding the thought process when trying
 to get behind the meaning of unknown data. Mind that this takes a lot of time.
 It often starts with the simple question: What is this?
 
+A first helpful step is to try to identify headers and formats. Binary data
+structures often start with markers called signatures, _magic_ bytes or numbers,
+commonly four ASCII characters or significant numbers that suggest a meaning.
+There are tools such as `file` to recognize them, as well as lists of common
+[file signatures](https://en.wikipedia.org/wiki/List_of_file_signatures) and
+[magic bytes](https://tool.lu/en_US/magicbytes/). Search engines and communities
+are quick to assist with a first effort.
+
 Often enough, other researchers have already performed initial work to build on
 top of. In the case of Intel ME generation 3 hardware, there are manifests with
 lots of metadata, described through what are called _extensions_ by Positive
@@ -128,6 +136,5 @@ Which yields:
   514:d=0  hl=2 l=   0 prim: EOC
   ```
 
-Success! Next up, we need to find a suitable library to parse this data. Further 
+Success! Next up, we need to find a suitable library to parse this data. Further
 development is omitted here.
-
