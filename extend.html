@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-e33bb2a8.js";
+            window.path_to_searchindex_js = "searchindex-4fefa95a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-0695aabd.js"></script>
@@ -215,6 +215,14 @@ a final app is typically not run in development mode, but as a release. In that
 moment, semantic errors will help to identify possible problems. Include offsets
 and sizes (or <code>Range</code>s) for the application to tell exactly where the problem
 is, and it can choose to e.g. dump a contextual hex view on the data.</p>
+<h2 id="additional-information"><a class="header" href="#additional-information">Additional information</a></h2>
+<p>To provide additional information, instead of returning an <code>Err(String)</code>, wrap
+it in an <code>enum CustomError</code>, i.e., for example,</p>
+<pre><code class="language-rs">enum CustomError {
+    TooSmall(String),
+}
+</code></pre>
+<p>so you would <code>return Err(CustomError:TooSmall(format!("{n{ bytes needed")))</code>.</p>
 
                     </main>
 
