@@ -47,3 +47,14 @@ a final app is typically not run in development mode, but as a release. In that
 moment, semantic errors will help to identify possible problems. Include offsets
 and sizes (or `Range`s) for the application to tell exactly where the problem
 is, and it can choose to e.g. dump a contextual hex view on the data.
+
+## Additional information
+
+To provide additional information, instead of returning an `Err(String)`, wrap 
+it in an `enum CustomError`, i.e., for example, 
+```rs
+enum CustomError {
+    TooSmall(String),
+}
+```
+so you would `return Err(CustomError:TooSmall(format!("{n{ bytes needed")))`.
