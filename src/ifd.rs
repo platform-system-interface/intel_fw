@@ -525,12 +525,12 @@ impl Debug for IFD {
 }
 
 /// Extract a bit from a given byte, as bool.
-fn extract_bit(straps: &Vec<u32>, byte: usize, bit: u32) -> bool {
+fn extract_bit(straps: &[u32], byte: usize, bit: u32) -> bool {
     straps[byte] >> bit & 1 == 1
 }
 
 /// Set or clear a bit in a given strap, identified by its number.
-fn set_bit(straps: &mut Vec<u32>, byte: usize, bit: u32, s: bool) {
+fn set_bit(straps: &mut [u32], byte: usize, bit: u32, s: bool) {
     let b = straps[byte];
     straps[byte] = b & !(1 << bit) | ((s as u32) << bit);
 }
@@ -684,6 +684,9 @@ const REGION_COUNT: usize = 8;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum IfdError {
     NoIfd(String),
+    DataTooSmall(String),
+    ParserError(String),
+    OutOfBounds(String),
 }
 
 fn u8_slice_to_u32(slice: &[u8]) -> Vec<u32> {
@@ -695,7 +698,15 @@ fn u8_slice_to_u32(slice: &[u8]) -> Vec<u32> {
 
 impl IFD {
     pub fn parse(data: &[u8]) -> Result<Self, IfdError> {
-        let (header, _) = Header::read_from_prefix(&data[OFFSET..]).unwrap();
+        if data.len() < OFFSET {
+            return Err(IfdError::DataTooSmall(
+                "Not enough data: need at least 4096 bytes".into(),
+            ));
+        }
+        let header = match Header::read_from_prefix(&data[OFFSET..]) {
+            Ok((r, _)) => r,
+            Err(e) => return Err(IfdError::ParserError(format!("IFD header: {e:?}"))),
+        };
 
         if header.magic != MAGIC {
             return Err(IfdError::NoIfd(format!(
@@ -710,17 +721,51 @@ impl IFD {
         let pch_straps_offset = header.flmap1.fisba();
         let mch_straps_offset = header.flmap2.fmsba();
 
-        let (components, _) = Components::read_from_prefix(&data[components_offset..]).unwrap();
+        if components_offset > data.len() {
+            return Err(IfdError::OutOfBounds(format!(
+                "Components @ {components_offset:08x}"
+            )));
+        }
+        let components = match Components::read_from_prefix(&data[components_offset..]) {
+            Ok((r, _)) => r,
+            Err(e) => return Err(IfdError::ParserError(format!("{e:?}"))),
+        };
 
-        let (regions, _) = Regions::read_from_prefix(&data[regions_offset..]).unwrap();
+        if regions_offset > data.len() {
+            return Err(IfdError::OutOfBounds(format!(
+                "Regions @ {regions_offset:08x}"
+            )));
+        }
+        let regions = match Regions::read_from_prefix(&data[regions_offset..]) {
+            Ok((r, _)) => r,
+            Err(e) => return Err(IfdError::ParserError(format!("{e:?}"))),
+        };
 
-        let slice = &data[masters_offset..masters_offset + REGION_COUNT * 4];
+        let masters_end = masters_offset + REGION_COUNT * 4;
+        if masters_offset > data.len() || masters_end > data.len() {
+            return Err(IfdError::OutOfBounds(format!(
+                "Masters @ {masters_offset:08x}..{masters_end:08x}"
+            )));
+        }
+        let slice = &data[masters_offset..masters_end];
         let masters = u8_slice_to_u32(slice);
 
-        let slice = &data[pch_straps_offset..pch_straps_offset + header.flmap1.isl() * 4];
+        let pch_straps_end = pch_straps_offset + header.flmap1.isl() * 4;
+        if pch_straps_offset > data.len() || pch_straps_end > data.len() {
+            return Err(IfdError::OutOfBounds(format!(
+                "PCH straps @ {pch_straps_offset:08x}..{pch_straps_end:08x}"
+            )));
+        }
+        let slice = &data[pch_straps_offset..pch_straps_end];
         let pch_straps = u8_slice_to_u32(slice);
 
-        let slice = &data[mch_straps_offset..mch_straps_offset + header.flmap2.msl() * 4];
+        let mch_straps_end = mch_straps_offset + header.flmap2.msl() * 4;
+        if mch_straps_offset > data.len() || mch_straps_end > data.len() {
+            return Err(IfdError::OutOfBounds(format!(
+                "MCH straps @ {mch_straps_offset:08x}..{mch_straps_end:08x}"
+            )));
+        }
+        let slice = &data[mch_straps_offset..mch_straps_end];
         let mch_straps = u8_slice_to_u32(slice);
 
         Ok(Self {
