@@ -191,7 +191,7 @@ impl<'a> Manifest {
 
         let header = self.header.as_bytes();
         let mut hasher = Sha256::new();
-        hasher.update(&header);
+        hasher.update(header);
         hasher.update(&self.mdata);
         let hash = hasher.finalize();
         let hb = hash.as_bytes();
