@@ -158,7 +158,7 @@ impl Fit {
         }
         let offset = mapping & fp as usize;
         // NOTE: FIT is usually aligned. The spec does not mandate it though.
-        if offset % 0x10 != 0 {
+        if !offset.is_multiple_of(0x10) {
             return Err(FitError::InvalidPointer(format!(
                 "Not a FIT pointer: {offset:08x}"
             )));
