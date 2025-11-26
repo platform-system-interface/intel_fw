@@ -53,7 +53,7 @@ For more understanding, see also any of these additional resources:
       issue; instead, add notes on how to reproduce them, via public vendor
       images and extraction utilities (e.g. from Lenovo)
     - [x] step 1: port core logic to produce the same output as `me_cleaner` for
-        Lenovo ThinkPad X230 + X270
+      Lenovo ThinkPad X230 + X270
     - [x] step 2: full feature parity with `me_cleaner`
 - [ ] expand the documentation
     - [ ] higher-level view on Intel platform boot flows
@@ -61,4 +61,4 @@ For more understanding, see also any of these additional resources:
     - [ ] adding support for more platforms and variants
 - [ ] work out a reusable library, i.e., a Rust crate for <https://crates.io/>
 - [ ] sync up; <https://github.com/corna/me_cleaner> has another patch that
-      coreboot is missing, doing rework and adding ME Gen 1 support
+  coreboot is missing, doing rework and adding ME Gen 1 support
