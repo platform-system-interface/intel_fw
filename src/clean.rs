@@ -46,10 +46,10 @@ pub fn clean(
         parts_force_deletion: options.parts_force_deletion,
     };
     new_me.fpt_area.clean(&opts);
-    if options.relocate {
-        if let Err(e) = new_me.fpt_area.relocate_partitions() {
-            warn!("Could not relocate: {e}")
-        }
+    if options.relocate
+        && let Err(e) = new_me.fpt_area.relocate_partitions()
+    {
+        warn!("Could not relocate: {e}")
     }
     match new_me.fpt_area.to_vec() {
         Ok(cleaned) => {
