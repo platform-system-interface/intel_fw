@@ -29,14 +29,31 @@ enum Container {
 }
 ```
 
+## Intel ME Generation 2
+
+With the second hardware generation, Intel ME based platforms have introduced
+a partitioning scheme called Flash Partition Table (FPT), starting with a `$FPT`
+magic. There are code and data partitions, and the main code partition is called
+FTPR.
+
+Code partitions start with a manifest that holds metadata over the modules
+contained in the partition, as a flat directory. Those modules are in part
+Huffman-encoded and chunked, and the Huffman tables are part of the mask ROM.
+
+The overall manifest format is header + signature + data. The data part lists
+the modules with their offsets, sizes and hashes, so that the manifest covers
+the whole partition's integrity.
+
 ## Intel ME Generation 3
 
 With the third hardware generation of Intel ME based platforms, a new operating
-system was introduced, based on MINIX 3. It needs bootstrapping first.
+system was introduced, based on MINIX 3. It needs bootstrapping first, starting
+with phases called RBE (ROM Boot Extensions) and bup (bringup).
 
 There are multiple kinds of partitions, including Code Partition Directory (CPD)
 partitions. Those contain executables, their corresponding metadata files, and a
-manifest that holds a signature over the manifest.
+manifest that holds a signature over the header before it and its other data.
+The manifest format with the header and signature is the same as for Gen 2.
 
 The signed data in the manifest includes hashes of the metadata files and other
 things, so that the manifest suffices to verify the entire CPD's integrity.
