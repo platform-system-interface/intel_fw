@@ -72,14 +72,14 @@ pub struct ClearOptions {
 pub fn retain(part_name: String, options: &ClearOptions) -> bool {
     part_name == FTPR
         || options.parts_force_retention.contains(&part_name)
-        || (options.parts_force_deletion.len() > 0
+        || (!options.parts_force_deletion.is_empty()
             && !options.parts_force_deletion.contains(&part_name))
 }
 
 /// Clear out removable ranges in the FTPR directory
-pub fn dir_clean(dir: &dyn Removables, retention_list: &Vec<String>, data: &mut Vec<u8>) {
+pub fn dir_clean(dir: &dyn Removables, retention_list: &[String], data: &mut [u8]) {
     use log::info;
-    for r in dir.removables(&retention_list) {
+    for r in dir.removables(retention_list) {
         let offset = r.start;
         let size = r.end - r.start;
         info!("Freeing {size:8} bytes @ {offset:08x}");

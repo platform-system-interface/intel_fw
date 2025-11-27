@@ -23,9 +23,9 @@ impl CPDPartition {
     pub fn check_signature(&self) -> Result<(), String> {
         if let Ok(m) = &self.cpd.manifest {
             if m.verify() {
-                return Ok(());
+                Ok(())
             } else {
-                return Err("hash mismatch".into());
+                Err("hash mismatch".into())
             }
         } else {
             Err("no manifest found".into())
@@ -139,8 +139,7 @@ impl Gen3Partition {
 }
 
 pub fn parse(fpt: &FPT, data: &[u8], debug: bool) -> Vec<Gen3Partition> {
-    let parts = fpt
-        .entries
+    fpt.entries
         .iter()
         .map(|e| {
             let offset = e.offset();
@@ -160,11 +159,10 @@ pub fn parse(fpt: &FPT, data: &[u8], debug: bool) -> Vec<Gen3Partition> {
                 Gen3Partition::parse(&data[offset..end], *e, debug)
             }
         })
-        .collect();
-    parts
+        .collect()
 }
 
-pub fn clean(parts: &Vec<Gen3Partition>, options: &ClearOptions) -> Vec<Gen3Partition> {
+pub fn clean(parts: &[Gen3Partition], options: &ClearOptions) -> Vec<Gen3Partition> {
     use log::info;
     // Step 1: Reduce down to the partitions to be kept, i.e., non-removable
     // ones.
@@ -181,7 +179,7 @@ pub fn clean(parts: &Vec<Gen3Partition>, options: &ClearOptions) -> Vec<Gen3Part
                 false
             }
         })
-        .map(|p| p.clone())
+        .cloned()
         .collect::<Vec<Gen3Partition>>();
     if options.keep_modules {
         return reduced;
@@ -193,12 +191,9 @@ pub fn clean(parts: &Vec<Gen3Partition>, options: &ClearOptions) -> Vec<Gen3Part
         // TODO: Extend with user-provided list
         let retention_list = strs_to_strings(ALWAYS_RETAIN);
         let mut cleaned = p.data().clone();
-        match &p {
-            Gen3Partition::Dir(dir) => {
-                dir_clean(&dir.cpd, &retention_list, &mut cleaned);
-            }
-            _ => {}
-        };
+        if let Gen3Partition::Dir(dir) = &p {
+            dir_clean(&dir.cpd, &retention_list, &mut cleaned);
+        }
         p.set_data(cleaned);
     }
     // Step 3: Profit.
