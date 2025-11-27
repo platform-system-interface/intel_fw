@@ -105,7 +105,7 @@ impl Entry {
         let b = self.mod_base;
         let rapi = self.flags.rapi();
         let kapi = self.flags.kapi();
-        let code_start = (b as usize + (rapi + kapi) * 0x1000) as usize;
+        let code_start = b as usize + (rapi + kapi) * 0x1000;
         let code_end = (b + self.code_size) as usize;
         let data_end = (b + self.memory_size) as usize;
         BinaryMap {
@@ -215,15 +215,15 @@ impl Display for Directory {
     }
 }
 
-const HEADER_SIZE: usize = core::mem::size_of::<Header>();
-
 impl Directory {
     pub fn new(data: &[u8], offset: usize) -> Result<Self, String> {
-        let Ok(manifest) = Manifest::new(data) else {
-            return Err("cannot parse Gen 2 directory manifest".to_string());
+        let manifest = match Manifest::new(data) {
+            Ok(r) => r,
+            Err(e) => return Err(format!("cannot parse Gen 2 directory manifest: {e:?}")),
         };
-        let Ok((header, _)) = Header::read_from_prefix(&manifest.mdata) else {
-            return Err("cannot parse ME FW Gen 2 directory header".to_string());
+        let (header, rest) = match Header::read_from_prefix(&manifest.mdata) {
+            Ok((h, rest)) => (h, rest),
+            Err(e) => return Err(format!("cannot parse Gen 2 directory header: {e:?}")),
         };
         let name = match from_utf8(&header.name) {
             Ok(n) => n.trim_end_matches('\0').to_string(),
@@ -231,9 +231,7 @@ impl Directory {
         };
 
         // Check magic bytes of first entry.
-        let pos = HEADER_SIZE;
-        let slice = &manifest.mdata[pos..];
-        let m = &slice[..4];
+        let m = &rest[..4];
         if !m.eq(MODULE_MAGIC_BYTES) {
             return Err(format!(
                 "entry magic not found, got {m:02x?}, wanted {MODULE_MAGIC_BYTES:02x?} ({MODULE_MAGIC})"
@@ -241,8 +239,9 @@ impl Directory {
         }
         // Parse the entries themselves.
         let count = manifest.header.entries as usize;
-        let Ok((r, _)) = Ref::<_, [Entry]>::from_prefix_with_elems(slice, count) else {
-            return Err(format!("cannot parse ME FW Gen 2 directory entries",));
+        let r = match Ref::<_, [Entry]>::from_prefix_with_elems(rest, count) {
+            Ok((r, _)) => r,
+            Err(e) => return Err(format!("cannot parse Gen 2 directory entries: {e}")),
         };
         let entries = r.to_vec();
 
@@ -265,16 +264,28 @@ impl Directory {
                                 "Expected {SIG_LUT_BYTES:02x?} @ {o:08x}, got {sig:02x?}"
                             )));
                         }
-                        let (header, _) = LutHeader::read_from_prefix(&data[o..]).unwrap();
+                        let header = match LutHeader::read_from_prefix(&data[o..]) {
+                            Ok((r, _)) => r,
+                            Err(e) => return Module::Huffman(Err(format!("{e:?}"))),
+                        };
                         let count = header.chunk_count as usize;
                         let lo = o + LUT_HEADER_SIZE;
-                        let (lut, _) =
-                            Ref::<_, [u32]>::from_prefix_with_elems(&data[lo..], count).unwrap();
-                        let huff = HuffmanModule {
-                            header,
-                            chunks: lut.to_vec(),
-                        };
-                        Module::Huffman(Ok((*e, huff)))
+                        let l = data.len();
+                        if lo > l {
+                            return Module::Huffman(Err(format!(
+                                "offset {lo:08x} out of bounds ({l})"
+                            )));
+                        }
+                        match Ref::<_, [u32]>::from_prefix_with_elems(&data[lo..], count) {
+                            Ok((lut, _)) => {
+                                let huff = HuffmanModule {
+                                    header,
+                                    chunks: lut.to_vec(),
+                                };
+                                Module::Huffman(Ok((*e, huff)))
+                            }
+                            Err(e) => Module::Huffman(Err(format!("{e}"))),
+                        }
                     }
                     Compression::Lzma => {
                         if sig != SIG_LZMA_BYTES {
@@ -319,7 +330,7 @@ impl Directory {
         Err("new offset cannot be calculated".into())
     }
 
-    fn dump_ranges(ranges: &Vec<Range<usize>>) {
+    fn dump_ranges(ranges: &[Range<usize>]) {
         let group_size = 4;
         for (i, r) in ranges.iter().enumerate() {
             if i % group_size == group_size - 1 {
@@ -332,7 +343,7 @@ impl Directory {
     }
 
     /// Get the offset ranges of the chunks.
-    fn chunks_as_ranges(&self, chunks: &Vec<u32>, stream_end: usize) -> Vec<Range<usize>> {
+    fn chunks_as_ranges(&self, chunks: &[u32], stream_end: usize) -> Vec<Range<usize>> {
         // NOTE: This is the end of the directory.
         // me_cleaner uses the end of the ME region.
         let dir_end = self.offset + self.size;
@@ -352,6 +363,7 @@ impl Directory {
                 }
             })
             .collect::<Vec<usize>>();
+        // This should move dir_end to the end.
         nonzero_offsets.sort();
         // Turn offsets into ranges by finding the offset of the next chunk.
         offsets
@@ -360,9 +372,11 @@ impl Directory {
                 let o = *offset;
                 let e = if o != 0 {
                     // NOTE: nonzero_offsets are a subset of offsets, so this should never fail.
+                    #[allow(clippy::unwrap_used)]
                     let p = nonzero_offsets.iter().position(|e| *e == o).unwrap();
                     let next = p + 1;
-                    // The last entry has no successor.
+                    // The last entry potentially has no successor. It would be
+                    // dir_end, which is the initial entry in nonzero_offsets.
                     if next < nonzero_offsets.len() {
                         nonzero_offsets[next]
                     } else {
@@ -395,7 +409,7 @@ impl Directory {
                 if (*c >> 24) as u8 == CHUNK_INACTIVE {
                     //
                 } else {
-                    *c = *c - offset_diff;
+                    *c -= offset_diff;
                 };
             }
             return Ok(());
@@ -415,7 +429,7 @@ impl Directory {
             .find(|m| matches!(m, Module::Huffman(Ok(_))))
         {
             let lut_header_offset = e.offset as usize;
-            return Some((lut_header_offset, &h));
+            return Some((lut_header_offset, h));
         }
         None
     }
@@ -423,7 +437,7 @@ impl Directory {
 
 impl Removables for Directory {
     /// Removable ranges relative to the start of the Directory
-    fn removables(&self, retention_list: &Vec<String>) -> Vec<Range<usize>> {
+    fn removables(&self, retention_list: &[String]) -> Vec<Range<usize>> {
         use log::{debug, info, warn};
         let debug = false;
         let mut removables = vec![];
@@ -445,7 +459,7 @@ impl Removables for Directory {
                     // NOTE: The header is always the same, since multiple
                     // Huffman-encoded modules point to the same offset.
                     let cs = h.header.chunk_size;
-                    if all_chunks.len() == 0 {
+                    if all_chunks.is_empty() {
                         info!("Huffman chunk size: {cs}");
                         let stream_end = (h.header.hs0 + h.header.hs1) as usize;
                         all_chunks = self.chunks_as_ranges(&h.chunks, stream_end);

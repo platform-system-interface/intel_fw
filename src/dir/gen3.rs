@@ -135,13 +135,13 @@ impl Display for CodePartitionDirectory {
                 };
                 format!("{m}\n{kh}{me}")
             }
-            Err(e) => format!("{e}"),
+            Err(e) => e.to_string(),
         };
-        let l3 = format!("  file name        offset    end       size      kind");
-        write!(f, "{l1}\n{l2}\n{l3}\n").unwrap();
+        let l3 = "  file name        offset    end       size      kind".to_string();
+        write!(f, "{l1}\n{l2}\n{l3}\n")?;
         let sorted_entries = self.sorted_entries();
         for e in sorted_entries {
-            write!(f, "  {e}\n").unwrap();
+            writeln!(f, "  {e}")?;
         }
         write!(f, "")
     }
@@ -149,7 +149,7 @@ impl Display for CodePartitionDirectory {
 
 impl CodePartitionDirectory {
     pub fn new(data: &[u8], offset: usize) -> Result<Self, String> {
-        let Ok((header, _)) = CPDHeader::read_from_prefix(&data) else {
+        let Ok((header, _)) = CPDHeader::read_from_prefix(data) else {
             return Err("could not parse CPD header".to_string());
         };
         let name = header.name();
@@ -203,7 +203,7 @@ impl CodePartitionDirectory {
 
 impl Removables for CodePartitionDirectory {
     /// Removable ranges relative to the start of the directory
-    fn removables(&self, retention_list: &Vec<String>) -> Vec<Range<usize>> {
+    fn removables(&self, retention_list: &[String]) -> Vec<Range<usize>> {
         use log::info;
         let mut removables = vec![];
 
@@ -224,12 +224,13 @@ impl Removables for CodePartitionDirectory {
         }
         // Remaining space to free after last entry
         let sorted = self.sorted_entries();
-        let last = sorted.last().unwrap();
-        let end = (last.flags_and_offset.offset() + last.size) as usize;
-        let o = end.next_multiple_of(FOUR_K);
-        let e = self.size;
-        removables.push(o..e);
-        info!("Remaining space: {o:08x}..{e:08x}");
+        if let Some(last) = sorted.last() {
+            let end = (last.flags_and_offset.offset() + last.size) as usize;
+            let o = end.next_multiple_of(FOUR_K);
+            let e = self.size;
+            removables.push(o..e);
+            info!("Remaining space: {o:08x}..{e:08x}");
+        }
         removables
     }
 }
