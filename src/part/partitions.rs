@@ -29,9 +29,9 @@ impl<'a> IntoIterator for &'a Partitions {
 
     fn into_iter(self) -> Self::IntoIter {
         match *self {
-            Partitions::Gen2(ref s) => Box::new(s.into_iter().map(|x| x as &dyn Partition)),
-            Partitions::Gen3(ref s) => Box::new(s.into_iter().map(|x| x as &dyn Partition)),
-            Partitions::Unknown(ref s) => Box::new(s.into_iter().map(|x| x as &dyn Partition)),
+            Partitions::Gen2(ref s) => Box::new(s.iter().map(|x| x as &dyn Partition)),
+            Partitions::Gen3(ref s) => Box::new(s.iter().map(|x| x as &dyn Partition)),
+            Partitions::Unknown(ref s) => Box::new(s.iter().map(|x| x as &dyn Partition)),
         }
     }
 }
@@ -53,24 +53,19 @@ impl Partitions {
         // the 2nd or 3rd ME generation by looking at the directories themselves.
         // The heuristic may fail though, so we expose the ME generation
         // at a higher level instead where we add more detection features.
-        let is_gen3 = entries
-            .iter()
-            .find(|e| {
-                let o = e.offset();
-                let l = o + CPD_MAGIC_BYTES.len();
-                l < data.len() && data[o..l].eq(CPD_MAGIC_BYTES)
-            })
-            .is_some();
+        let is_gen3 = entries.iter().any(|e| {
+            let o = e.offset();
+            let l = o + CPD_MAGIC_BYTES.len();
+            l < data.len() && data[o..l].eq(CPD_MAGIC_BYTES)
+        });
 
-        let partitions = if is_gen3 {
+        if is_gen3 {
             let parts = gen3::parse(fpt, data, debug);
             Partitions::Gen3(parts)
         } else {
             let parts = gen2::parse(fpt, data, debug);
             Partitions::Gen2(parts)
-        };
-
-        partitions
+        }
     }
 
     pub fn get_me_version(&self) -> Option<Version> {
@@ -122,15 +117,15 @@ impl Partitions {
     pub fn clear(&mut self, options: &ClearOptions) {
         let parts = match &self {
             Partitions::Gen2(parts) => {
-                let res = gen2::clean(&parts, options);
+                let res = gen2::clean(parts, options);
                 Partitions::Gen2(res)
             }
             Partitions::Gen3(parts) => {
-                let res = gen3::clean(&parts, options);
+                let res = gen3::clean(parts, options);
                 Partitions::Gen3(res)
             }
             Partitions::Unknown(p) => {
-                let res = p.iter().map(|p| p.clone()).collect();
+                let res = p.to_vec();
                 Partitions::Unknown(res)
             }
         };
@@ -162,19 +157,19 @@ impl Partitions {
         *self = match self {
             Partitions::Gen2(parts) => {
                 let p = parts.iter_mut().find(|p| p.entry().name() == part_name);
-                if let Some(p) = p {
-                    if let Err(e) = p.relocate(offset) {
-                        return Err(format!("Cannot relocate partition: {e}"));
-                    }
+                if let Some(p) = p
+                    && let Err(e) = p.relocate(offset)
+                {
+                    return Err(format!("Cannot relocate partition: {e}"));
                 }
                 Partitions::Gen2(parts.to_vec())
             }
             Partitions::Gen3(parts) => {
                 let p = parts.iter_mut().find(|p| p.entry().name() == part_name);
-                if let Some(p) = p {
-                    if let Err(e) = p.relocate(offset) {
-                        return Err(format!("Cannot relocate partition: {e}"));
-                    }
+                if let Some(p) = p
+                    && let Err(e) = p.relocate(offset)
+                {
+                    return Err(format!("Cannot relocate partition: {e}"));
                 }
                 Partitions::Gen3(parts.to_vec())
             }
@@ -193,23 +188,20 @@ impl Partitions {
         let sorted_parts = &self.get_sorted();
         // NOTE: We need to filter out NVRAM partitions, which have an offset of
         // 0xffff_ffff.
-        if let Some(last) = &sorted_parts
+        sorted_parts
             .into_iter()
             .filter(|p| {
                 let f = p.entry().flags;
                 f.kind() != PartitionKind::NVRAM
             })
             .last()
-        {
-            Some(last.entry().clone())
-        } else {
-            None
-        }
+            .as_ref()
+            .map(|last| *last.entry())
     }
 
     pub fn to_vec(&self) -> Result<Vec<u8>, String> {
         use log::debug;
-        fn copy_parts(parts: &Vec<&dyn Partition>, data: &mut Vec<u8>) {
+        fn copy_parts(parts: &Vec<&dyn Partition>, data: &mut [u8]) {
             for p in parts {
                 let e = p.entry();
                 let offset = p.entry().offset();

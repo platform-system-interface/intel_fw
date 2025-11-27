@@ -24,9 +24,9 @@ use zerocopy::{AlignmentError, ConvertError, FromBytes, IntoBytes, Ref, SizeErro
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 use crate::{
-    part::part::{retain, ClearOptions},
-    ver::Version,
     EMPTY,
+    part::part::{ClearOptions, retain},
+    ver::Version,
 };
 
 pub const FTPR: &str = "FTPR";
@@ -142,16 +142,13 @@ impl Display for FPTHeader {
     }
 }
 
+type EntryConvertError<'a> =
+    ConvertError<AlignmentError<&'a [u8], [FPTEntry]>, SizeError<&'a [u8], [FPTEntry]>, Infallible>;
+
 #[derive(Debug)]
 pub enum FptError<'a> {
     ParseHeaderError(SizeError<&'a [u8], FPTHeader>),
-    ParseEntryError(
-        ConvertError<
-            AlignmentError<&'a [u8], [FPTEntry]>,
-            SizeError<&'a [u8], [FPTEntry]>,
-            Infallible,
-        >,
-    ),
+    ParseEntryError(EntryConvertError<'a>),
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Eq, PartialEq)]
@@ -293,22 +290,20 @@ const POSSIBLE_OFFSET: usize = 16;
 fn determine_offset(data: &[u8]) -> Option<usize> {
     let m = &data[..FPT_MAGIC_BYTES.len()];
     if m.eq(FPT_MAGIC_BYTES) {
-        return Some(0);
+        Some(0)
     } else {
         let m = &data[POSSIBLE_OFFSET..POSSIBLE_OFFSET + FPT_MAGIC_BYTES.len()];
         if m.eq(FPT_MAGIC_BYTES) {
-            return Some(POSSIBLE_OFFSET);
+            Some(POSSIBLE_OFFSET)
         } else {
-            return None;
+            None
         }
     }
 }
 
 impl<'a> FPT {
     pub fn parse(data: &'a [u8]) -> Option<Result<Self, FptError<'a>>> {
-        let Some(offset) = determine_offset(data) else {
-            return None;
-        };
+        let offset = determine_offset(data)?;
         // Save for checksum recalculation
         let pre_header = &data[..offset];
         let d = &data[offset..];
@@ -353,7 +348,7 @@ impl<'a> FPT {
 
     /// Two's complement of the sum of the bytes
     pub fn header_checksum(&self) -> u8 {
-        let mut c = self.header.clone();
+        let mut c = self.header;
         // Initial checksum field itself must be 0.
         c.checksum = 0;
         let d = [self.pre_header.as_bytes(), c.as_bytes()].concat();
@@ -373,12 +368,12 @@ impl<'a> FPT {
                 let f = e.flags;
                 retain(e.name(), options) && e.size() > 0 && f.kind() != PartitionKind::NVRAM
             })
-            .map(|e| *e)
+            .copied()
             .collect();
         self.header.entries = self.entries.len() as u32;
         // clear EFFS presence flag if applicable
         if (!options.parts_force_retention.contains(&EFFS.into())
-            && options.parts_force_deletion.len() == 0)
+            && options.parts_force_deletion.is_empty())
             || options.parts_force_deletion.contains(&EFFS.into())
         {
             // TODO: define bitfield, parameterize via API

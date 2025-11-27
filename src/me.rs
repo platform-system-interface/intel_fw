@@ -80,7 +80,7 @@ impl FPTArea {
                         Gen2Partition::Dir(d) => Some(d.clone()),
                         _ => None,
                     })
-                    .collect::<Vec<DirPartition>>();
+                    .collect::<Vec<Box<DirPartition>>>();
                 dirs.iter()
                     .map(|d| (d.entry.name(), d.check_signature()))
                     .collect()
@@ -104,14 +104,14 @@ impl FPTArea {
     pub fn check_ftpr_presence(&self) -> Result<(), String> {
         match &self.partitions {
             Partitions::Gen2(parts) => {
-                if parts.iter().find(|p| p.entry().name() == FTPR).is_some() {
+                if parts.iter().any(|p| p.entry().name() == FTPR) {
                     Ok(())
                 } else {
                     Err("not found".into())
                 }
             }
             Partitions::Gen3(parts) => {
-                if parts.iter().find(|p| p.entry().name() == FTPR).is_some() {
+                if parts.iter().any(|p| p.entry().name() == FTPR) {
                     Ok(())
                 } else {
                     Err("not found".into())
@@ -190,10 +190,7 @@ impl FPTArea {
             println!("Recreate ME region from components");
         }
 
-        let mut res = match self.partitions.to_vec() {
-            Ok(r) => r,
-            Err(e) => return Err(e),
-        };
+        let mut res = self.partitions.to_vec()?;
         if debug {
             println!("  Minimum size: {:08x}", res.len());
         }

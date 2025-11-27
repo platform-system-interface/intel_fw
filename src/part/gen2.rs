@@ -21,16 +21,16 @@ pub struct DirPartition {
 impl DirPartition {
     pub fn check_signature(&self) -> Result<(), String> {
         if self.dir.manifest.verify() {
-            return Ok(());
+            Ok(())
         } else {
-            return Err("hash mismatch".into());
+            Err("hash mismatch".into())
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum Gen2Partition {
-    Dir(DirPartition),
+    Dir(Box<DirPartition>),
     Data(DataPartition),
     MalformedOrUnknown(UnknownOrMalformedPartition),
 }
@@ -71,7 +71,8 @@ impl Gen2Partition {
         let o = entry.offset();
         let data = data.to_vec();
         if let Ok(dir) = Directory::new(&data, o) {
-            Gen2Partition::Dir(DirPartition { dir, entry, data })
+            let p = DirPartition { dir, entry, data };
+            Gen2Partition::Dir(Box::new(p))
         } else {
             if debug {
                 let n = entry.name();
@@ -90,9 +91,7 @@ impl Gen2Partition {
                 // rebase Huffman chunks
                 let offset_diff = old_offset - offset;
                 println!("Adjust Huffman LUT, diff: {offset_diff:08x}");
-                if let Err(e) = p.dir.rebase_huffman_chunks(offset_diff) {
-                    return Err(e);
-                }
+                p.dir.rebase_huffman_chunks(offset_diff)?;
                 if let Some((mod_offset, huffman_mod)) = p.dir.get_huffman_mod() {
                     let o = mod_offset;
                     let l = LUT_HEADER_SIZE;
@@ -110,8 +109,7 @@ impl Gen2Partition {
 }
 
 pub fn parse(fpt: &FPT, data: &[u8], debug: bool) -> Vec<Gen2Partition> {
-    let parts = fpt
-        .entries
+    fpt.entries
         .iter()
         .map(|e| {
             let offset = e.offset();
@@ -131,13 +129,12 @@ pub fn parse(fpt: &FPT, data: &[u8], debug: bool) -> Vec<Gen2Partition> {
                 Gen2Partition::parse(&data[offset..end], *e, debug)
             }
         })
-        .collect();
-    parts
+        .collect()
 }
 
-pub fn clean(parts: &Vec<Gen2Partition>, options: &ClearOptions) -> Vec<Gen2Partition> {
+pub fn clean(parts: &[Gen2Partition], options: &ClearOptions) -> Vec<Gen2Partition> {
     use log::info;
-    let res = parts
+    parts
         .iter()
         .filter(|p| {
             let e = p.entry();
@@ -158,16 +155,12 @@ pub fn clean(parts: &Vec<Gen2Partition>, options: &ClearOptions) -> Vec<Gen2Part
                 // TODO: Extend with user-provided list
                 let retention_list = strs_to_strings(ALWAYS_RETAIN);
                 let mut cleaned = p.data().clone();
-                match &p {
-                    Gen2Partition::Dir(dir) => {
-                        dir_clean(&dir.dir, &retention_list, &mut cleaned);
-                    }
-                    _ => {}
-                };
+                if let Gen2Partition::Dir(dir) = &p {
+                    dir_clean(&dir.dir, &retention_list, &mut cleaned);
+                }
                 p.set_data(cleaned);
             }
             p
         })
-        .collect();
-    res
+        .collect()
 }
