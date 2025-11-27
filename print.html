@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4fefa95a.js";
+            window.path_to_searchindex_js = "searchindex-7d6939cf.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-0695aabd.js"></script>
@@ -720,12 +720,25 @@ types to express this:</p>
     BContainer(Vec&lt;BEntry&gt;),
 }
 </code></pre>
+<h2 id="intel-me-generation-2"><a class="header" href="#intel-me-generation-2">Intel ME Generation 2</a></h2>
+<p>With the second hardware generation, Intel ME based platforms have introduced
+a partitioning scheme called Flash Partition Table (FPT), starting with a <code>$FPT</code>
+magic. There are code and data partitions, and the main code partition is called
+FTPR.</p>
+<p>Code partitions start with a manifest that holds metadata over the modules
+contained in the partition, as a flat directory. Those modules are in part
+Huffman-encoded and chunked, and the Huffman tables are part of the mask ROM.</p>
+<p>The overall manifest format is header + signature + data. The data part lists
+the modules with their offsets, sizes and hashes, so that the manifest covers
+the whole partition’s integrity.</p>
 <h2 id="intel-me-generation-3"><a class="header" href="#intel-me-generation-3">Intel ME Generation 3</a></h2>
 <p>With the third hardware generation of Intel ME based platforms, a new operating
-system was introduced, based on MINIX 3. It needs bootstrapping first.</p>
+system was introduced, based on MINIX 3. It needs bootstrapping first, starting
+with phases called RBE (ROM Boot Extensions) and bup (bringup).</p>
 <p>There are multiple kinds of partitions, including Code Partition Directory (CPD)
 partitions. Those contain executables, their corresponding metadata files, and a
-manifest that holds a signature over the manifest.</p>
+manifest that holds a signature over the header before it and its other data.
+The manifest format with the header and signature is the same as for Gen 2.</p>
 <p>The signed data in the manifest includes hashes of the metadata files and other
 things, so that the manifest suffices to verify the entire CPD’s integrity.
 Each metadata file contains the counterpart binary’s hash.
