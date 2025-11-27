@@ -6,7 +6,7 @@ use intel_fw::{
     fit::Fit,
     ifd::{FlashMasterV1, FlashMasterV2, IFD},
     me::{Generation, ME},
-    part::{gen2::Gen2Partition, gen3::Gen3Partition, partitions::Partitions},
+    part::{fpt::FTUP, gen2::Gen2Partition, gen3::Gen3Partition, partitions::Partitions},
 };
 
 fn print_gen2_dir(dir: &Gen2Dir) {
@@ -73,11 +73,8 @@ fn print_me(me: &ME) {
             println!("Partitions and directories:");
             println!();
             for p in parts {
-                match p {
-                    Gen2Partition::Dir(dir) => {
-                        print_gen2_dir(&dir.dir);
-                    }
-                    _ => {}
+                if let Gen2Partition::Dir(dir) = p {
+                    print_gen2_dir(&dir.dir);
                 }
             }
         }
@@ -85,12 +82,14 @@ fn print_me(me: &ME) {
             println!("Partitions and directories:");
             println!();
             for p in parts {
-                match p {
-                    Gen3Partition::Dir(dir) => {
-                        let d = &dir.cpd;
-                        println!("{d}");
+                if let Gen3Partition::Dir(dir) = p {
+                    let d = &dir.cpd;
+                    if d.name == FTUP {
+                        // FTUP contains NFTP and potentially WCOD and LOCL.
+                        // Skip it to avoid redundant printing.
+                        continue;
                     }
-                    _ => {}
+                    println!("{d}");
                 }
             }
         }
@@ -148,7 +147,7 @@ pub fn show(fw: &Firmware, verbose: bool) {
     match &fw.ifd {
         Ok(ifd) => {
             let ver = get_ifd_ver(&fw.me);
-            print_ifd(&ifd, ver);
+            print_ifd(ifd, ver);
         }
         Err(e) => warn!("Could not parse IFD: {e:?}"),
     }
@@ -156,10 +155,10 @@ pub fn show(fw: &Firmware, verbose: bool) {
         match me_res {
             Ok(me) => {
                 if let Ok(ifd) = &fw.ifd {
-                    print_me_soft_config(&me, &ifd);
+                    print_me_soft_config(me, ifd);
                     println!();
                 }
-                print_me(&me);
+                print_me(me);
             }
             Err(e) => error!("ME firmware could not be parsed: {e:?}"),
         }
@@ -168,7 +167,7 @@ pub fn show(fw: &Firmware, verbose: bool) {
     }
     println!();
     match &fw.fit {
-        Ok(fit) => print_fit(&fit),
+        Ok(fit) => print_fit(fit),
         Err(e) => warn!("Could not parse FIT: {e:?}"),
     }
     println!();
