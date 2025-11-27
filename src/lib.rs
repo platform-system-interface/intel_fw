@@ -22,7 +22,7 @@ pub const EMPTY: u8 = 0xff;
 pub trait Removables {
     /// Get removable ranges relative to the start of a section or directory.
     /// The respective section/directory needs to know its own offset.
-    fn removables(&self, retention_list: &Vec<String>) -> Vec<core::ops::Range<usize>>;
+    fn removables(&self, retention_list: &[String]) -> Vec<core::ops::Range<usize>>;
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -34,7 +34,7 @@ pub struct Firmware {
 
 impl Firmware {
     pub fn parse(data: &[u8], debug: bool) -> Self {
-        let ifd = IFD::parse(&data);
+        let ifd = IFD::parse(data);
         let me = match &ifd {
             Ok(ifd) => {
                 let me_region = ifd.regions.me_range();
@@ -52,9 +52,9 @@ impl Firmware {
     }
 
     pub fn scan(data: &[u8], debug: bool) -> Self {
-        let ifd = IFD::parse(&data);
-        let me = ME::scan(&data, debug);
-        let fit = Fit::new(&data);
+        let ifd = IFD::parse(data);
+        let me = ME::scan(data, debug);
+        let fit = Fit::new(data);
         Self { ifd, me, fit }
     }
 }
