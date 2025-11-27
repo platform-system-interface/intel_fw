@@ -9,10 +9,10 @@
 //! image in its entirety. This tool brings together all publicly known details.
 
 use std::fs;
-use std::io::Write;
+use std::io::{self, Write};
 
 use clap::{Parser, Subcommand};
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 
 mod clean;
 mod show;
@@ -111,7 +111,7 @@ struct Cli {
     verbose: bool,
 }
 
-fn main() {
+fn main() -> Result<(), io::Error> {
     println!("Intel Firmware Tool 🔧");
     // Default to log level "info". Otherwise, you get no "regular" logs.
     let env = env_logger::Env::default().default_filter_or("info");
@@ -170,16 +170,23 @@ fn main() {
                     info!("Output will be written to: {out_file}");
                 }
                 info!("Reading {file_name}...");
-                let mut data = fs::read(file_name).unwrap();
+                let mut data = fs::read(file_name)?;
                 let fw = Firmware::parse(&data, debug);
                 show::show(&fw, verbose);
                 println!();
 
-                let Some(me_res) = fw.me else {
-                    return;
+                let me_res = match fw.me {
+                    Some(r) => r,
+                    None => {
+                        return Err(io::Error::new(
+                            io::ErrorKind::NotFound,
+                            "no ME firmware recognized",
+                        ));
+                    }
                 };
-                let Ok(me) = me_res else {
-                    return;
+                let me = match me_res {
+                    Ok(r) => r,
+                    Err(e) => return Err(io::Error::new(io::ErrorKind::InvalidData, e)),
                 };
                 if check {
                     let fpt = &me.fpt_area.fpt;
@@ -202,7 +209,7 @@ fn main() {
                             Err(e) => println!("  {n}: signature error: {e}"),
                         }
                     }
-                    return;
+                    return Ok(());
                 }
                 let opts = clean::Options {
                     keep_modules,
@@ -215,31 +222,32 @@ fn main() {
                 match clean::clean(&fw.ifd, &me, &mut data, opts) {
                     Ok(data) => {
                         if let Some(f) = output {
-                            let mut f = fs::File::create(f).unwrap();
-                            f.write_all(&data).unwrap();
+                            let mut f = fs::File::create(f)?;
+                            f.write_all(&data)?;
                         } else {
-                            error!("No output file given");
+                            warn!("No output file given");
                         }
                         if let Ok(ifd) = &fw.ifd {
                             if let Some(f) = extract_descriptor {
-                                let mut f = fs::File::create(f).unwrap();
+                                let mut f = fs::File::create(f)?;
                                 let ifd_range = ifd.regions.ifd_range();
-                                f.write_all(&data[ifd_range]).unwrap();
+                                f.write_all(&data[ifd_range])?;
                             }
                             if let Some(f) = extract_me {
-                                let mut f = fs::File::create(f).unwrap();
+                                let mut f = fs::File::create(f)?;
                                 let me_range = ifd.regions.me_range();
-                                f.write_all(&data[me_range]).unwrap();
+                                f.write_all(&data[me_range])?;
                             }
                         }
                     }
                     Err(e) => {
                         error!("Clean operation failed: {e}");
+                        return Err(io::Error::other(e));
                     }
                 }
             }
             MeCommand::Scan { file_name } => {
-                let data = fs::read(file_name).unwrap();
+                let data = fs::read(file_name)?;
                 let fw = Firmware::scan(&data, debug);
                 show::show(&fw, verbose);
             }
@@ -247,10 +255,12 @@ fn main() {
                 todo!("check {file_name}")
             }
             MeCommand::Show { file_name } => {
-                let data = fs::read(file_name).unwrap();
+                let data = fs::read(file_name)?;
                 let fw = Firmware::parse(&data, debug);
                 show::show(&fw, verbose);
             }
         },
     }
+
+    Ok(())
 }
