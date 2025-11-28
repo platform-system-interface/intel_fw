@@ -2,6 +2,11 @@
 name = "intel_fw"
 version = "0.1.0"
 edition = "2024"
+description = "Parsing and editing library for Intel firmware images"
+repository = "https://github.com/platform-system-interface/intel_fw"
+homepage = "https://platform-system-interface.github.io/intel_fw/"
+authors = ["Daniel Maslowski <info@orangecms.org>", "PSI contributors"]
+license = "GPL-2.0-only"
 
 [lib]
 name = "intel_fw"
