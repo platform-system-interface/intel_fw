@@ -41,7 +41,7 @@ impl CPDHeader {
         match std::str::from_utf8(&n) {
             // some names are shorter than 4 bytes and padded with 0x0
             Ok(n) => n.trim_end_matches('\0').to_string(),
-            Err(_) => format!("{:02x?}", n),
+            Err(_) => format!("{n:02x?}"),
         }
     }
 }
@@ -112,10 +112,7 @@ pub struct CodePartitionDirectory {
 }
 
 fn stringify_vec(v: Vec<u8>) -> String {
-    v.iter()
-        .map(|b| format!("{b:02x}"))
-        .collect::<Vec<String>>()
-        .join("")
+    v.iter().map(|b| format!("{b:02x}")).collect::<String>()
 }
 
 impl Display for CodePartitionDirectory {
@@ -135,7 +132,7 @@ impl Display for CodePartitionDirectory {
                 };
                 format!("{m}\n{kh}{me}")
             }
-            Err(e) => e.to_string(),
+            Err(e) => e.clone(),
         };
         let l3 = "  file name        offset    end       size      kind".to_string();
         write!(f, "{l1}\n{l2}\n{l3}\n")?;
@@ -187,7 +184,7 @@ impl CodePartitionDirectory {
             entries,
             offset,
             size,
-            name: name.to_string(),
+            name: name.clone(),
         };
 
         Ok(cpd)
