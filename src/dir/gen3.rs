@@ -7,6 +7,7 @@ use zerocopy::{FromBytes, Ref};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 use crate::Removables;
+use crate::dir::gen3_man::ManExtensions;
 use crate::dir::man::Manifest;
 use crate::meta::get_meta_for_key;
 
@@ -44,7 +45,7 @@ pub struct CPDHeader {
     pub entries: u32,
     pub version_or_checksum: u32,
     pub part_name: [u8; 4],
-    // Some ME variants have an extra 4 bytes here...
+    // TODO: Some ME variants have an extra 4 bytes here...
     // _10: u32,
 }
 
@@ -197,6 +198,13 @@ impl CodePartitionDirectory {
         };
 
         Ok(cpd)
+    }
+
+    pub fn parse_manifest_extensions(&self) -> Result<ManExtensions, String> {
+        match &self.manifest {
+            Err(e) => Err(format!("error processing manifest: {e}")),
+            Ok(m) => ManExtensions::parse(&m.mdata, m.header.version),
+        }
     }
 
     // Entries sorted by offset
