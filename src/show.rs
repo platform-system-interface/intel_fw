@@ -135,7 +135,7 @@ fn print_ifd(ifd: &IFD, ver: Option<IfdVersion>) {
                 println!(" {i:2}:\n{m}");
             }
             _ => println!(" {i:2}: {e:08x}"),
-        };
+        }
     }
 }
 
