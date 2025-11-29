@@ -23,6 +23,19 @@ pub const CPD_MAGIC_BYTES: &[u8] = CPD_MAGIC.as_bytes();
 
 const FOUR_K: usize = 0x1000;
 
+fn stringify_vec(v: Vec<u8>) -> String {
+    v.iter().map(|b| format!("{b:02x}")).collect::<String>()
+}
+
+fn u8_slice_name_to_str(n: &[u8]) -> String {
+    match std::str::from_utf8(n) {
+        // some names are padded with 0x0
+        Ok(n) => n.trim_end_matches('\0').to_string(),
+        // sometimes, there is no real name
+        Err(_) => stringify_vec(n.to_vec()),
+    }
+}
+
 // see <https://troopers.de/downloads/troopers17/TR17_ME11_Static.pdf>
 #[derive(IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
 #[repr(C, packed)]
@@ -37,12 +50,7 @@ pub struct CPDHeader {
 
 impl CPDHeader {
     pub fn name(&self) -> String {
-        let n = self.part_name;
-        match std::str::from_utf8(&n) {
-            // some names are shorter than 4 bytes and padded with 0x0
-            Ok(n) => n.trim_end_matches('\0').to_string(),
-            Err(_) => format!("{n:02x?}"),
-        }
+        u8_slice_name_to_str(&self.part_name)
     }
 }
 
@@ -71,10 +79,7 @@ pub struct CPDEntry {
 
 impl CPDEntry {
     pub fn name(&self) -> String {
-        match std::str::from_utf8(&self.name) {
-            Ok(n) => n.trim_end_matches('\0').to_string(),
-            Err(_) => format!("{:02x?}", &self.name),
-        }
+        u8_slice_name_to_str(&self.name)
     }
 }
 
@@ -109,10 +114,6 @@ pub struct CodePartitionDirectory {
     pub offset: usize,
     pub size: usize,
     pub name: String,
-}
-
-fn stringify_vec(v: Vec<u8>) -> String {
-    v.iter().map(|b| format!("{b:02x}")).collect::<String>()
 }
 
 impl Display for CodePartitionDirectory {
