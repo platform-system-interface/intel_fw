@@ -2,7 +2,10 @@ use log::{error, warn};
 
 use intel_fw::{
     Firmware,
-    dir::gen2::{Directory as Gen2Dir, Module},
+    dir::{
+        gen2::{Directory as Gen2Dir, Module},
+        gen3_man::ManExtension,
+    },
     fit::Fit,
     ifd::{FlashMasterV1, FlashMasterV2, IFD},
     me::{Generation, ME},
@@ -52,7 +55,24 @@ fn print_me_soft_config(me: &ME, ifd: &IFD) {
     }
 }
 
-fn print_me(me: &ME) {
+fn print_ext(ext: &ManExtension) {
+    match ext {
+        ManExtension::InitScriptV11(Ok(ext)) => println!("{ext}"),
+        ManExtension::InitScriptV12(Ok(ext)) => println!("{ext}"),
+        ManExtension::PartitionInfo(Ok(ext)) => println!("{ext}"),
+        ManExtension::SystemInfoV11(Ok(ext)) => println!("{ext}"),
+        ManExtension::SystemInfoV15(Ok(ext)) => println!("{ext}"),
+        ManExtension::ClientSystemInfo(Ok(ext)) => println!("{ext}"),
+        ManExtension::FeaturePermissions(Ok(ext)) => println!("{ext}"),
+        ManExtension::PackageInfo(Ok(ext)) => println!("{ext}"),
+        ManExtension::Unk22(Ok(ext)) => println!("{ext}"),
+        ManExtension::CertRevocation(Ok(ext)) => println!("{ext}"),
+        ManExtension::Unk31(Ok(ext)) => println!("{ext}"),
+        x => println!("- unhandled: {x:#02x?}"),
+    }
+}
+
+fn print_me(me: &ME, parse_manifest: bool) {
     println!("=== Intel (CS)ME ===");
     println!("{:?} detected", me.generation);
     println!();
@@ -90,6 +110,17 @@ fn print_me(me: &ME) {
                         continue;
                     }
                     println!("{d}");
+                    if parse_manifest {
+                        match d.parse_manifest_extensions() {
+                            Ok(r) => {
+                                println!();
+                                for ext in &r.exts {
+                                    print_ext(ext);
+                                }
+                            }
+                            Err(e) => println!("{e}"),
+                        }
+                    }
                 }
             }
         }
@@ -139,7 +170,7 @@ fn print_ifd(ifd: &IFD, ver: Option<IfdVersion>) {
     }
 }
 
-pub fn show(fw: &Firmware, verbose: bool) {
+pub fn show(fw: &Firmware, parse_manifest: bool, verbose: bool) {
     if verbose {
         println!("{fw:#02x?}");
     }
@@ -158,7 +189,7 @@ pub fn show(fw: &Firmware, verbose: bool) {
                     print_me_soft_config(me, ifd);
                     println!();
                 }
-                print_me(me);
+                print_me(me, parse_manifest);
             }
             Err(e) => error!("ME firmware could not be parsed: {e:?}"),
         }
