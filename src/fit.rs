@@ -187,8 +187,7 @@ impl Fit {
         let slice = &data[pos..];
         let Ok((r, _)) = Ref::<_, [FitEntry]>::from_prefix_with_elems(slice, count) else {
             return Err(FitError::EntryReadError(format!(
-                "Could not parse FIT entries @ {:08x}",
-                pos
+                "Could not parse FIT entries @ {pos:08x}"
             )));
         };
         let entries = r.to_vec();
