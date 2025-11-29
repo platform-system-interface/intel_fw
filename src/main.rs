@@ -65,12 +65,18 @@ enum MeCommand {
     /// Display the (CS)ME high-level structures (full image or ME region)
     #[clap(verbatim_doc_comment)]
     Show {
+        /// Parse and display Gen 3 manifest extensions
+        #[clap(long, short)]
+        manifest: bool,
         /// File to read
         file_name: String,
     },
     /// Scan for (CS)ME data structures (useful for update images)
     #[clap(verbatim_doc_comment)]
     Scan {
+        /// Parse and display Gen 3 manifest extensions
+        #[clap(long, short)]
+        manifest: bool,
         /// File to read
         file_name: String,
     },
@@ -181,7 +187,7 @@ fn main() -> Result<(), io::Error> {
                 info!("Reading {file_name}...");
                 let mut data = fs::read(file_name)?;
                 let fw = Firmware::parse(&data, debug);
-                show::show(&fw, verbose);
+                show::show(&fw, false, verbose);
                 println!();
 
                 let me_res = match fw.me {
@@ -259,18 +265,24 @@ fn main() -> Result<(), io::Error> {
                     }
                 }
             }
-            MeCommand::Scan { file_name } => {
+            MeCommand::Scan {
+                file_name,
+                manifest,
+            } => {
                 let data = fs::read(file_name)?;
                 let fw = Firmware::scan(&data, debug);
-                show::show(&fw, verbose);
+                show::show(&fw, manifest, verbose);
             }
             MeCommand::Check { file_name } => {
                 todo!("check {file_name}")
             }
-            MeCommand::Show { file_name } => {
+            MeCommand::Show {
+                file_name,
+                manifest,
+            } => {
                 let data = fs::read(file_name)?;
                 let fw = Firmware::parse(&data, debug);
-                show::show(&fw, verbose);
+                show::show(&fw, manifest, verbose);
             }
             MeCommand::Extract {
                 part_name,
