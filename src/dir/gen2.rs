@@ -28,7 +28,7 @@ const CHUNK_OFFSET_MASK: u32 = 0x00ff_ffff;
 
 // https://github.com/skochinsky/me-tools me_unpack.py MeModuleHeader2
 #[derive(Immutable, IntoBytes, FromBytes, Serialize, Deserialize, Clone, Copy, Debug)]
-#[repr(C)]
+#[repr(C, packed)]
 pub struct Entry {
     pub magic: [u8; 4],
     pub name: [u8; 0x10],
@@ -103,8 +103,9 @@ pub struct BinaryMap {
 impl Entry {
     pub fn bin_map(&self) -> BinaryMap {
         let b = self.mod_base;
-        let rapi = self.flags.rapi();
-        let kapi = self.flags.kapi();
+        let f = self.flags;
+        let rapi = f.rapi();
+        let kapi = f.kapi();
         let code_start = b as usize + (rapi + kapi) * 0x1000;
         let code_end = (b + self.code_size) as usize;
         let data_end = (b + self.memory_size) as usize;
@@ -148,7 +149,8 @@ impl Display for Entry {
         let o = self.offset;
         let s = self.size;
         let e = self.entry_point;
-        let c = self.flags.compression();
+        let fl = self.flags;
+        let c = fl.compression();
         write!(f, "{n:16} {s:08x} @ {o:08x}, entry point {e:08x}, {c:10?}")
     }
 }
@@ -173,7 +175,6 @@ pub struct LutHeader {
 pub const LUT_HEADER_SIZE: usize = size_of::<LutHeader>();
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-#[repr(C)]
 pub struct HuffmanModule {
     pub header: LutHeader,
     pub chunks: Vec<u32>,
@@ -249,7 +250,8 @@ impl Directory {
         let modules = entries
             .iter()
             .map(|e| {
-                let c = e.flags.compression();
+                let f = e.flags;
+                let c = f.compression();
                 let o = e.offset as usize;
                 if o + 4 > data.len() {
                     return Module::Unknown(*e);
