@@ -49,7 +49,7 @@ pub fn clean(
     if options.relocate
         && let Err(e) = new_me.fpt_area.relocate_partitions()
     {
-        warn!("Could not relocate: {e}")
+        warn!("Could not relocate: {e}");
     }
     match new_me.fpt_area.to_vec() {
         Ok(cleaned) => {
