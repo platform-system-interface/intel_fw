@@ -66,3 +66,31 @@ utilities for unpacking:
 
 - <https://github.com/ptresearch/unME11>
 - <https://github.com/ptresearch/unME12>
+
+### Integrated Firmware Image
+
+A variant of ME gen 3 firmware exists based on a different layout, as described
+in the Atom E3900 series platform enabling guide[^1]:
+
+> The IFWI region in SPI flash physically follows the SPI Flash Descriptor
+> Region. It contains all platform firmware components and device firmware
+> components.
+
+> The IFWI region is divided into two Logical Boot Partitions, which are
+> identical in size. The Logical Boot Partition layout is defined by the Boot
+> Partition Descriptor Table (BPDT) at the head of the Logical Boot Partition.
+
+There are multiple IFWI data structures, and some do not have a magic to detect,
+so parsing them is not trivial. ME Analyzer has a lot of logic[^3] for them.
+In some cases, the FPT is located right after the IFWI.
+
+The BPDT entries mostly point to CPDs, including the FTPR.
+Some BPDT entries may point to the FPT.
+
+Samples:
+- BPDT v1: Google "Coral" Chromebook
+- BPDT v2: System76 Lemur Pro 10 (Tigerlake), Gigabyte Z590[^2]
+
+[^1]: <https://cdrdv2-public.intel.com/671281/uefi-firmware-enabling-guide-for-the-intel-atom-processor-e3900-series.pdf>
+[^2]: <https://www.gigabyte.com/us/Motherboard/Z590M-rev-10/support#support-dl>
+[^3]: <https://github.com/platomav/MEAnalyzer/blob/aa148556bbf09e418074c3cea18255a25432fb7c/MEA.py#L11490>
