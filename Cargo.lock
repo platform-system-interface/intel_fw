@@ -62,6 +62,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "asn1"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bcb25db9258497df3a24e939c160b4fa3477d0a4f22402a73e610a4c056786fe"
+dependencies = [
+ "asn1_derive",
+ "itoa",
+]
+
+[[package]]
+name = "asn1_der"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "155a5a185e42c6b77ac7b88a15143d930a9e9727a5b7b77eed417404ab15c247"
+
+[[package]]
+name = "asn1_derive"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1663403ad39c8f68bba1d051181a53f12344b08c4f7af0f382baca8fdbd5c9bf"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -232,6 +259,8 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 name = "intel_fw"
 version = "0.1.2"
 dependencies = [
+ "asn1",
+ "asn1_der",
  "bitfield-struct",
  "clap",
  "crc",
@@ -242,6 +271,7 @@ dependencies = [
  "phf",
  "phf_macros",
  "serde",
+ "serde_asn1_der",
  "serde_bytes",
  "sha2",
  "strum",
@@ -254,6 +284,12 @@ name = "is_terminal_polyfill"
 version = "1.70.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
+
+[[package]]
+name = "itoa"
+version = "1.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
 name = "jiff"
@@ -455,6 +491,16 @@ checksum = "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e"
 dependencies = [
  "serde_core",
  "serde_derive",
+]
+
+[[package]]
+name = "serde_asn1_der"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6aac6773dc501fdae675c6d982eb96f66a4711738b22dc2604c9bfc6ebaac5b5"
+dependencies = [
+ "asn1_der",
+ "serde",
 ]
 
 [[package]]
