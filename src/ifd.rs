@@ -532,7 +532,7 @@ fn extract_bit(straps: &[u32], byte: usize, bit: u32) -> bool {
 /// Set or clear a bit in a given strap, identified by its number.
 fn set_bit(straps: &mut [u32], byte: usize, bit: u32, s: bool) {
     let b = straps[byte];
-    straps[byte] = b & !(1 << bit) | ((s as u32) << bit);
+    straps[byte] = b & !(1 << bit) | (u32::from(s) << bit);
 }
 
 // TODO: The straps changed over the generations of processors.
@@ -550,7 +550,7 @@ impl IFD {
     }
     /// Direct Connect Interface
     pub fn set_dci(&mut self, s: bool) {
-        set_bit(&mut self.pch_straps, 0, 17, s)
+        set_bit(&mut self.pch_straps, 0, 17, s);
     }
 
     // TODO: there is a _different_ soft-disable feature
@@ -562,7 +562,7 @@ impl IFD {
     }
     /// High-Assurance Platform (ME soft-disable), ME Gen 3
     pub fn set_hap(&mut self, s: bool) {
-        set_bit(&mut self.pch_straps, 0, 16, s)
+        set_bit(&mut self.pch_straps, 0, 16, s);
     }
 
     /// I/O Controller Hub, ME Gen 1
@@ -571,7 +571,7 @@ impl IFD {
     }
     /// I/O Controller Hub, ME Gen 1
     pub fn set_ich_me_disabled(&mut self, s: bool) {
-        set_bit(&mut self.pch_straps, 0, 0, s)
+        set_bit(&mut self.pch_straps, 0, 0, s);
     }
 
     /// Memory Controller Hub, ME Gen 1
@@ -580,7 +580,7 @@ impl IFD {
     }
     /// Memory Controller Hub, ME Gen 1
     pub fn set_mch_me_disabled(&mut self, s: bool) {
-        set_bit(&mut self.mch_straps, 0, 0, s)
+        set_bit(&mut self.mch_straps, 0, 0, s);
     }
 
     /// Memory Controller Hub (alternative), ME Gen 1
@@ -589,7 +589,7 @@ impl IFD {
     }
     /// Memory Controller Hub (alternative), ME Gen 1
     pub fn set_mch_alt_me_disabled(&mut self, s: bool) {
-        set_bit(&mut self.mch_straps, 0, 7, s)
+        set_bit(&mut self.mch_straps, 0, 7, s);
     }
 
     /// Disable ME (alternative), ME Gen 2
@@ -598,7 +598,7 @@ impl IFD {
     }
     /// Disable ME (alternative), ME Gen 2
     pub fn set_alt_me_disabled(&mut self, s: bool) {
-        set_bit(&mut self.pch_straps, 10, 7, s)
+        set_bit(&mut self.pch_straps, 10, 7, s);
     }
 
     /// Disable ME for ME generation 3.
@@ -773,8 +773,8 @@ impl IFD {
             components,
             regions,
             masters,
-            mch_straps,
             pch_straps,
+            mch_straps,
         })
     }
 }
