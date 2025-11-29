@@ -315,9 +315,9 @@ impl Directory {
     /// Calculate a new minimum possible offset for relocation to save space.
     ///
     /// As taken from `me_cleaner`:
-    /// The two bytes in the middle of addr_base are added to spi_base to
-    /// compute the final start of the LUT. However, addr_base is not
-    /// modifiable, so act only on spi_base.
+    /// The two bytes in the middle of `addr_base` are added to `spi_base` to
+    /// compute the final start of the LUT. However, `addr_base` is not
+    /// modifiable, so act only on `spi_base`.
     pub fn calc_new_offset(&self, min_offset: u32) -> Result<u32, String> {
         if let Some((offset, m)) = self.get_huffman_mod() {
             let b = (m.header.addr_base & 0x00ff_ffff) >> 8;
@@ -410,7 +410,7 @@ impl Directory {
                     //
                 } else {
                     *c -= offset_diff;
-                };
+                }
             }
             return Ok(());
         }
@@ -473,7 +473,7 @@ impl Removables for Directory {
                     let last_chunk = first_chunk + c;
                     info!("Huffman compressed {n} @ {o:08x} ({s} bytes)");
                     let a = if retention_list.contains(&n) {
-                        for o in &all_chunks[first_chunk..last_chunk + 1] {
+                        for o in &all_chunks[first_chunk..=last_chunk] {
                             if o.start != 0 {
                                 unremovable_chunks.push(o.clone());
                             }
