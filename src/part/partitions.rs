@@ -43,7 +43,7 @@ impl Partitions {
 
     pub fn get_sorted_entries(&self) -> Vec<FPTEntry> {
         let mut entries = self.get_entries().clone();
-        entries.sort_by_key(|e| e.offset());
+        entries.sort_by_key(super::fpt::FPTEntry::offset);
         entries
     }
 
@@ -125,7 +125,7 @@ impl Partitions {
                 Partitions::Gen3(res)
             }
             Partitions::Unknown(p) => {
-                let res = p.to_vec();
+                let res = p.clone();
                 Partitions::Unknown(res)
             }
         };
@@ -136,17 +136,17 @@ impl Partitions {
     pub fn get_sorted(&self) -> Self {
         match self {
             Partitions::Gen2(parts) => {
-                let mut parts = parts.to_vec();
+                let mut parts = parts.clone();
                 parts.sort_by_key(|p| p.entry().offset());
                 Partitions::Gen2(parts)
             }
             Partitions::Gen3(parts) => {
-                let mut parts = parts.to_vec();
+                let mut parts = parts.clone();
                 parts.sort_by_key(|p| p.entry().offset());
                 Partitions::Gen3(parts)
             }
             Partitions::Unknown(parts) => {
-                let mut parts = parts.to_vec();
+                let mut parts = parts.clone();
                 parts.sort_by_key(|p| p.entry().offset());
                 Partitions::Unknown(parts)
             }
@@ -162,7 +162,7 @@ impl Partitions {
                 {
                     return Err(format!("Cannot relocate partition: {e}"));
                 }
-                Partitions::Gen2(parts.to_vec())
+                Partitions::Gen2(parts.clone())
             }
             Partitions::Gen3(parts) => {
                 let p = parts.iter_mut().find(|p| p.entry().name() == part_name);
@@ -171,10 +171,10 @@ impl Partitions {
                 {
                     return Err(format!("Cannot relocate partition: {e}"));
                 }
-                Partitions::Gen3(parts.to_vec())
+                Partitions::Gen3(parts.clone())
             }
             Partitions::Unknown(parts) => {
-                let parts = parts.to_vec();
+                let parts = parts.clone();
                 Partitions::Unknown(parts)
             }
         };
@@ -242,7 +242,7 @@ impl Partitions {
                     &parts.iter().map(|p| p as &dyn Partition).collect(),
                     &mut data,
                 ),
-            };
+            }
 
             Ok(data)
         } else {

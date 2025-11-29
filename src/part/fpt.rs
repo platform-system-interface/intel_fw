@@ -342,7 +342,7 @@ impl<'a> FPT {
 
     pub fn get_sorted_entries(&self) -> Vec<FPTEntry> {
         let mut entries = self.entries.clone();
-        entries.sort_by_key(|e| e.offset());
+        entries.sort_by_key(FPTEntry::offset);
         entries
     }
 
@@ -389,7 +389,7 @@ impl<'a> FPT {
             self.entries.as_bytes(),
         ]
         .concat();
-        let mut res = all.to_vec();
+        let mut res = all.clone();
         res.resize(self.original_size, EMPTY);
         res
     }
