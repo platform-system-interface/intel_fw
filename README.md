@@ -25,6 +25,7 @@ The `me clean` command is compatible with `me_cleaner`, with minor differences:
   to be retained. This is considered a bug fix.
 - The `--check` flag checks _all_ directory partitions as well as the presence
   of the FTPR. Analysis details are printed unconditionally.
+- The `--truncuate` option may result in smaller ME images than `me_cleaner`.
 
 ## Development
 
