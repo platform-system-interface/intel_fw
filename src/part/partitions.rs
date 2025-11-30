@@ -5,13 +5,11 @@ use zerocopy::IntoBytes;
 
 use crate::EMPTY;
 use crate::dir::gen3::CPD_MAGIC_BYTES;
-use crate::part::fpt::PartitionKind;
-use crate::part::part::ClearOptions;
 use crate::part::{
-    fpt::{FPT, FPTEntry},
+    fpt::{FPT, FPTEntry, PartitionKind},
     gen2::{self, Gen2Partition},
     gen3::{self, Gen3Partition},
-    part::{GenUnknownPartition, Partition},
+    generic::{ClearOptions, GenUnknownPartition, Partition},
 };
 use crate::ver::Version;
 

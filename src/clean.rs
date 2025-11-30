@@ -2,7 +2,7 @@ use intel_fw::{
     EMPTY,
     ifd::{IFD, IfdError},
     me::ME,
-    part::part::ClearOptions,
+    part::generic::ClearOptions,
 };
 use log::warn;
 

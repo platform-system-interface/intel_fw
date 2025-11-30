@@ -5,7 +5,7 @@ use crate::dir::gen2::{ALWAYS_RETAIN, Directory, LUT_HEADER_SIZE};
 use crate::dump48;
 use crate::part::{
     fpt::{FPT, FPTEntry, FTPR},
-    part::{
+    generic::{
         ClearOptions, DataPartition, Partition, UnknownOrMalformedPartition, dir_clean, retain,
         strs_to_strings,
     },
