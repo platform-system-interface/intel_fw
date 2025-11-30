@@ -20,6 +20,8 @@ cargo run --release -- me clean -b MFS -O x230_clean_b_MFS.rom ./fixtures/x230.r
 cargo run --release -- me clean -w EFFS -O x230_clean_w_EFFS.rom ./fixtures/x230.rom
 #me_cleaner -b EFFS -O ./fixtures/x230_cleaned_b_EFFS.rom ./fixtures/x230.rom
 cargo run --release -- me clean -b EFFS -O x230_clean_b_EFFS.rom ./fixtures/x230.rom
+#me_cleaner -b EFFS -O ./fixtures/x230_cleaned_b_EFFS.rom -M ./fixtures/x230_cleaned_b_EFFS_me.bin ./fixtures/x230.rom
+cargo run --release -- me clean -b EFFS -O x230_clean_b_EFFS.rom -M x230_clean_b_EFFS_me.bin ./fixtures/x230.rom
 
 #me_cleaner -O ./fixtures/x270_cleaned_simple.rom ./fixtures/x270.rom
 cargo run --release -- me clean -O x270_clean.rom ./fixtures/x270.rom
@@ -41,6 +43,10 @@ cargo run --release -- me clean -b MFS -O x270_clean_b_MFS.rom ./fixtures/x270.r
 cargo run --release -- me clean -w EFFS -O x270_clean_w_EFFS.rom ./fixtures/x270.rom
 #me_cleaner -b EFFS -O ./fixtures/x270_cleaned_b_EFFS.rom ./fixtures/x270.rom
 cargo run --release -- me clean -b EFFS -O x270_clean_b_EFFS.rom ./fixtures/x270.rom
+#me_cleaner -b EFFS -O ./fixtures/x270_cleaned_b_EFFS.rom -M ./fixtures/x270_cleaned_b_EFFS_me.bin ./fixtures/x270.rom
+cargo run --release -- me clean -b EFFS -O x270_clean_b_EFFS.rom -M x270_clean_b_EFFS_me.bin ./fixtures/x270.rom
+me_cleaner -b EFFS -O ./fixtures/x270_cleaned_b_EFFS.rom -t -M ./fixtures/x270_cleaned_b_EFFS_me_t.bin ./fixtures/x270.rom
+cargo run --release -- me clean -b EFFS -O x270_clean_b_EFFS.rom -t -M x270_clean_b_EFFS_me_t.bin ./fixtures/x270.rom
 
 ./scripts/bdiffstat x230_clean.rom fixtures/x230_cleaned_simple.rom
 ./scripts/bdiffstat x230_clean_k.rom fixtures/x230_cleaned_k.rom
