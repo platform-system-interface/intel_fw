@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-7d6939cf.js";
+            window.path_to_searchindex_js = "searchindex-2c5c9e2f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-0695aabd.js"></script>
@@ -229,6 +229,41 @@ utilities for unpacking:</p>
 <li><a href="https://github.com/ptresearch/unME11">https://github.com/ptresearch/unME11</a></li>
 <li><a href="https://github.com/ptresearch/unME12">https://github.com/ptresearch/unME12</a></li>
 </ul>
+<h3 id="integrated-firmware-image"><a class="header" href="#integrated-firmware-image">Integrated Firmware Image</a></h3>
+<p>A variant of ME gen 3 firmware exists based on a different layout, as described
+in the Atom E3900 series platform enabling guide<sup class="footnote-reference" id="fr-1-1"><a href="#footnote-1">1</a></sup>:</p>
+<blockquote>
+<p>The IFWI region in SPI flash physically follows the SPI Flash Descriptor
+Region. It contains all platform firmware components and device firmware
+components.</p>
+</blockquote>
+<blockquote>
+<p>The IFWI region is divided into two Logical Boot Partitions, which are
+identical in size. The Logical Boot Partition layout is defined by the Boot
+Partition Descriptor Table (BPDT) at the head of the Logical Boot Partition.</p>
+</blockquote>
+<p>There are multiple IFWI data structures, and some do not have a magic to detect,
+so parsing them is not trivial. ME Analyzer has a lot of logic<sup class="footnote-reference" id="fr-3-1"><a href="#footnote-3">2</a></sup> for them.
+In some cases, the FPT is located right after the IFWI.</p>
+<p>The BPDT entries mostly point to CPDs, including the FTPR.
+Some BPDT entries may point to the FPT.</p>
+<p>Samples:</p>
+<ul>
+<li>BPDT v1: Google “Coral” Chromebook</li>
+<li>BPDT v2: System76 Lemur Pro 10 (Tigerlake), Gigabyte Z590<sup class="footnote-reference" id="fr-2-1"><a href="#footnote-2">3</a></sup></li>
+</ul>
+<hr>
+<ol class="footnote-definition">
+<li id="footnote-1">
+<p><a href="https://cdrdv2-public.intel.com/671281/uefi-firmware-enabling-guide-for-the-intel-atom-processor-e3900-series.pdf">https://cdrdv2-public.intel.com/671281/uefi-firmware-enabling-guide-for-the-intel-atom-processor-e3900-series.pdf</a> <a href="#fr-1-1">↩</a></p>
+</li>
+<li id="footnote-3">
+<p><a href="https://github.com/platomav/MEAnalyzer/blob/aa148556bbf09e418074c3cea18255a25432fb7c/MEA.py#L11490">https://github.com/platomav/MEAnalyzer/blob/aa148556bbf09e418074c3cea18255a25432fb7c/MEA.py#L11490</a> <a href="#fr-3-1">↩</a></p>
+</li>
+<li id="footnote-2">
+<p><a href="https://www.gigabyte.com/us/Motherboard/Z590M-rev-10/support#support-dl">https://www.gigabyte.com/us/Motherboard/Z590M-rev-10/support#support-dl</a> <a href="#fr-2-1">↩</a></p>
+</li>
+</ol>
 
                     </main>
 
