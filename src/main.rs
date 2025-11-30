@@ -220,7 +220,7 @@ fn main() -> Result<(), io::Error> {
                     parts_force_deletion: blacklist.unwrap_or(vec![]),
                 };
                 match clean::clean(&fw.ifd, &me, &mut data, opts) {
-                    Ok(data) => {
+                    Ok((data, me_data)) => {
                         if let Some(f) = output {
                             let mut f = fs::File::create(f)?;
                             f.write_all(&data)?;
@@ -235,8 +235,12 @@ fn main() -> Result<(), io::Error> {
                             }
                             if let Some(f) = extract_me {
                                 let mut f = fs::File::create(f)?;
-                                let me_range = ifd.regions.me_range();
-                                f.write_all(&data[me_range])?;
+                                if truncate && let Some(me_data) = me_data {
+                                    f.write_all(&me_data)?;
+                                } else {
+                                    let me_range = ifd.regions.me_range();
+                                    f.write_all(&data[me_range])?;
+                                }
                             }
                         }
                     }
