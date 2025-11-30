@@ -7,7 +7,7 @@ use crate::dir::{
 use crate::dump48;
 use crate::part::{
     fpt::{DIR_PARTS, FPT, FPTEntry, FS_PARTS, FTPR},
-    part::{
+    generic::{
         ClearOptions, Partition, UnknownOrMalformedPartition, dir_clean, retain, strs_to_strings,
     },
 };

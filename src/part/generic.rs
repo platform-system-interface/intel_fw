@@ -1,3 +1,4 @@
+/// Generic data structures and helpers for partitions
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -5,12 +6,14 @@ use crate::{
     part::fpt::{FPTEntry, FTPR},
 };
 
+/// Data partitions are for now treated uniformly, but may carry semantics.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DataPartition {
     pub entry: FPTEntry,
     pub data: Vec<u8>,
 }
 
+/// Last resort if a partition cannot be classified
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UnknownOrMalformedPartition {
     pub entry: FPTEntry,
@@ -18,6 +21,7 @@ pub struct UnknownOrMalformedPartition {
     pub note: String,
 }
 
+/// Common trait for partitions and their relationship with the FPT
 pub trait Partition {
     fn entry(&self) -> &FPTEntry;
     fn data(&self) -> &Vec<u8>;
@@ -62,6 +66,7 @@ pub fn strs_to_strings(strs: &[&str]) -> Vec<String> {
     Vec::from(strs).iter().map(|s| String::from(*s)).collect()
 }
 
+/// Options for clearing partitions and directories
 pub struct ClearOptions {
     pub keep_modules: bool,
     pub parts_force_retention: Vec<String>,

@@ -12,15 +12,11 @@ use crate::dir::{
     gen2::Directory as Gen2Directory,
     gen3::{CPD_MAGIC_BYTES, CodePartitionDirectory},
 };
-use crate::part::fpt::FTPR;
-use crate::part::gen2::DirPartition;
-use crate::part::gen3::CPDPartition;
-use crate::part::part::Partition;
 use crate::part::{
-    fpt::{FPT, MIN_FPT_SIZE},
-    gen2::Gen2Partition,
-    gen3::Gen3Partition,
-    part::ClearOptions,
+    fpt::{FPT, FTPR, MIN_FPT_SIZE},
+    gen2::{DirPartition, Gen2Partition},
+    gen3::{CPDPartition, Gen3Partition},
+    generic::{ClearOptions, Partition},
     partitions::Partitions,
 };
 use crate::ver::Version;

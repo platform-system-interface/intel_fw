@@ -25,7 +25,7 @@ use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
 
 use crate::{
     EMPTY,
-    part::part::{ClearOptions, retain},
+    part::generic::{ClearOptions, retain},
     ver::Version,
 };
 
