@@ -150,6 +150,14 @@ impl CodePartitionDirectory {
         let Ok((header, _)) = CPDHeader::read_from_prefix(data) else {
             return Err("could not parse CPD header".to_string());
         };
+
+        let m = header.magic;
+        if m != CPD_MAGIC_BYTES {
+            return Err(format!(
+                "missing CPD magic; got {m:02x?}, wanted {CPD_MAGIC_BYTES:02x?}"
+            ));
+        }
+
         let name = header.name();
         let header_size = if header.version_or_checksum == 0x00140102 {
             HEADER_SIZE + 4
