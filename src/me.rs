@@ -7,12 +7,12 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::EMPTY;
 use crate::dir::gen2::Module;
 use crate::dir::{
     gen2::Directory as Gen2Directory,
     gen3::{CPD_MAGIC_BYTES, CodePartitionDirectory},
 };
+use crate::ifwi::{BPDT, PreIFWI};
 use crate::part::{
     fpt::{FPT, FTPR, MIN_FPT_SIZE},
     gen2::{DirPartition, Gen2Partition},
@@ -21,6 +21,7 @@ use crate::part::{
     partitions::Partitions,
 };
 use crate::ver::Version;
+use crate::{EMPTY, dump48};
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub enum Generation {
@@ -285,6 +286,24 @@ pub struct ME {
     pub cpds: Vec<CodePartitionDirectory>,
 }
 
+const DUMP: bool = true;
+
+/// Print a BPDT
+fn print_bpdt(bpdt: &BPDT, data: &[u8], offset: usize) {
+    let bpdt_offset = offset + bpdt.offset as usize;
+    let h = bpdt.header;
+    println!("{h}  @ {bpdt_offset:08x}");
+    for e in &bpdt.entries {
+        println!("{e}");
+        if e.offset > 0 && DUMP {
+            let o = bpdt_offset + e.offset as usize;
+            if o < data.len() {
+                dump48(&data[o..]);
+            }
+        }
+    }
+}
+
 impl ME {
     pub fn parse(data: &[u8], base: usize, debug: bool) -> Option<Result<Self, String>> {
         if let Some(r) = FPT::parse(data) {
@@ -328,7 +347,7 @@ impl ME {
                         };
                     }
                     let data = data[offset..end].to_vec();
-                    Data { data, offset }
+                    Data { offset, data }
                 })
                 .collect();
 
@@ -344,12 +363,59 @@ impl ME {
 
             Some(Ok(Self {
                 base,
-                fpt_area,
                 generation,
                 version,
+                fpt_area,
                 cpds,
             }))
         } else {
+            match PreIFWI::parse(data) {
+                Ok(pre_ifwi) => {
+                    let h = pre_ifwi.header;
+                    println!("{h:02x?}");
+                    for e in pre_ifwi.entries {
+                        println!("- {e:02x?}");
+                        if e.offset > 0 {
+                            let o = e.offset as usize;
+                            let slice = &data[o..];
+                            // entries are either FPT or BPDTs
+                            match FPT::parse(slice) {
+                                Some(Ok(fpt)) => {
+                                    println!("FPT: {}", fpt.header);
+                                    continue;
+                                }
+                                Some(Err(e)) => println!("FPT: {e:?}"),
+                                _ => {}
+                            }
+                            match BPDT::parse(slice, o) {
+                                Ok(bpdt) => {
+                                    print_bpdt(&bpdt, data, o);
+                                    continue;
+                                }
+                                Err(e) => println!("BPDT: {e:?}"),
+                            }
+                            if o + 48 < data.len() {
+                                dump48(slice);
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("Pre-IFWI: {e:?}");
+                    match Self::bpdt_scan(data) {
+                        Ok(bpdt) => {
+                            let bpdt_offset = bpdt.offset;
+                            print_bpdt(&bpdt, data, 0);
+                            match bpdt.next(&data[bpdt_offset..]) {
+                                Some(Ok(bpdt)) => print_bpdt(&bpdt, data, bpdt_offset),
+                                Some(Err(e)) => println!("{e:?}"),
+                                _ => println!("nope"),
+                            }
+                        }
+                        Err(e) => println!("{e}"),
+                    }
+                }
+            }
             None
         }
     }
@@ -373,6 +439,16 @@ impl ME {
         }
 
         r
+    }
+
+    // TODO: we shouldn't have to scan...
+    pub fn bpdt_scan(data: &[u8]) -> Result<BPDT, String> {
+        for o in (0..data.len()).step_by(0x40) {
+            if let Ok(r) = BPDT::parse(&data[o..], o) {
+                return Ok(r);
+            }
+        }
+        Err("not found".into())
     }
 
     // Scan for all CPDs (there may be some not listed in FPT)

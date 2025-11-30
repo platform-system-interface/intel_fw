@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub mod dir;
 pub mod fit;
 pub mod ifd;
+pub mod ifwi;
 pub mod me;
 pub mod meta;
 pub mod part;
@@ -32,6 +33,8 @@ pub struct Firmware {
     pub fit: Result<Fit, FitError>,
 }
 
+const DUMP: bool = false;
+
 impl Firmware {
     pub fn parse(data: &[u8], debug: bool) -> Self {
         let ifd = IFD::parse(data);
@@ -40,7 +43,50 @@ impl Firmware {
                 let me_region = ifd.regions.me_range();
                 let b = me_region.start;
                 info!("ME region start @ {b:08x}");
-                ME::parse(&data[me_region], b, debug)
+                let l = data.len();
+                if b > l {
+                    warn!("ME region out of bounds, only got {l:08x}");
+                    // TODO: work out smth regarding offsets
+                    // v2 has another struct first, which has not magic...
+                    if let Ok(bpdt) = ME::bpdt_scan(&data[4096..]) {
+                        let o = bpdt.offset;
+                        let h = bpdt.header;
+                        let bpdt_offset = o + 4096;
+                        println!("{h}  @ {o:08x}");
+                        for e in &bpdt.entries {
+                            println!("{e}");
+                            if e.offset > 0 && DUMP {
+                                let o = bpdt_offset + e.offset as usize;
+                                if o < data.len() {
+                                    dump48(&data[o..]);
+                                }
+                            }
+                        }
+
+                        match bpdt.next(&data[bpdt_offset..]) {
+                            Some(Ok(bpdt)) => {
+                                let o = bpdt.offset;
+                                let h = bpdt.header;
+                                println!();
+                                println!("{h}  @ {o:08x}");
+                                for e in bpdt.entries {
+                                    println!("{e}");
+                                    if e.offset > 0 && DUMP {
+                                        let o = bpdt_offset + e.offset as usize;
+                                        if o < data.len() {
+                                            dump48(&data[o..]);
+                                        }
+                                    }
+                                }
+                            }
+                            Some(Err(e)) => println!("{e:?}"),
+                            _ => println!("no sub-partition"),
+                        }
+                    }
+                    None
+                } else {
+                    ME::parse(&data[me_region], b, debug)
+                }
             }
             Err(e) => {
                 warn!("Not a full image: {e:?}");
