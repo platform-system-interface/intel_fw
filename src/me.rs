@@ -191,16 +191,12 @@ impl FPTArea {
         }
 
         let mut res = self.partitions.to_vec()?;
+        // Round to next 4k
+        let min_size = res.len().next_multiple_of(4096);
         if debug {
-            println!("  Minimum size: {:08x}", res.len());
+            println!("  Minimum size: {:08x}", min_size);
         }
-        // Restore the original size, so that the resulting slice fully covers
-        // the FPT area. The resulting bytes can be used to overwrite the region
-        // in a given image, e.g., after cleaning or other partition changes.
-        res.resize(self.original_size, EMPTY);
-        if debug {
-            println!(" Restored size: {:08x}", res.len());
-        }
+        res.resize(min_size, EMPTY);
 
         // Any range within the FPT area may be non-covered.
         for u in &self.non_covered {

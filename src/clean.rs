@@ -1,4 +1,5 @@
 use intel_fw::{
+    EMPTY,
     ifd::{IFD, IfdError},
     me::ME,
     part::part::ClearOptions,
@@ -19,7 +20,7 @@ pub fn clean(
     me: &ME,
     data: &mut [u8],
     options: Options,
-) -> Result<Vec<u8>, String> {
+) -> Result<(Vec<u8>, Option<Vec<u8>>), String> {
     if (options.disable_me || options.disable_me_only)
         && let Ok(ifd) = ifd
     {
@@ -36,7 +37,7 @@ pub fn clean(
             data[..size].copy_from_slice(&new_ifd);
         }
         if options.disable_me_only {
-            return Ok(data.to_vec());
+            return Ok((data.to_vec(), None));
         }
     }
     let mut new_me = me.clone();
@@ -55,7 +56,12 @@ pub fn clean(
         Ok(cleaned) => {
             let size = cleaned.len();
             data[me.base..me.base + size].copy_from_slice(&cleaned);
-            Ok(data.to_vec())
+
+            // Fill up to fully cover the FPT area, clear out remaining bytes.
+            let original_size = new_me.fpt_area.original_size;
+            data[me.base + size..me.base + original_size].fill(EMPTY);
+
+            Ok((data.to_vec(), Some(cleaned)))
         }
         Err(e) => Err(e),
     }
