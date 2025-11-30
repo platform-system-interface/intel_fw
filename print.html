@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2c5c9e2f.js";
+            window.path_to_searchindex_js = "searchindex-c6f1e848.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-0695aabd.js"></script>
@@ -184,6 +184,17 @@
 <a href="#intel-platforms">Intel platforms</a>.</p>
 <p>The <a href="#architecture-and-design">architecture</a> is based on <a href="#knowledge-on-firmware-images-for-intel-platforms">knowledge</a>
 from prior research.</p>
+<h2 id="cli"><a class="header" href="#cli">CLI</a></h2>
+<p>The CLI is made with the <a href="https://docs.rs/clap/latest/clap/_derive/index.html"><code>clap</code> command line argument parser in <em>derive</em> mode</a>.
+To familiarize yourself with Rust and common approaches to CLI tools, take a
+look at the <a href="https://rust-cli.github.io/book/index.html">Rust CLI book</a>.</p>
+<p>For more understanding, see also any of these additional resources:</p>
+<ul>
+<li><a href="https://rust-cli-recommendations.sunshowers.io/handling-arguments.html">https://rust-cli-recommendations.sunshowers.io/handling-arguments.html</a></li>
+<li><a href="https://github.com/kyclark/command-line-rust">https://github.com/kyclark/command-line-rust</a></li>
+<li><a href="https://tucson-josh.com/posts/rust-clap-cli/">https://tucson-josh.com/posts/rust-clap-cli/</a></li>
+<li><a href="https://www.rustadventure.dev/introducing-clap/clap-v4/parsing-arguments-with-clap">https://www.rustadventure.dev/introducing-clap/clap-v4/parsing-arguments-with-clap</a></li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="architecture-and-design"><a class="header" href="#architecture-and-design">Architecture and Design</a></h1>
 <p>The following considerations around specifics in the domain of Intel platforms
