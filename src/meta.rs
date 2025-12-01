@@ -1,4 +1,6 @@
-//! Adapted from me_cleaner, a map of key hashes => metadata (variant + version).
+//! Map of key hashes => metadata (variant + version)
+//!
+//! This has been adapted from me_cleaner.
 
 use std::fmt::Display;
 
