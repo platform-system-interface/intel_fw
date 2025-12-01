@@ -1,3 +1,7 @@
+//! Common struct for version information
+//!
+//! This kind of version information occurs in multiple places.
+
 use core::fmt::{self, Display};
 use serde::{Deserialize, Serialize};
 use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
