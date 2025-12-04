@@ -23,6 +23,8 @@ use crate::part::{
 use crate::ver::Version;
 use crate::{EMPTY, dump48};
 
+const PROBE_IFWI: bool = false;
+
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub enum Generation {
     Gen1,
@@ -369,50 +371,52 @@ impl ME {
                 cpds,
             }))
         } else {
-            match PreIFWI::parse(data) {
-                Ok(pre_ifwi) => {
-                    let h = pre_ifwi.header;
-                    println!("{h:02x?}");
-                    for e in pre_ifwi.entries {
-                        println!("- {e:02x?}");
-                        if e.offset > 0 {
-                            let o = e.offset as usize;
-                            let slice = &data[o..];
-                            // entries are either FPT or BPDTs
-                            match FPT::parse(slice) {
-                                Some(Ok(fpt)) => {
-                                    println!("FPT: {}", fpt.header);
-                                    continue;
+            if PROBE_IFWI {
+                match PreIFWI::parse(data) {
+                    Ok(pre_ifwi) => {
+                        let h = pre_ifwi.header;
+                        println!("{h:02x?}");
+                        for e in pre_ifwi.entries {
+                            println!("- {e:02x?}");
+                            if e.offset > 0 {
+                                let o = e.offset as usize;
+                                let slice = &data[o..];
+                                // entries are either FPT or BPDTs
+                                match FPT::parse(slice) {
+                                    Some(Ok(fpt)) => {
+                                        println!("FPT: {}", fpt.header);
+                                        continue;
+                                    }
+                                    Some(Err(e)) => println!("FPT: {e:?}"),
+                                    _ => {}
                                 }
-                                Some(Err(e)) => println!("FPT: {e:?}"),
-                                _ => {}
-                            }
-                            match BPDT::parse(slice, o) {
-                                Ok(bpdt) => {
-                                    print_bpdt(&bpdt, data, o);
-                                    continue;
+                                match BPDT::parse(slice, o) {
+                                    Ok(bpdt) => {
+                                        print_bpdt(&bpdt, data, o);
+                                        continue;
+                                    }
+                                    Err(e) => println!("BPDT: {e:?}"),
                                 }
-                                Err(e) => println!("BPDT: {e:?}"),
-                            }
-                            if o + 48 < data.len() {
-                                dump48(slice);
+                                if o + 48 < data.len() {
+                                    dump48(slice);
+                                }
                             }
                         }
                     }
-                }
-                Err(e) => {
-                    println!("Pre-IFWI: {e:?}");
-                    match Self::bpdt_scan(data) {
-                        Ok(bpdt) => {
-                            let bpdt_offset = bpdt.offset;
-                            print_bpdt(&bpdt, data, 0);
-                            match bpdt.next(&data[bpdt_offset..]) {
-                                Some(Ok(bpdt)) => print_bpdt(&bpdt, data, bpdt_offset),
-                                Some(Err(e)) => println!("{e:?}"),
-                                _ => println!("nope"),
+                    Err(e) => {
+                        println!("Pre-IFWI: {e:?}");
+                        match Self::bpdt_scan(data) {
+                            Ok(bpdt) => {
+                                let bpdt_offset = bpdt.offset;
+                                print_bpdt(&bpdt, data, 0);
+                                match bpdt.next(&data[bpdt_offset..]) {
+                                    Some(Ok(bpdt)) => print_bpdt(&bpdt, data, bpdt_offset),
+                                    Some(Err(e)) => println!("{e:?}"),
+                                    _ => println!("nope"),
+                                }
                             }
+                            Err(e) => println!("{e}"),
                         }
-                        Err(e) => println!("{e}"),
                     }
                 }
             }
