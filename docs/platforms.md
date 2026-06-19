@@ -90,6 +90,7 @@ suffixes mean[^13].
 | HAP       | High-Assurance Platform                     |
 | {I,M,P}CH | {I/O,Memory,Platform} Controller Hub[^9]    |
 | IFD       | Intel Flash Descriptor                      |
+| LMS       | Local Manageability Service[^21]            |
 | PTT       | Platform Trust Technology                   |
 | RBE       | ROM Boot Extensions (part of ME firmware)   |
 | SPS       | Server Platform Services                    |
@@ -124,3 +125,4 @@ The following abbreviations have a second meaning:
 [^18]: <https://bitkeks.eu/blog/2017/12/the-intel-management-engine.html>
 [^19]: <https://www.intel.com/content/dam/www/public/us/en/security-advisory/documents/intel-csme-security-white-paper.pdf>
 [^20]: <https://www.intel.com/content/dam/support/us/en/documents/technologies/intel_amt_linux_enablement_guide_revision_1_1.pdf>
+[^21]: <https://web.archive.org/web/20070630000420/http://www.openamt.org/>
