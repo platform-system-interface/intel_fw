@@ -47,6 +47,31 @@ generation and specific platforms a certain firmware version range. For example,
 Lenovo ThinkPad X270 laptops came with 6th/7th gen Intel Core processors, which
 means 3rd generation ME hardware and version 11.x.x.x ME firmware.
 
+The following table is not necessarily correct nor complete, based on rough
+findings and notes on Wikipedia[^26].
+
+| Year | Microarchitecture | Chipset series | Generation | ME version |
+| ---- | ----------------- | -------------- | ---------- | ---------- |
+| 2015 | Broadwell         |                |    5th     |  11.x.x.x  |
+|      | Skylake           | 100[^22]       |    6th     |  11.x.x.x  |
+| 2016 |                   |                |            |            |
+| 2017 | Kaby Lake         | 200[^23]       |    7th     |  11.5.x.x  |
+|      | Coffee Lake       |                |    8th     |  12.x.x.x  |
+| 2018 | Coffee Lake       | 300[^24]       |    9th     |  12.x.x.x  |
+| 2019 |                   |                |            |            |
+| 2020 | Comet Lake        | 400[^25]       |    10th    |  14.x.x.x  |
+| 2021 | Rocket Lake       |                |    11th    |  15.x.x.x  |
+| 2022 | Alder Lake        |                |    12th    |  15.x.x.x  |
+| 2023 | Raptor Lake       |                |    13th    |  15.x.x.x  |
+|      | Raptor Lake       |                |    14th    |  15.x.x.x  |
+| 2024 | Arrow Lake        |                |  Series 2  |  15.x.x.x  |
+
+[^22]: <https://www.intel.com/content/www/us/en/products/sku/90587/intel-q170-chipset/specifications.html>
+[^23]: <https://www.intel.com/content/www/us/en/products/sku/98088/intel-q270-chipset/specifications.html>
+[^24]: <https://www.intel.com/content/www/us/en/products/sku/133282/intel-q370-chipset/specifications.html>
+[^25]: <https://www.intel.com/content/www/us/en/products/sku/201836/intel-q470-chipset/specifications.html>
+[^26]: <https://en.wikipedia.org/wiki/Intel_AMT_versions>
+
 ## Processor names
 
 Intel publicly documents how to interpret procesor names[^12] and what their
