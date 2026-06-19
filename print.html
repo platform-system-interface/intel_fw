@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c6f1e848.js";
+            window.path_to_searchindex_js = "searchindex-3d63009e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-0695aabd.js"></script>
@@ -475,9 +475,33 @@ that ranges of Intel platforms are expected to carry a certain ME hardware
 generation and specific platforms a certain firmware version range. For example,
 Lenovo ThinkPad X270 laptops came with 6th/7th gen Intel Core processors, which
 means 3rd generation ME hardware and version 11.x.x.x ME firmware.</p>
+<p>The following table is not necessarily correct nor complete, based on rough
+findings and notes on Wikipedia<sup class="footnote-reference" id="fr-26-1"><a href="#footnote-26">18</a></sup>.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Year</th><th>Microarchitecture</th><th>Chipset series</th><th>Generation</th><th>ME version</th></tr>
+</thead>
+<tbody>
+<tr><td>2015</td><td>Broadwell</td><td></td><td>5th</td><td>11.x.x.x</td></tr>
+<tr><td></td><td>Skylake</td><td>100<sup class="footnote-reference" id="fr-22-1"><a href="#footnote-22">19</a></sup></td><td>6th</td><td>11.x.x.x</td></tr>
+<tr><td>2016</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2017</td><td>Kaby Lake</td><td>200<sup class="footnote-reference" id="fr-23-1"><a href="#footnote-23">20</a></sup></td><td>7th</td><td>11.5.x.x</td></tr>
+<tr><td></td><td>Coffee Lake</td><td></td><td>8th</td><td>12.x.x.x</td></tr>
+<tr><td>2018</td><td>Coffee Lake</td><td>300<sup class="footnote-reference" id="fr-24-1"><a href="#footnote-24">21</a></sup></td><td>9th</td><td>12.x.x.x</td></tr>
+<tr><td>2019</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2020</td><td>Comet Lake</td><td>400<sup class="footnote-reference" id="fr-25-1"><a href="#footnote-25">22</a></sup></td><td>10th</td><td>14.x.x.x</td></tr>
+<tr><td>2021</td><td>Rocket Lake</td><td></td><td>11th</td><td>15.x.x.x</td></tr>
+<tr><td>2022</td><td>Alder Lake</td><td></td><td>12th</td><td>15.x.x.x</td></tr>
+<tr><td>2023</td><td>Raptor Lake</td><td></td><td>13th</td><td>15.x.x.x</td></tr>
+<tr><td></td><td>Raptor Lake</td><td></td><td>14th</td><td>15.x.x.x</td></tr>
+<tr><td>2024</td><td>Arrow Lake</td><td></td><td>Series 2</td><td>15.x.x.x</td></tr>
+</tbody>
+</table>
+</div>
 <h2 id="processor-names"><a class="header" href="#processor-names">Processor names</a></h2>
-<p>Intel publicly documents how to interpret procesor names<sup class="footnote-reference" id="fr-12-1"><a href="#footnote-12">18</a></sup> and what their
-suffixes mean<sup class="footnote-reference" id="fr-13-1"><a href="#footnote-13">19</a></sup>.</p>
+<p>Intel publicly documents how to interpret procesor names<sup class="footnote-reference" id="fr-12-1"><a href="#footnote-12">23</a></sup> and what their
+suffixes mean<sup class="footnote-reference" id="fr-13-1"><a href="#footnote-13">24</a></sup>.</p>
 <h2 id="abbreviations"><a class="header" href="#abbreviations">Abbreviations</a></h2>
 <div class="table-wrapper">
 <table>
@@ -492,8 +516,9 @@ suffixes mean<sup class="footnote-reference" id="fr-13-1"><a href="#footnote-13"
 <tr><td>FIT</td><td>Firmware Interface Table</td></tr>
 <tr><td>FPT</td><td>Firmware Partition Table</td></tr>
 <tr><td>HAP</td><td>High-Assurance Platform</td></tr>
-<tr><td>{I,M,P}CH</td><td>{I/O,Memory,Platform} Controller Hub<sup class="footnote-reference" id="fr-9-1"><a href="#footnote-9">20</a></sup></td></tr>
+<tr><td>{I,M,P}CH</td><td>{I/O,Memory,Platform} Controller Hub<sup class="footnote-reference" id="fr-9-1"><a href="#footnote-9">25</a></sup></td></tr>
 <tr><td>IFD</td><td>Intel Flash Descriptor</td></tr>
+<tr><td>LMS</td><td>Local Manageability Service<sup class="footnote-reference" id="fr-21-1"><a href="#footnote-21">26</a></sup></td></tr>
 <tr><td>PTT</td><td>Platform Trust Technology</td></tr>
 <tr><td>RBE</td><td>ROM Boot Extensions (part of ME firmware)</td></tr>
 <tr><td>SPS</td><td>Server Platform Services</td></tr>
@@ -562,6 +587,21 @@ The following abbreviations have a second meaning:</p>
 <li id="footnote-11">
 <p><a href="https://web.archive.org/web/20230322090345/https://patrick.georgi.family/2015/02/17/intel-boot-guard/">https://web.archive.org/web/20230322090345/https://patrick.georgi.family/2015/02/17/intel-boot-guard/</a> <a href="#fr-11-1">↩</a></p>
 </li>
+<li id="footnote-26">
+<p><a href="https://en.wikipedia.org/wiki/Intel_AMT_versions">https://en.wikipedia.org/wiki/Intel_AMT_versions</a> <a href="#fr-26-1">↩</a></p>
+</li>
+<li id="footnote-22">
+<p><a href="https://www.intel.com/content/www/us/en/products/sku/90587/intel-q170-chipset/specifications.html">https://www.intel.com/content/www/us/en/products/sku/90587/intel-q170-chipset/specifications.html</a> <a href="#fr-22-1">↩</a></p>
+</li>
+<li id="footnote-23">
+<p><a href="https://www.intel.com/content/www/us/en/products/sku/98088/intel-q270-chipset/specifications.html">https://www.intel.com/content/www/us/en/products/sku/98088/intel-q270-chipset/specifications.html</a> <a href="#fr-23-1">↩</a></p>
+</li>
+<li id="footnote-24">
+<p><a href="https://www.intel.com/content/www/us/en/products/sku/133282/intel-q370-chipset/specifications.html">https://www.intel.com/content/www/us/en/products/sku/133282/intel-q370-chipset/specifications.html</a> <a href="#fr-24-1">↩</a></p>
+</li>
+<li id="footnote-25">
+<p><a href="https://www.intel.com/content/www/us/en/products/sku/201836/intel-q470-chipset/specifications.html">https://www.intel.com/content/www/us/en/products/sku/201836/intel-q470-chipset/specifications.html</a> <a href="#fr-25-1">↩</a></p>
+</li>
 <li id="footnote-12">
 <p><a href="https://www.intel.com/content/www/us/en/processors/processor-numbers.html">https://www.intel.com/content/www/us/en/processors/processor-numbers.html</a> <a href="#fr-12-1">↩</a></p>
 </li>
@@ -570,6 +610,9 @@ The following abbreviations have a second meaning:</p>
 </li>
 <li id="footnote-9">
 <p><a href="https://en.wikipedia.org/wiki/Intel_Hub_Architecture">https://en.wikipedia.org/wiki/Intel_Hub_Architecture</a> <a href="#fr-9-1">↩</a></p>
+</li>
+<li id="footnote-21">
+<p><a href="https://web.archive.org/web/20070630000420/http://www.openamt.org/">https://web.archive.org/web/20070630000420/http://www.openamt.org/</a> <a href="#fr-21-1">↩</a></p>
 </li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -604,6 +647,13 @@ Note that the public information mainly focuses on host processor firmware.</p>
 <li><a href="https://github.com/ptresearch/IntelTXE-PoC">TXE MFS exploit PoC</a></li>
 <li><a href="https://github.com/ptresearch/me-disablement">ME disablement</a></li>
 <li><a href="https://github.com/ptresearch?tab=repositories">many other repositories</a></li>
+</ul>
+</li>
+<li>earlier commmunity research
+<ul>
+<li><a href="http://xvilka.me/h2hc2014-reversing-firmware-radare-slides.pdf">xvilka’s attempts with r2</a></li>
+<li><a href="https://web.archive.org/web/20170930114403/http://me.bios.io/Main_Page">community wiki of people who wanted custom ME firmware</a></li>
+<li><a href="https://web.archive.org/web/20160428074432/https://io.netgarage.org/me/">analysis of ME v6-10 Huffman algorithm</a></li>
 </ul>
 </li>
 </ul>
