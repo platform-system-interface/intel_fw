@@ -175,19 +175,13 @@ fn main() -> Result<(), io::Error> {
                 show::show(&fw, verbose);
                 println!();
 
-                let me_res = match fw.me {
-                    Some(r) => r,
-                    None => {
-                        return Err(io::Error::new(
-                            io::ErrorKind::NotFound,
-                            "no ME firmware recognized",
-                        ));
-                    }
-                };
-                let me = match me_res {
-                    Ok(r) => r,
-                    Err(e) => return Err(io::Error::new(io::ErrorKind::InvalidData, e)),
-                };
+                let me = fw
+                    .me
+                    .ok_or(io::Error::new(
+                        io::ErrorKind::NotFound,
+                        "no ME firmware recognized",
+                    ))?
+                    .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
                 if check {
                     let fpt = &me.fpt_area.fpt;
                     let cs = fpt.header_checksum();
