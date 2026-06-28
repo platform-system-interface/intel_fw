@@ -1,3 +1,9 @@
+//! Generation 3 Management Engine
+//!
+//! Notes
+//! ME Gen 3 directory modules appear to start aligned at a `0x20` bytes boundary.
+//! Hashes are for _metadata_, in LE notation.
+
 use core::fmt::{self, Display};
 use core::ops::Range;
 
