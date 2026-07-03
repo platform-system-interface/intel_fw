@@ -27,6 +27,7 @@ Note that the public information mainly focuses on host processor firmware.
   - [ME disablement](https://github.com/ptresearch/me-disablement)
   - [many other repositories](https://github.com/ptresearch?tab=repositories)
 - earlier commmunity research
+  - [Igor Skochinsky's ME Gen 2 analysis](https://recon.cx/2014/slides/Recon%202014%20Skochinsky.pdf)
   - [xvilka's attempts with r2](http://xvilka.me/h2hc2014-reversing-firmware-radare-slides.pdf)
   - [community wiki of people who wanted custom ME firmware](https://web.archive.org/web/20170930114403/http://me.bios.io/Main_Page)
   - [analysis of ME v6-10 Huffman algorithm](https://web.archive.org/web/20160428074432/https://io.netgarage.org/me/)
