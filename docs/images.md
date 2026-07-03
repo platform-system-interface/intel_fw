@@ -76,3 +76,12 @@ The remaining images can now be used to test `intel_fw`.
 
 Many samples can be found via this forum post:
 <https://winraid.level1techs.com/t/intel-cs-me-cs-txe-cs-sps-gsc-pmc-pchc-phy-orom-firmware-repositories/30869>
+
+## Partial images
+
+### System76
+
+Individual pieces are in the `models/` directory in the firmware-open repo:
+<https://github.com/system76/firmware-open/tree/master/models>
+
+This includes the respective flash descriptor and ME firmware.
