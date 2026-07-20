@@ -26,6 +26,15 @@ NVM (Non-Volatile Memory, just a flash partition) are for, on a higher level:
   - [IFD](https://github.com/LongSoft/UEFITool/blob/new_engine/common/descriptor.h)
   - [ME parser](https://github.com/LongSoft/UEFITool/blob/new_engine/common/meparser.cpp)
   - [FIT parser](https://github.com/LongSoft/UEFITool/blob/new_engine/common/fitparser.cpp)
+- OpenSecurityTraining2 courses
+  - [Architecture 4001: x86-64 Intel Firmware Attack & Defense](https://p.ost2.fyi/courses/course-v1:OpenSecurityTraining2+Arch4001_x86-64_RVF+2021_v1/about)
+  - [Hardware 1101: Intel SPI Analysis](https://p.ost2.fyi/courses/course-v1:OpenSecurityTraining2+hw1101_intel_spi+2023_v1/about)
+
+## Research
+
+Many researchers have looked into the Intel Management Engine over the years and
+presented on their findings:
+
 - Positive Technologies research
   - [TXE MFS exploit PoC](https://github.com/ptresearch/IntelTXE-PoC)
   - [ME disablement](https://github.com/ptresearch/me-disablement)
@@ -35,12 +44,6 @@ NVM (Non-Volatile Memory, just a flash partition) are for, on a higher level:
   - [xvilka's attempts with r2](http://xvilka.me/h2hc2014-reversing-firmware-radare-slides.pdf)
   - [community wiki of people who wanted custom ME firmware](https://web.archive.org/web/20170930114403/http://me.bios.io/Main_Page)
   - [analysis of ME v6-10 Huffman algorithm](https://web.archive.org/web/20160428074432/https://io.netgarage.org/me/)
-
-## Research
-
-Many researchers have looked into the Intel Management Engine over the years and
-presented on their findings:
-
 - <https://media.ccc.de/v/34c3-8762-inside_intel_management_engine>
 - <https://media.ccc.de/v/36c3-10694-intel_management_engine_deep_dive>
 
