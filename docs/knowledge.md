@@ -9,6 +9,10 @@ Intel publishes general information on firmware in their developer portal:
 <https://www.intel.com/content/www/us/en/developer/topic-technology/firmware/overview.html>
 Note that the public information mainly focuses on host processor firmware.
 
+There is also documentation on what the Intel Management engine and e.g. its
+NVM (Non-Volatile Memory, just a flash partition) are for, on a higher level:
+- [AMT Storage Administration and Operations (Gen 2 ME)](https://software.intel.com/sites/manageability/AMT_Implementation_and_Reference_Guide/default.htm?turl=WordDocuments%2Fdetaileddescription9.htm)
+
 ## Other projects
 
 - [`me_cleaner` wiki](https://github.com/corna/me_cleaner/wiki/)
