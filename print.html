@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c9873b76.js";
+            window.path_to_searchindex_js = "searchindex-dc7d38b1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-0695aabd.js"></script>
@@ -623,6 +623,11 @@ structures.</p>
 <p>Intel publishes general information on firmware in their developer portal:
 <a href="https://www.intel.com/content/www/us/en/developer/topic-technology/firmware/overview.html">https://www.intel.com/content/www/us/en/developer/topic-technology/firmware/overview.html</a>
 Note that the public information mainly focuses on host processor firmware.</p>
+<p>There is also documentation on what the Intel Management engine and e.g. its
+NVM (Non-Volatile Memory, just a flash partition) are for, on a higher level:</p>
+<ul>
+<li><a href="https://software.intel.com/sites/manageability/AMT_Implementation_and_Reference_Guide/default.htm?turl=WordDocuments%2Fdetaileddescription9.htm">AMT Storage Administration and Operations (Gen 2 ME)</a></li>
+</ul>
 <h2 id="other-projects"><a class="header" href="#other-projects">Other projects</a></h2>
 <ul>
 <li><a href="https://github.com/corna/me_cleaner/wiki/"><code>me_cleaner</code> wiki</a></li>
@@ -642,6 +647,17 @@ Note that the public information mainly focuses on host processor firmware.</p>
 <li><a href="https://github.com/LongSoft/UEFITool/blob/new_engine/common/fitparser.cpp">FIT parser</a></li>
 </ul>
 </li>
+<li>OpenSecurityTraining2 courses
+<ul>
+<li><a href="https://p.ost2.fyi/courses/course-v1:OpenSecurityTraining2+Arch4001_x86-64_RVF+2021_v1/about">Architecture 4001: x86-64 Intel Firmware Attack &amp; Defense</a></li>
+<li><a href="https://p.ost2.fyi/courses/course-v1:OpenSecurityTraining2+hw1101_intel_spi+2023_v1/about">Hardware 1101: Intel SPI Analysis</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="research"><a class="header" href="#research">Research</a></h2>
+<p>Many researchers have looked into the Intel Management Engine over the years and
+presented on their findings:</p>
+<ul>
 <li>Positive Technologies research
 <ul>
 <li><a href="https://github.com/ptresearch/IntelTXE-PoC">TXE MFS exploit PoC</a></li>
@@ -657,11 +673,6 @@ Note that the public information mainly focuses on host processor firmware.</p>
 <li><a href="https://web.archive.org/web/20160428074432/https://io.netgarage.org/me/">analysis of ME v6-10 Huffman algorithm</a></li>
 </ul>
 </li>
-</ul>
-<h2 id="research"><a class="header" href="#research">Research</a></h2>
-<p>Many researchers have looked into the Intel Management Engine over the years and
-presented on their findings:</p>
-<ul>
 <li><a href="https://media.ccc.de/v/34c3-8762-inside_intel_management_engine">https://media.ccc.de/v/34c3-8762-inside_intel_management_engine</a></li>
 <li><a href="https://media.ccc.de/v/36c3-10694-intel_management_engine_deep_dive">https://media.ccc.de/v/36c3-10694-intel_management_engine_deep_dive</a></li>
 </ul>
