@@ -498,6 +498,11 @@ pub struct IFD {
 
 impl Display for IFD {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let o = core::mem::size_of::<Header>()
+            + core::mem::size_of::<Components>()
+            + core::mem::size_of::<Regions>()
+            + self.masters.len() * 4;
+        writeln!(f, "straps @{o:08x}")?;
         writeln!(f, "== Configuration ==")?;
         writeln!(f, "{}", self.header.flmap0)?;
         writeln!(f, "{}", self.header.flmap1)?;

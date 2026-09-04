@@ -92,6 +92,9 @@ enum MeCommand {
         /// Partition to extract
         #[clap(long, short)]
         part_name: Option<String>,
+        /// Extract MFS to this directory
+        #[clap(long, short)]
+        mfs: Option<String>,
         /// File to read
         file_name: String,
     },
@@ -280,14 +283,18 @@ fn main() -> Result<(), io::Error> {
             }
             MeCommand::Extract {
                 part_name,
+                mfs,
                 file_name,
             } => {
+                use intel_fw::mfs;
+                use intel_fw::part::fpt::EFFS;
                 use intel_fw::part::gen2::Gen2Partition;
                 use intel_fw::part::gen3::Gen3Partition;
+                use intel_fw::part::generic::Partition;
                 use intel_fw::part::partitions::Partitions;
 
                 let data = fs::read(&file_name)?;
-                info!("Extracting {}", file_name);
+                info!("Extracting {file_name}");
 
                 let fw = Firmware::parse(&data, debug);
                 let me = fw
@@ -310,6 +317,24 @@ fn main() -> Result<(), io::Error> {
                     }
                     Ok(())
                 };
+
+                if let Some(extract_dir) = mfs
+                    && let Some(data) = match &me.fpt_area.partitions {
+                        Partitions::Gen2(parts) => parts
+                            .iter()
+                            .find(|p| {
+                                if let Gen2Partition::Data(dir) = p {
+                                    dir.entry.name() == EFFS
+                                } else {
+                                    false
+                                }
+                            })
+                            .map(|mfs| mfs.data()),
+                        _ => None,
+                    }
+                {
+                    let _ = mfs::parse(data, Some(extract_dir), verbose);
+                }
 
                 // TODO: For partitions not holding a directory, extract the
                 // whole partition.

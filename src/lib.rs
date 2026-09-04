@@ -9,6 +9,7 @@ pub mod ifd;
 pub mod ifwi;
 pub mod me;
 pub mod meta;
+pub mod mfs;
 pub mod part;
 pub mod ver;
 

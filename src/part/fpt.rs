@@ -421,7 +421,7 @@ fn parse_okay_fpt() {
 
 #[test]
 fn parse_okay_fpt_with_offset() {
-    let parsed = FPT::parse(&DATA);
+    let parsed = FPT::parse(DATA);
     assert!(parsed.is_some());
     let fpt_res = parsed.unwrap();
     assert!(fpt_res.is_ok());
@@ -431,14 +431,14 @@ fn parse_okay_fpt_with_offset() {
 
 #[test]
 fn checksum() {
-    let parsed = FPT::parse(&DATA);
+    let parsed = FPT::parse(DATA);
     let fpt = parsed.unwrap().unwrap();
     assert_eq!(fpt.header_checksum(), fpt.header.checksum);
 }
 
 #[test]
 fn clear() {
-    let mut fpt = FPT::parse(&DATA).unwrap().unwrap();
+    let mut fpt = FPT::parse(DATA).unwrap().unwrap();
     let opts = ClearOptions {
         keep_modules: false,
         parts_force_retention: vec![],
